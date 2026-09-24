@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -98,6 +99,42 @@ final class SessionController {
         scheduleNextEvent()
     }
 
+    func snoozeBreak() {
+        let now = Date()
+        engine.snoozeBreak(at: now)
+        refreshSnapshot(at: now)
+        breakPresenter.dismiss()
+        persistSession()
+        scheduleNextEvent()
+    }
+
+    func openSettings() {
+        breakPresenter.dismiss()
+        NSApp.activate(ignoringOtherApps: true)
+        let selector = Selector(("showSettingsWindow:"))
+        NSApp.sendAction(selector, to: nil as AnyObject?, from: nil as AnyObject?)
+    }
+
+    func previewBreak() {
+        breakPresenter.show(
+            endsAt: Date.now.addingTimeInterval(20),
+            configuration: configuration,
+            isPreview: true,
+            onSnooze: { [weak self] in
+                self?.snoozeBreak()
+            },
+            onSkip: { [weak self] in
+                self?.completeBreak()
+            },
+            onLockScreen: {
+                SystemAction.lockScreen()
+            },
+            onOpenSettings: { [weak self] in
+                self?.openSettings()
+            }
+        )
+    }
+
     func completeBreak() {
         let now = Date()
         engine.completeBreak(at: now)
@@ -122,9 +159,23 @@ final class SessionController {
     }
 
     private func presentCurrentBreak() {
-        breakPresenter.show(endsAt: engine.session.endsAt) { [weak self] in
-            self?.completeBreak()
-        }
+        breakPresenter.show(
+            endsAt: engine.session.endsAt,
+            configuration: configuration,
+            isPreview: false,
+            onSnooze: { [weak self] in
+                self?.snoozeBreak()
+            },
+            onSkip: { [weak self] in
+                self?.completeBreak()
+            },
+            onLockScreen: {
+                SystemAction.lockScreen()
+            },
+            onOpenSettings: { [weak self] in
+                self?.openSettings()
+            }
+        )
     }
 
     private func scheduleNextEvent() {

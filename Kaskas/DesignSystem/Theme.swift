@@ -4,14 +4,14 @@ enum Theme {
     enum Typography {
         static let status = Font.system(.headline, design: .rounded, weight: .semibold)
         static let reminderTitle = Font.system(.title3, design: .rounded, weight: .semibold)
-        static let breakTitle = Font.system(size: 44, weight: .bold, design: .rounded)
-        static let countdown = Font.system(size: 68, weight: .semibold, design: .rounded)
+        static let breakTitle = Font.system(size: 58, weight: .bold, design: .rounded)
+        static let countdown = Font.system(size: 104, weight: .medium, design: .rounded)
     }
 
     enum Spacing {
         static let small: CGFloat = 6
         static let medium: CGFloat = 12
-        static let large: CGFloat = 20
+          static let large: CGFloat = 20
         static let extraLarge: CGFloat = 32
     }
 

@@ -6,7 +6,15 @@ final class BreakPresenter {
     private var window: BreakWindow?
     private var presentedEndDate: Date?
 
-    func show(endsAt: Date, onComplete: @escaping @MainActor () -> Void) {
+    func show(
+        endsAt: Date,
+        configuration: FocusConfiguration,
+        isPreview: Bool = false,
+        onSnooze: @escaping @MainActor () -> Void,
+        onSkip: @escaping @MainActor () -> Void,
+        onLockScreen: @escaping @MainActor () -> Void,
+        onOpenSettings: @escaping @MainActor () -> Void
+    ) {
         if window?.isVisible == true, presentedEndDate == endsAt {
             return
         }
@@ -22,7 +30,15 @@ final class BreakPresenter {
             return
         }
 
-        let rootView = BreakView(endsAt: endsAt, onComplete: onComplete)
+        let rootView = BreakView(
+            endsAt: endsAt,
+            configuration: configuration,
+            isPreview: isPreview,
+            onSnooze: onSnooze,
+            onSkip: onSkip,
+            onLockScreen: onLockScreen,
+            onOpenSettings: onOpenSettings
+        )
         let hostingController = NSHostingController(rootView: rootView)
         let window = BreakWindow(
             contentRect: screen.frame,
@@ -31,8 +47,9 @@ final class BreakPresenter {
             defer: false,
             screen: screen
         )
+        window.onEscape = onSkip
         window.contentViewController = hostingController
-        window.backgroundColor = .windowBackgroundColor
+        window.backgroundColor = .black
         window.level = .screenSaver
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
@@ -52,6 +69,20 @@ final class BreakPresenter {
 }
 
 private final class BreakWindow: NSWindow {
+    var onEscape: (() -> Void)?
+
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
+
+    override func cancelOperation(_ sender: Any?) {
+        onEscape?()
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // ESC key
+            onEscape?()
+        } else {
+            super.keyDown(with: event)
+        }
+    }
 }
