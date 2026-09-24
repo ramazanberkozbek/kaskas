@@ -7,6 +7,12 @@
     " " : {
 
     },
+    "%lld%%" : {
+
+    },
+    "00:20" : {
+
+    },
     "app.name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14,6 +20,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaskas"
+          }
+        }
+      }
+    },
+    "break.backgroundHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arka planı daha sonra Ayarlar’dan değiştirebilirsin."
           }
         }
       }
@@ -29,13 +46,35 @@
         }
       }
     },
+    "break.lockScreen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekranı Kilitle"
+          }
+        }
+      }
+    },
     "break.message" : {
       "extractionState" : "manual",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekrandan uzaklaş, nefes al ve biraz hareket et."
+            "value" : "Ekrandan uzaklaş, gözlerini ve zihnini dinlendir."
+          }
+        }
+      }
+    },
+    "break.press" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BASIN:"
           }
         }
       }
@@ -51,16 +90,52 @@
         }
       }
     },
+    "break.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geç"
+          }
+        }
+      }
+    },
+    "break.snooze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ertele"
+          }
+        }
+      }
+    },
     "break.title" : {
       "extractionState" : "manual",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mola zamanı"
+            "value" : "Uzağa bak ve dinlen"
           }
         }
       }
+    },
+    "break.toSkip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GEÇMEK İÇİN"
+          }
+        }
+      }
+    },
+    "esc" : {
+
     },
     "menu.active" : {
       "extractionState" : "manual",
@@ -201,6 +276,248 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kısa bir nefes"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.aurora" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuzey Işıkları"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.calmGradient" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakin renkler"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.chooseImagePrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arka plan görseli seçin"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Net"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.cosmic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derin Uzay"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel Fotoğraf"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçiminiz tüm sonraki mola ekranlarında kullanılır."
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.desertDunes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kum Tepeleri"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.frost" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buzlu"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.fullscreenPreview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam Ekran Önizle"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.livePreview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canlı Önizleme"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.mountainLake" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dağ Gölü"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sade"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karartma yoğunluğu"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.overlayDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazıların rahat okunması için arka planın ne kadar karartılacağını ayarlar."
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.sectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranınızın görünümünü özelleştirin"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.sectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ARKA PLAN"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.snowPeaks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karlı Zirveler"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stil"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.styleDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buzlu, arka planı yumuşakça bulanıklaştırır. Net, görseli berrak gösterir."
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranı arka planı"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.upload" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğraf Seç..."
           }
         }
       }

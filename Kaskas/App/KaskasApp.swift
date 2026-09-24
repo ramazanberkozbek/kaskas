@@ -27,5 +27,6 @@ struct KaskasApp: App {
             height: Theme.Size.settingsHeight
         )
         .windowResizability(.contentSize)
+        .windowToolbarStyle(.unified(showsTitle: false))
     }
 }

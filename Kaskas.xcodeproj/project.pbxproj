@@ -6,6 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		B10000000000000000000008 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000006;
+			remoteInfo = Kaskas;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* Kaskas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kaskas.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000001 /* KaskasTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaskasTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -109,16 +119,6 @@
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
-
-/* Begin PBXContainerItemProxy section */
-		B10000000000000000000008 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A1000000000000000000000A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A10000000000000000000006;
-			remoteInfo = Kaskas;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXProject section */
 		A1000000000000000000000A /* Project object */ = {
