@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 120 120">
   <defs>
     <mask id="flame-eye-knockout" x="0" y="0" width="120" height="120" maskUnits="userSpaceOnUse" mask-type="alpha">
       <path
