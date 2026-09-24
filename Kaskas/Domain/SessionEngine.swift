@@ -109,6 +109,15 @@ struct SessionEngine: Sendable {
         session.endsAt = session.endsAt.addingTimeInterval(activeConfiguration.snoozeDuration)
     }
 
+    mutating func snoozeBreak(at now: Date = Date()) {
+        session = FocusSession(
+            phase: .focusing,
+            startedAt: now,
+            endsAt: now.addingTimeInterval(activeConfiguration.snoozeDuration),
+            nextMicroReminderAt: nil
+        )
+    }
+
     private mutating func startFocus(at now: Date) {
         activeConfiguration = configuration
         session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)

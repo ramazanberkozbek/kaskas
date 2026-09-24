@@ -162,4 +162,34 @@ struct SessionEngineTests {
         #expect(snapshot.remaining == 30 * 60)
         #expect(snapshot.progress == 1.0 / 3.0)
     }
+
+    @Test
+    func snoozeBreakPostponesBreakAndStartsFocusForSnoozeDuration() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakStart = startDate.addingTimeInterval(45 * 60)
+        _ = engine.process(at: breakStart)
+
+        #expect(engine.session.phase == .onBreak)
+
+        engine.snoozeBreak(at: breakStart)
+
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.startedAt == breakStart)
+        #expect(engine.session.endsAt == breakStart.addingTimeInterval(5 * 60))
+    }
+
+    @Test
+    func completeBreakDirectlySkipsBreakAndStartsFullFocusDuration() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakStart = startDate.addingTimeInterval(45 * 60)
+        _ = engine.process(at: breakStart)
+
+        #expect(engine.session.phase == .onBreak)
+
+        engine.completeBreak(at: breakStart)
+
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.startedAt == breakStart)
+        #expect(engine.session.endsAt == breakStart.addingTimeInterval(configuration.focusDuration))
+    }
 }
