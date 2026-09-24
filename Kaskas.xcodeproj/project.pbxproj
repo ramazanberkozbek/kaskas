@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* Kaskas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kaskas.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000001 /* KaskasTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaskasTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +17,22 @@
 			path = Kaskas;
 			sourceTree = "<group>";
 		};
+		B10000000000000000000002 /* KaskasTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KaskasTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B10000000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +46,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000002 /* Kaskas */,
+				B10000000000000000000002 /* KaskasTests */,
 				A10000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000001 /* Kaskas.app */,
+				B10000000000000000000001 /* KaskasTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,7 +85,40 @@
 			productReference = A10000000000000000000001 /* Kaskas.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B10000000000000000000006 /* KaskasTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B10000000000000000000007 /* Build configuration list for PBXNativeTarget "KaskasTests" */;
+			buildPhases = (
+				B10000000000000000000004 /* Sources */,
+				B10000000000000000000003 /* Frameworks */,
+				B10000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B10000000000000000000009 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B10000000000000000000002 /* KaskasTests */,
+			);
+			name = KaskasTests;
+			packageProductDependencies = (
+			);
+			productName = KaskasTests;
+			productReference = B10000000000000000000001 /* KaskasTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		B10000000000000000000008 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000006;
+			remoteInfo = Kaskas;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXProject section */
 		A1000000000000000000000A /* Project object */ = {
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					A10000000000000000000006 = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					B10000000000000000000006 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = A10000000000000000000006;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				A10000000000000000000006 /* Kaskas */,
+				B10000000000000000000006 /* KaskasTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A10000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B10000000000000000000005 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B10000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B10000000000000000000009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000006 /* Kaskas */;
+			targetProxy = B10000000000000000000008 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A1000000000000000000000C /* Debug */ = {
@@ -173,7 +248,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
-		};
+			};
 			name = Release;
 		};
 		A1000000000000000000000E /* Debug */ = {
@@ -183,6 +258,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y5RHXV497H;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -206,6 +282,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y5RHXV497H;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -219,6 +296,44 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		B1000000000000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y5RHXV497H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ramazanozbek.kaskas.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kaskas.app/Contents/MacOS/Kaskas";
+			};
+			name = Debug;
+		};
+		B1000000000000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y5RHXV497H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ramazanozbek.kaskas.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kaskas.app/Contents/MacOS/Kaskas";
 			};
 			name = Release;
 		};
@@ -239,6 +354,15 @@
 			buildConfigurations = (
 				A1000000000000000000000C /* Debug */,
 				A1000000000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B10000000000000000000007 /* Build configuration list for PBXNativeTarget "KaskasTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1000000000000000000000A /* Debug */,
+				B1000000000000000000000B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

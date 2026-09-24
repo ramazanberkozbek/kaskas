@@ -1,0 +1,126 @@
+import Foundation
+import Testing
+@testable import Kaskas
+
+struct SessionEngineTests {
+    private let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
+    private let configuration = FocusConfiguration(
+        focusDuration: 45 * 60,
+        microReminderInterval: 20 * 60,
+        breakDuration: 5 * 60,
+        snoozeDuration: 5 * 60
+    )
+
+    @Test
+    func startsWithDateBasedDeadlines() {
+        let engine = SessionEngine(configuration: configuration, now: startDate)
+
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(45 * 60))
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(20 * 60))
+    }
+
+    @Test
+    func emitsMicroRemindersWithoutStartingABreak() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+
+        let firstEvents = engine.process(at: startDate.addingTimeInterval(20 * 60))
+        let secondEvents = engine.process(at: startDate.addingTimeInterval(40 * 60))
+
+        #expect(firstEvents == [.microReminderDue])
+        #expect(secondEvents == [.microReminderDue])
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.nextMicroReminderAt == nil)
+    }
+
+    @Test
+    func doesNotReplayMissedMicroRemindersAfterWake() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+
+        let events = engine.process(at: startDate.addingTimeInterval(41 * 60))
+        let repeatedEvents = engine.process(at: startDate.addingTimeInterval(41 * 60))
+
+        #expect(events == [.microReminderDue])
+        #expect(repeatedEvents.isEmpty)
+    }
+
+    @Test
+    func startsFullBreakAtFocusDeadline() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let deadline = startDate.addingTimeInterval(45 * 60)
+
+        let events = engine.process(at: deadline)
+
+        #expect(events == [.fullBreakDue])
+        #expect(engine.session.phase == .onBreak)
+        #expect(engine.session.startedAt == deadline)
+        #expect(engine.session.endsAt == deadline.addingTimeInterval(5 * 60))
+    }
+
+    @Test
+    func fullBreakTakesPriorityOverMissedMicroReminders() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let wakeDate = startDate.addingTimeInterval(60 * 60)
+
+        let events = engine.process(at: wakeDate)
+
+        #expect(events == [.fullBreakDue])
+        #expect(engine.session.phase == .onBreak)
+        #expect(engine.session.startedAt == wakeDate)
+    }
+
+    @Test
+    func startsANewFocusCycleWhenBreakEnds() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakStart = startDate.addingTimeInterval(45 * 60)
+        _ = engine.process(at: breakStart)
+        let breakEnd = breakStart.addingTimeInterval(5 * 60)
+
+        let events = engine.process(at: breakEnd)
+
+        #expect(events == [.breakEnded])
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.startedAt == breakEnd)
+        #expect(engine.session.endsAt == breakEnd.addingTimeInterval(45 * 60))
+    }
+
+    @Test
+    func snoozeExtendsOnlyTheCurrentFocusDeadline() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+
+        engine.snooze()
+
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(50 * 60))
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(20 * 60))
+    }
+
+    @Test
+    func configurationChangesApplyToTheNextFocusCycle() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let originalDeadline = engine.session.endsAt
+        let updatedConfiguration = FocusConfiguration(
+            focusDuration: 60 * 60,
+            microReminderInterval: 15 * 60,
+            breakDuration: 10 * 60,
+            snoozeDuration: 10 * 60
+        )
+
+        engine.updateConfiguration(updatedConfiguration)
+        engine.startBreak(at: startDate)
+        engine.completeBreak(at: startDate.addingTimeInterval(10 * 60))
+
+        #expect(originalDeadline == startDate.addingTimeInterval(45 * 60))
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(70 * 60))
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(25 * 60))
+    }
+
+    @Test
+    func snapshotCalculatesRemainingTimeAndProgress() {
+        let engine = SessionEngine(configuration: configuration, now: startDate)
+
+        let snapshot = engine.snapshot(at: startDate.addingTimeInterval(15 * 60))
+
+        #expect(snapshot.remaining == 30 * 60)
+        #expect(snapshot.progress == 1.0 / 3.0)
+    }
+}
