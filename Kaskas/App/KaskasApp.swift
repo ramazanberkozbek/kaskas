@@ -6,7 +6,14 @@ struct KaskasApp: App {
         MenuBarExtra {
             MenuBarView()
         } label: {
-            Label("app.name", systemImage: "timer")
+            HStack(spacing: 4) {
+                Image("Mascot")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+
+                Text("app.name")
+            }
         }
 
         Settings {
