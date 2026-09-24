@@ -2,6 +2,7 @@ import Foundation
 
 struct SessionEngine: Sendable {
     private(set) var configuration: FocusConfiguration
+    private(set) var activeConfiguration: FocusConfiguration
     private(set) var session: FocusSession
 
     init(
@@ -9,7 +10,21 @@ struct SessionEngine: Sendable {
         now: Date = Date()
     ) {
         self.configuration = configuration
+        activeConfiguration = configuration
         session = Self.makeFocusSession(configuration: configuration, startingAt: now)
+    }
+
+    init(configuration: FocusConfiguration, restoredState: SessionState) {
+        self.configuration = configuration
+        activeConfiguration = restoredState.activeConfiguration
+        session = restoredState.session
+    }
+
+    var state: SessionState {
+        SessionState(
+            session: session,
+            activeConfiguration: activeConfiguration
+        )
     }
 
     var nextEventDate: Date {
@@ -77,7 +92,7 @@ struct SessionEngine: Sendable {
         session = FocusSession(
             phase: .onBreak,
             startedAt: now,
-            endsAt: now.addingTimeInterval(configuration.breakDuration),
+            endsAt: now.addingTimeInterval(activeConfiguration.breakDuration),
             nextMicroReminderAt: nil
         )
     }
@@ -91,11 +106,12 @@ struct SessionEngine: Sendable {
             return
         }
 
-        session.endsAt = session.endsAt.addingTimeInterval(configuration.snoozeDuration)
+        session.endsAt = session.endsAt.addingTimeInterval(activeConfiguration.snoozeDuration)
     }
 
     private mutating func startFocus(at now: Date) {
-        session = Self.makeFocusSession(configuration: configuration, startingAt: now)
+        activeConfiguration = configuration
+        session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)
     }
 
     private func nextFutureMicroReminder(
@@ -104,10 +120,10 @@ struct SessionEngine: Sendable {
         focusEndsAt: Date
     ) -> Date? {
         let elapsedIntervals = floor(
-            now.timeIntervalSince(reminderAt) / configuration.microReminderInterval
+            now.timeIntervalSince(reminderAt) / activeConfiguration.microReminderInterval
         ) + 1
         let nextReminderAt = reminderAt.addingTimeInterval(
-            elapsedIntervals * configuration.microReminderInterval
+            elapsedIntervals * activeConfiguration.microReminderInterval
         )
 
         return nextReminderAt < focusEndsAt ? nextReminderAt : nil

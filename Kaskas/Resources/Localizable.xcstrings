@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
+    "" : {
+
+    },
+    " " : {
+
+    },
     "app.name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8,6 +14,105 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaskas"
+          }
+        }
+      }
+    },
+    "break.complete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı Bitir"
+          }
+        }
+      }
+    },
+    "break.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekrandan uzaklaş, nefes al ve biraz hareket et."
+          }
+        }
+      }
+    },
+    "break.remaining.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalan mola süresi"
+          }
+        }
+      }
+    },
+    "break.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola zamanı"
+          }
+        }
+      }
+    },
+    "menu.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktif"
+          }
+        }
+      }
+    },
+    "menu.atTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bitiş"
+          }
+        }
+      }
+    },
+    "menu.break" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola"
+          }
+        }
+      }
+    },
+    "menu.completeBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı Bitir"
+          }
+        }
+      }
+    },
+    "menu.nextBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıradaki mola"
           }
         }
       }
@@ -34,6 +139,17 @@
         }
       }
     },
+    "menu.remaining" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalan süre"
+          }
+        }
+      }
+    },
     "menu.settings" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -45,6 +161,116 @@
         }
       }
     },
+    "menu.snooze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı Ertele"
+          }
+        }
+      }
+    },
+    "menu.startBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi Mola Ver"
+          }
+        }
+      }
+    },
+    "reminder.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gözlerini dinlendir ve omuzlarını gevşet."
+          }
+        }
+      }
+    },
+    "reminder.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa bir nefes"
+          }
+        }
+      }
+    },
+    "settings.breakDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola süresi"
+          }
+        }
+      }
+    },
+    "settings.breakDuration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her molanın ne kadar süreceği"
+          }
+        }
+      }
+    },
+    "settings.comingSoon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu ayar yakında kullanıma açılacak."
+          }
+        }
+      }
+    },
+    "settings.focus.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odak ve mola"
+          }
+        }
+      }
+    },
+    "settings.focusDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam mola aralığı"
+          }
+        }
+      }
+    },
+    "settings.focusDuration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas’ın ne sıklıkla mola hatırlatacağı"
+          }
+        }
+      }
+    },
     "settings.general.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -52,6 +278,160 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genel"
+          }
+        }
+      }
+    },
+    "settings.nextCycle.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikler devam eden oturumu etkilemeden sonraki odak döngüsünde uygulanır."
+          }
+        }
+      }
+    },
+    "settings.privacy.local" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar ve oturum bilgileri yalnızca bu Mac’te saklanır."
+          }
+        }
+      }
+    },
+    "settings.privacy.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizlilik"
+          }
+        }
+      }
+    },
+    "settings.reminderInterval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Küçük hatırlatma aralığı"
+          }
+        }
+      }
+    },
+    "settings.reminderInterval.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa sağlık hatırlatmaları arasındaki süre"
+          }
+        }
+      }
+    },
+    "settings.schedule.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola Programı"
+          }
+        }
+      }
+    },
+    "settings.sidebar.alerts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uyarılar"
+          }
+        }
+      }
+    },
+    "settings.sidebar.focus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odak"
+          }
+        }
+      }
+    },
+    "settings.sidebar.general" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genel"
+          }
+        }
+      }
+    },
+    "settings.sidebar.smartPause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akıllı Mola"
+          }
+        }
+      }
+    },
+    "settings.sidebar.statistics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İstatistikler"
+          }
+        }
+      }
+    },
+    "settings.sidebar.wellness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağlık"
+          }
+        }
+      }
+    },
+    "settings.snoozeDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erteleme süresi"
+          }
+        }
+      }
+    },
+    "settings.snoozeDuration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden hatırlatmadan önce beklenecek süre"
           }
         }
       }
@@ -74,6 +454,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hazır"
+          }
+        }
+      }
+    },
+    "settings.wellness.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağlık Hatırlatmaları"
           }
         }
       }

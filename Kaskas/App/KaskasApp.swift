@@ -2,9 +2,11 @@ import SwiftUI
 
 @main
 struct KaskasApp: App {
+    @NSApplicationDelegateAdaptor(KaskasAppDelegate.self) private var appDelegate
+
     var body: some Scene {
         MenuBarExtra {
-            MenuBarView()
+            MenuBarView(controller: appDelegate.sessionController)
         } label: {
             HStack(spacing: 4) {
                 Image("Mascot")
@@ -15,9 +17,15 @@ struct KaskasApp: App {
                 Text("app.name")
             }
         }
+        .menuBarExtraStyle(.window)
 
         Settings {
-            SettingsView()
+            SettingsView(controller: appDelegate.sessionController)
         }
+        .defaultSize(
+            width: Theme.Size.settingsWidth,
+            height: Theme.Size.settingsHeight
+        )
+        .windowResizability(.contentSize)
     }
 }

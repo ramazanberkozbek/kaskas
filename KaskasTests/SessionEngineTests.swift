@@ -115,6 +115,45 @@ struct SessionEngineTests {
     }
 
     @Test
+    func configurationChangesDoNotAlterTheCurrentCycle() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let updatedConfiguration = FocusConfiguration(
+            focusDuration: 60 * 60,
+            microReminderInterval: 15 * 60,
+            breakDuration: 10 * 60,
+            snoozeDuration: 10 * 60
+        )
+
+        engine.updateConfiguration(updatedConfiguration)
+        let events = engine.process(at: startDate.addingTimeInterval(20 * 60))
+        engine.snooze()
+
+        #expect(events == [.microReminderDue])
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(40 * 60))
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(50 * 60))
+    }
+
+    @Test
+    func restoredStateKeepsTheActiveCycleConfiguration() {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        let updatedConfiguration = FocusConfiguration(
+            focusDuration: 60 * 60,
+            microReminderInterval: 15 * 60,
+            breakDuration: 10 * 60,
+            snoozeDuration: 10 * 60
+        )
+        original.updateConfiguration(updatedConfiguration)
+
+        var restored = SessionEngine(
+            configuration: updatedConfiguration,
+            restoredState: original.state
+        )
+        _ = restored.process(at: startDate.addingTimeInterval(20 * 60))
+
+        #expect(restored.session.nextMicroReminderAt == startDate.addingTimeInterval(40 * 60))
+    }
+
+    @Test
     func snapshotCalculatesRemainingTimeAndProgress() {
         let engine = SessionEngine(configuration: configuration, now: startDate)
 
