@@ -7,6 +7,15 @@
     " " : {
 
     },
+    "%lldd" : {
+
+    },
+    "•" : {
+
+    },
+    "<1d" : {
+
+    },
     "00:20" : {
 
     },
@@ -20,6 +29,53 @@
           }
         }
       }
+    },
+    "Break" : {
+
+    },
+    "debug.break" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Molayı göster" } } }
+    },
+    "debug.breaksToday" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Bugünkü molalar" } } }
+    },
+    "debug.breakWarning" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Mola uyarısını göster" } } }
+    },
+    "debug.description" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Önizlemeler oturumu ve sayaçları değiştirmez." } } }
+    },
+    "debug.dismissPreviews" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Önizlemeleri kapat" } } }
+    },
+    "debug.enable" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Debug modunu aç" } } }
+    },
+    "debug.focusing" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Odaklanıyor" } } }
+    },
+    "debug.microReminder" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Kısa mola hatırlatıcısını göster" } } }
+    },
+    "debug.onBreak" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Molada" } } }
+    },
+    "debug.session" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Oturum durumu" } } }
+    },
+    "debug.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "tr" : { "stringUnit" : { "state" : "translated", "value" : "Debug" } } }
     },
     "break.backgroundHint" : {
       "extractionState" : "manual",
@@ -170,6 +226,17 @@
         }
       }
     },
+    "menu.breaksTaken" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mola verildi"
+          }
+        }
+      }
+    },
     "menu.completeBreak" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -231,7 +298,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ayarlar…"
+            "value" : "Ayarlar"
           }
         }
       }
@@ -254,6 +321,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Şimdi Mola Ver"
+          }
+        }
+      }
+    },
+    "menu.today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugün"
           }
         }
       }
