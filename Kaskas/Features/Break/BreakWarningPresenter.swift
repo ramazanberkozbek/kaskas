@@ -5,9 +5,13 @@ import SwiftUI
 final class BreakWarningPresenter {
     private var panel: NSPanel?
     private var presentedEndDate: Date?
+    private var isShowingPreview = false
+    private var previewDismissalTask: Task<Void, Never>?
+    private let cursorCountdown = CursorBreakCountdownPresenter()
 
     func show(
         endsAt: Date,
+        isPreview: Bool = false,
         onStart: @escaping () -> Void,
         onPostpone: @escaping (TimeInterval) -> Void,
         onSkip: @escaping () -> Void
@@ -20,7 +24,7 @@ final class BreakWarningPresenter {
             ?? NSScreen.main
             ?? NSScreen.screens.first else { return }
 
-        let size = NSSize(width: 600, height: 164)
+        let size = BreakWarningView.panelSize
         let frame = NSRect(
             x: screen.visibleFrame.midX - size.width / 2,
             y: screen.visibleFrame.maxY - size.height - 24,
@@ -52,12 +56,30 @@ final class BreakWarningPresenter {
 
         self.panel = panel
         presentedEndDate = endsAt
+        isShowingPreview = isPreview
+        cursorCountdown.show(endsAt: endsAt)
+
+        if isPreview {
+            previewDismissalTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(until: .now + .seconds(max(0, endsAt.timeIntervalSinceNow)))
+                guard !Task.isCancelled else { return }
+                self?.dismissPreview()
+            }
+        }
     }
 
     func dismiss() {
+        previewDismissalTask?.cancel()
+        previewDismissalTask = nil
+        cursorCountdown.dismiss()
         panel?.orderOut(nil)
         panel = nil
         presentedEndDate = nil
+        isShowingPreview = false
+    }
+
+    func dismissPreview() {
+        if isShowingPreview { dismiss() }
     }
 }
 

@@ -1,54 +1,69 @@
 import SwiftUI
 
 struct BreakWarningView: View {
+    static let panelSize = CGSize(width: 460, height: 126)
+
+    private let accent = Color(red: 1, green: 0.62, blue: 0.39)
+
     let endsAt: Date
     let onStart: () -> Void
     let onPostpone: (TimeInterval) -> Void
     let onSkip: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack(spacing: 16) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 26, weight: .medium))
-                    .foregroundStyle(Color(red: 1, green: 0.62, blue: 0.39))
-                    .frame(width: 60, height: 60)
-                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 18))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(Color(red: 1, green: 0.62, blue: 0.39).opacity(0.65))
-                    }
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let remaining = max(0, endsAt.timeIntervalSince(context.date))
+            let progress = min(1, remaining / SessionEngine.breakWarningLeadTime)
+            let seconds = Int(remaining.rounded(.up))
 
-                VStack(alignment: .leading, spacing: 4) {
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
-                        (Text("warning.title") + Text(" ") + Text(String(format: "%02d:%02d", remaining / 60, remaining % 60)))
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(accent)
+                        .frame(width: 48, height: 48)
+                        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14)
+                                .trim(from: 0, to: progress)
+                                .stroke(accent, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                                .rotationEffect(.degrees(-90))
+                        }
+                        .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        (Text("warning.title") + Text(" ") + Text(String(format: "%02d:%02d", seconds / 60, seconds % 60)))
+                            .font(.system(size: 17, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.white)
-                    }
 
-                    Text("warning.subtitle")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.65))
+                        Text("warning.subtitle")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.65))
+                    }
+                }
+
+                HStack(spacing: 7) {
+                    action("warning.startNow", prominent: true, action: onStart)
+                    action("warning.oneMinute") { onPostpone(60) }
+                    action("warning.fiveMinutes") { onPostpone(5 * 60) }
+                    action("warning.skip", action: onSkip)
                 }
             }
-
-            HStack(spacing: 10) {
-                action("warning.startNow", prominent: true, action: onStart)
-                action("warning.oneMinute") { onPostpone(60) }
-                action("warning.fiveMinutes") { onPostpone(5 * 60) }
-                action("warning.skip", action: onSkip)
+            .frame(width: Self.panelSize.width - 32, alignment: .leading)
+            .padding(16)
+            .frame(width: Self.panelSize.width, height: Self.panelSize.height)
+            .background(Color(red: 0.15, green: 0.15, blue: 0.15), in: RoundedRectangle(cornerRadius: 20))
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.08))
             }
+            .shadow(color: .black.opacity(0.35), radius: 14, y: 6)
         }
-        .padding(22)
-        .frame(width: 600, height: 164)
-        .background(Color(red: 0.15, green: 0.15, blue: 0.15), in: RoundedRectangle(cornerRadius: 28))
-        .overlay {
-            RoundedRectangle(cornerRadius: 28)
-                .stroke(Color.white.opacity(0.08))
-        }
-        .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
     }
 
     private func action(
@@ -58,10 +73,10 @@ struct BreakWarningView: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 18)
-                .frame(height: 42)
+                .padding(.horizontal, 14)
+                .frame(height: 34)
                 .background(
                     prominent ? Color.white.opacity(0.18) : Color.clear,
                     in: Capsule()
