@@ -3,17 +3,25 @@ import SwiftUI
 
 @MainActor
 final class MicroReminderPresenter {
+    private static let maximumDisplayDuration: Duration = .seconds(6)
+
     private var panel: NonactivatingPanel?
     private var dismissalTask: Task<Void, Never>?
 
-    func show() {
+    func show(mascot: MicroReminderMascot, color: MicroReminderColor) {
         dismiss()
 
-        let contentView = NSHostingView(rootView: MicroReminderView())
-        contentView.frame = NSRect(
-            origin: .zero,
-            size: NSSize(width: Theme.Size.reminderWidth, height: Theme.Size.reminderHeight)
-        )
+        let mouseLocation = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) })
+            ?? NSScreen.main
+            ?? NSScreen.screens.first else {
+            return
+        }
+
+        let contentView = NSHostingView(rootView: MicroReminderView(mascot: mascot, color: color) { [weak self] in
+            self?.dismiss()
+        })
+        contentView.frame = NSRect(origin: .zero, size: screen.frame.size)
 
         let panel = NonactivatingPanel(
             contentRect: contentView.frame,
@@ -24,19 +32,19 @@ final class MicroReminderPresenter {
         panel.contentView = contentView
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
-        panel.level = .floating
+        panel.hasShadow = false
+        panel.level = .screenSaver
         panel.hidesOnDeactivate = false
-        panel.ignoresMouseEvents = true
+        panel.ignoresMouseEvents = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
 
-        position(panel)
+        panel.setFrame(screen.frame, display: true)
         panel.orderFrontRegardless()
         self.panel = panel
 
         dismissalTask = Task { @MainActor [weak self] in
             do {
-                try await Task.sleep(for: .seconds(7))
+                try await Task.sleep(for: Self.maximumDisplayDuration)
             } catch {
                 return
             }
@@ -50,26 +58,13 @@ final class MicroReminderPresenter {
         panel?.orderOut(nil)
         panel = nil
     }
-
-    private func position(_ panel: NSPanel) {
-        let mouseLocation = NSEvent.mouseLocation
-        let screen = NSApp.keyWindow?.screen
-            ?? NSScreen.screens.first { $0.frame.contains(mouseLocation) }
-            ?? NSScreen.main
-            ?? NSScreen.screens.first
-        guard let visibleFrame = screen?.visibleFrame else {
-            return
-        }
-
-        let origin = NSPoint(
-            x: visibleFrame.maxX - panel.frame.width - Theme.Size.windowInset,
-            y: visibleFrame.minY + Theme.Size.windowInset
-        )
-        panel.setFrameOrigin(origin)
-    }
 }
 
 private final class NonactivatingPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+
+    override func mouseDown(with event: NSEvent) {}
+    override func rightMouseDown(with event: NSEvent) {}
+    override func otherMouseDown(with event: NSEvent) {}
 }

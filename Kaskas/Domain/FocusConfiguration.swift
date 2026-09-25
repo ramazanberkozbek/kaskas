@@ -30,6 +30,33 @@ enum BreakBackgroundStyle: String, Codable, CaseIterable, Identifiable, Sendable
     var id: Self { self }
 }
 
+enum MicroReminderMascot: String, Codable, CaseIterable, Identifiable, Sendable {
+    case flame
+
+    var id: Self { self }
+
+    var titleKey: String {
+        switch self {
+        case .flame: "settings.microReminderMascot.flame"
+        }
+    }
+}
+
+enum MicroReminderColor: String, Codable, CaseIterable, Identifiable, Sendable {
+    case white
+    case blue
+    case mint
+    case lavender
+    case peach
+    case pink
+    case yellow
+    case rainbow
+
+    var id: Self { self }
+
+    var titleKey: String { "settings.microReminderColor.\(rawValue)" }
+}
+
 struct FocusConfiguration: Codable, Equatable, Sendable {
     var focusDuration: TimeInterval
     var microReminderInterval: TimeInterval
@@ -38,6 +65,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var breakBackground: BreakBackground
     var breakBackgroundStyle: BreakBackgroundStyle
     var breakOverlayDim: Double
+    var microReminderMascot: MicroReminderMascot
+    var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
 
     init(
@@ -48,6 +77,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         breakBackground: BreakBackground = .mountainLake,
         breakBackgroundStyle: BreakBackgroundStyle = .clear,
         breakOverlayDim: Double = 0.40,
+        microReminderMascot: MicroReminderMascot = .flame,
+        microReminderColor: MicroReminderColor = .peach,
         customWallpaperPath: String? = nil
     ) {
         self.focusDuration = max(1, focusDuration)
@@ -57,6 +88,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.breakBackground = breakBackground
         self.breakBackgroundStyle = breakBackgroundStyle
         self.breakOverlayDim = min(max(breakOverlayDim, 0.05), 0.90)
+        self.microReminderMascot = microReminderMascot
+        self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
     }
 
@@ -68,6 +101,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case breakBackground
         case breakBackgroundStyle
         case breakOverlayDim
+        case microReminderMascot
+        case microReminderColor
         case customWallpaperPath
     }
 
@@ -90,6 +125,14 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
                 Double.self,
                 forKey: .breakOverlayDim
             ) ?? 0.40,
+            microReminderMascot: (try? container.decode(
+                MicroReminderMascot.self,
+                forKey: .microReminderMascot
+            )) ?? .flame,
+            microReminderColor: try container.decodeIfPresent(
+                MicroReminderColor.self,
+                forKey: .microReminderColor
+            ) ?? .peach,
             customWallpaperPath: try container.decodeIfPresent(
                 String.self,
                 forKey: .customWallpaperPath

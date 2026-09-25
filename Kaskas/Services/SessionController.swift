@@ -149,6 +149,13 @@ final class SessionController {
         )
     }
 
+    func previewMicroReminder() {
+        microReminderPresenter.show(
+            mascot: configuration.microReminderMascot,
+            color: configuration.microReminderColor
+        )
+    }
+
     func completeBreak() {
         let now = Date()
         breakWarningPresenter.dismiss()
@@ -162,7 +169,10 @@ final class SessionController {
     private func handle(_ event: SessionEvent) {
         switch event {
         case .microReminderDue:
-            microReminderPresenter.show()
+            microReminderPresenter.show(
+                mascot: configuration.microReminderMascot,
+                color: configuration.microReminderColor
+            )
 
         case .breakApproaching:
             microReminderPresenter.dismiss()
