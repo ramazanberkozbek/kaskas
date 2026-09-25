@@ -44,7 +44,7 @@ struct SettingsView: View {
         case .statistics:
             SettingsPlaceholderView(pane: .statistics)
         case .general:
-            GeneralSettingsView()
+            GeneralSettingsView(controller: controller)
         }
     }
 }
@@ -1308,6 +1308,8 @@ private struct SettingsPlaceholderView: View {
 }
 
 private struct GeneralSettingsView: View {
+    let controller: SessionController
+
     var body: some View {
         Form {
             Section("settings.privacy.title") {
@@ -1318,6 +1320,9 @@ private struct GeneralSettingsView: View {
                     Label("settings.privacy.local", systemImage: "lock.shield")
                 }
             }
+#if DEBUG
+            DebugSettingsView(controller: controller)
+#endif
         }
         .formStyle(.grouped)
     }

@@ -5,6 +5,7 @@ import SwiftUI
 final class BreakPresenter {
     private var window: BreakWindow?
     private var presentedEndDate: Date?
+    private var isShowingPreview = false
 
     func show(
         endsAt: Date,
@@ -59,6 +60,7 @@ final class BreakPresenter {
         window.makeKeyAndOrderFront(nil)
         self.window = window
         presentedEndDate = endsAt
+        isShowingPreview = isPreview
 
         if !isPreview, configuration.breakSoundEnabled {
             NSSound(named: NSSound.Name(configuration.breakSound.rawValue))?.play()
@@ -69,6 +71,11 @@ final class BreakPresenter {
         window?.orderOut(nil)
         window = nil
         presentedEndDate = nil
+        isShowingPreview = false
+    }
+
+    func dismissPreview() {
+        if isShowingPreview { dismiss() }
     }
 }
 

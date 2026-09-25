@@ -7,8 +7,9 @@ final class MicroReminderPresenter {
 
     private var panel: NonactivatingPanel?
     private var dismissalTask: Task<Void, Never>?
+    private var isShowingPreview = false
 
-    func show(mascot: MicroReminderMascot, color: MicroReminderColor) {
+    func show(mascot: MicroReminderMascot, color: MicroReminderColor, isPreview: Bool = false) {
         dismiss()
 
         let mouseLocation = NSEvent.mouseLocation
@@ -41,6 +42,7 @@ final class MicroReminderPresenter {
         panel.setFrame(screen.frame, display: true)
         panel.orderFrontRegardless()
         self.panel = panel
+        isShowingPreview = isPreview
 
         dismissalTask = Task { @MainActor [weak self] in
             do {
@@ -57,6 +59,11 @@ final class MicroReminderPresenter {
         dismissalTask = nil
         panel?.orderOut(nil)
         panel = nil
+        isShowingPreview = false
+    }
+
+    func dismissPreview() {
+        if isShowingPreview { dismiss() }
     }
 }
 

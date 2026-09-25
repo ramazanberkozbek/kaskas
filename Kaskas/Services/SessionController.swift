@@ -146,10 +146,10 @@ final class SessionController {
             configuration: configuration,
             isPreview: true,
             onSnooze: { [weak self] in
-                self?.snoozeBreak()
+                self?.breakPresenter.dismissPreview()
             },
             onSkip: { [weak self] in
-                self?.completeBreak()
+                self?.breakPresenter.dismissPreview()
             },
             onLockScreen: {
                 SystemAction.lockScreen()
@@ -163,9 +163,35 @@ final class SessionController {
     func previewMicroReminder() {
         microReminderPresenter.show(
             mascot: configuration.microReminderMascot,
-            color: configuration.microReminderColor
+            color: configuration.microReminderColor,
+            isPreview: true
         )
     }
+
+#if DEBUG
+    func previewBreakWarning() {
+        breakWarningPresenter.show(
+            endsAt: Date.now.addingTimeInterval(SessionEngine.breakWarningLeadTime),
+            isPreview: true,
+            onStart: { [weak self] in
+                self?.breakWarningPresenter.dismissPreview()
+                self?.previewBreak()
+            },
+            onPostpone: { [weak self] _ in
+                self?.breakWarningPresenter.dismissPreview()
+            },
+            onSkip: { [weak self] in
+                self?.breakWarningPresenter.dismissPreview()
+            }
+        )
+    }
+
+    func dismissPreviews() {
+        microReminderPresenter.dismissPreview()
+        breakWarningPresenter.dismissPreview()
+        breakPresenter.dismissPreview()
+    }
+#endif
 
     func completeBreak() {
         let now = Date()
