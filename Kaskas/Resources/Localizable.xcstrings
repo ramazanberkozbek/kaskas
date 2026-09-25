@@ -847,7 +847,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Değişiklikler devam eden oturumu etkilemeden sonraki odak döngüsünde uygulanır."
+            "value" : "Odak süresi değişince sayaç yeni süreyle baştan başlar. Diğer değişiklikler sonraki odak döngüsünde uygulanır."
           }
         }
       }

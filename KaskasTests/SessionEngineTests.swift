@@ -58,14 +58,15 @@ struct SessionEngineTests {
     }
 
     @Test
-    func warnsOneMinuteBeforeBreakOnlyOnce() {
+    func warnsTwentySecondsBeforeBreakOnlyOnce() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
-        let warningAt = startDate.addingTimeInterval(44 * 60)
+        let warningAt = startDate.addingTimeInterval(44 * 60 + 40)
 
         #expect(engine.nextEventDate == startDate.addingTimeInterval(20 * 60))
         _ = engine.process(at: startDate.addingTimeInterval(20 * 60))
         _ = engine.process(at: startDate.addingTimeInterval(40 * 60))
         #expect(engine.nextEventDate == warningAt)
+        #expect(engine.process(at: warningAt.addingTimeInterval(-1)).isEmpty)
         #expect(engine.process(at: warningAt) == [.breakApproaching])
         #expect(engine.process(at: warningAt).isEmpty)
         #expect(engine.nextEventDate == startDate.addingTimeInterval(45 * 60))
@@ -74,14 +75,14 @@ struct SessionEngineTests {
     @Test
     func postponingBreakSchedulesAnotherWarning() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
-        let warningAt = startDate.addingTimeInterval(44 * 60)
+        let warningAt = startDate.addingTimeInterval(44 * 60 + 40)
         _ = engine.process(at: warningAt)
 
         engine.postponeBreak(by: 5 * 60)
 
         #expect(engine.session.endsAt == startDate.addingTimeInterval(50 * 60))
-        #expect(engine.nextEventDate == startDate.addingTimeInterval(49 * 60))
-        #expect(engine.process(at: startDate.addingTimeInterval(49 * 60)) == [.breakApproaching])
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(49 * 60 + 40))
+        #expect(engine.process(at: startDate.addingTimeInterval(49 * 60 + 40)) == [.breakApproaching])
     }
 
     @Test
@@ -91,17 +92,69 @@ struct SessionEngineTests {
 
         engine.postponeBreak(by: 60)
 
-        #expect(engine.nextEventDate == startDate.addingTimeInterval(46 * 60))
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(45 * 60 + 40))
     }
 
     @Test
     func restoredWarningIsNotShownAgain() {
         var original = SessionEngine(configuration: configuration, now: startDate)
-        _ = original.process(at: startDate.addingTimeInterval(44 * 60))
+        _ = original.process(at: startDate.addingTimeInterval(44 * 60 + 40))
         var restored = SessionEngine(configuration: configuration, restoredState: original.state)
 
-        #expect(restored.process(at: startDate.addingTimeInterval(44 * 60)).isEmpty)
+        #expect(restored.process(at: startDate.addingTimeInterval(44 * 60 + 40)).isEmpty)
         #expect(restored.nextEventDate == startDate.addingTimeInterval(45 * 60))
+    }
+
+    @Test
+    func launchAfterExpiredFocusStartsQuietlyWithANewFocusCycle() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let launchDate = startDate.addingTimeInterval(60 * 60)
+
+        engine.prepareForLaunch(at: launchDate)
+
+        #expect(engine.process(at: launchDate).isEmpty)
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.startedAt == launchDate)
+        #expect(engine.session.endsAt == launchDate.addingTimeInterval(configuration.focusDuration))
+    }
+
+    @Test
+    func launchDuringBreakStartsQuietlyWithANewFocusCycle() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakStart = startDate.addingTimeInterval(configuration.focusDuration)
+        _ = engine.process(at: breakStart)
+        let launchDate = breakStart.addingTimeInterval(60)
+
+        engine.prepareForLaunch(at: launchDate)
+
+        #expect(engine.process(at: launchDate).isEmpty)
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.startedAt == launchDate)
+    }
+
+    @Test
+    func launchDuringFocusKeepsDeadlineWithoutShowingMissedReminders() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let launchDate = startDate.addingTimeInterval(25 * 60)
+
+        engine.prepareForLaunch(at: launchDate)
+
+        #expect(engine.process(at: launchDate).isEmpty)
+        #expect(engine.session.startedAt == startDate)
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(configuration.focusDuration))
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(40 * 60))
+    }
+
+    @Test
+    func launchNearBreakWarningStartsANewFocusCycle() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let launchDate = startDate.addingTimeInterval(44 * 60 + 45)
+
+        engine.prepareForLaunch(at: launchDate)
+
+        #expect(engine.process(at: launchDate).isEmpty)
+        #expect(engine.session.startedAt == launchDate)
+        #expect(engine.hasShownBreakWarning == false)
     }
 
     @Test
@@ -152,7 +205,7 @@ struct SessionEngineTests {
             snoozeDuration: 10 * 60
         )
 
-        engine.updateConfiguration(updatedConfiguration)
+        engine.updateConfiguration(updatedConfiguration, at: startDate)
         engine.startBreak(at: startDate)
         engine.completeBreak(at: startDate.addingTimeInterval(10 * 60))
 
@@ -162,10 +215,41 @@ struct SessionEngineTests {
     }
 
     @Test
+    func changingFocusDurationRestartsCurrentCycleAndSurvivesRestore() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.snooze()
+        var updatedConfiguration = configuration
+        updatedConfiguration.focusDuration = 30 * 60
+        let changeDate = startDate.addingTimeInterval(10 * 60)
+
+        engine.updateConfiguration(updatedConfiguration, at: changeDate)
+
+        #expect(engine.session.startedAt == changeDate)
+        #expect(engine.session.endsAt == changeDate.addingTimeInterval(30 * 60))
+        #expect(engine.activeConfiguration.focusDuration == 30 * 60)
+        let restored = SessionEngine(configuration: updatedConfiguration, restoredState: engine.state)
+        #expect(restored.session.endsAt == changeDate.addingTimeInterval(30 * 60))
+    }
+
+    @Test
+    func shorterFocusDurationDoesNotStartBreakImmediately() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        var updatedConfiguration = configuration
+        updatedConfiguration.focusDuration = 10 * 60
+        let changeDate = startDate.addingTimeInterval(10 * 60)
+
+        engine.updateConfiguration(updatedConfiguration, at: changeDate)
+
+        #expect(engine.process(at: changeDate).isEmpty)
+        #expect(engine.session.phase == .focusing)
+        #expect(engine.session.endsAt == changeDate.addingTimeInterval(10 * 60))
+    }
+
+    @Test
     func configurationChangesDoNotAlterTheCurrentCycle() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let updatedConfiguration = FocusConfiguration(
-            focusDuration: 60 * 60,
+            focusDuration: 45 * 60,
             microReminderInterval: 15 * 60,
             breakDuration: 10 * 60,
             snoozeDuration: 10 * 60
@@ -189,7 +273,7 @@ struct SessionEngineTests {
             breakDuration: 10 * 60,
             snoozeDuration: 10 * 60
         )
-        original.updateConfiguration(updatedConfiguration)
+        original.updateConfiguration(updatedConfiguration, at: startDate)
 
         var restored = SessionEngine(
             configuration: updatedConfiguration,
@@ -238,5 +322,21 @@ struct SessionEngineTests {
         #expect(engine.session.phase == .focusing)
         #expect(engine.session.startedAt == breakStart)
         #expect(engine.session.endsAt == breakStart.addingTimeInterval(configuration.focusDuration))
+    }
+
+    @Test
+    func completedBreakCountPersistsAndResetsOnTheNextDay() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakStart = startDate.addingTimeInterval(configuration.focusDuration)
+
+        _ = engine.process(at: breakStart)
+        #expect(engine.breaksTakenToday(at: breakStart) == 0)
+
+        engine.completeBreak(at: breakStart.addingTimeInterval(60))
+        #expect(engine.breaksTakenToday(at: breakStart.addingTimeInterval(60)) == 1)
+
+        let restored = SessionEngine(configuration: configuration, restoredState: engine.state)
+        #expect(restored.breaksTakenToday(at: breakStart.addingTimeInterval(60)) == 1)
+        #expect(restored.breaksTakenToday(at: breakStart.addingTimeInterval(24 * 60 * 60)) == 0)
     }
 }

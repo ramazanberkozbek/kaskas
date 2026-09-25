@@ -54,6 +54,7 @@ final class SessionController {
         }
 
         hasStarted = true
+        engine.prepareForLaunch()
         reconcile()
     }
 
@@ -92,11 +93,19 @@ final class SessionController {
         engine.snapshot(at: now)
     }
 
+    func breaksTakenToday(at now: Date = Date()) -> Int {
+        engine.breaksTakenToday(at: now)
+    }
+
     func updateConfiguration(_ configuration: FocusConfiguration) {
+        let now = Date()
+        if configuration.focusDuration != self.configuration.focusDuration {
+            breakWarningPresenter.dismiss()
+        }
         self.configuration = configuration
-        engine.updateConfiguration(configuration)
+        engine.updateConfiguration(configuration, at: now)
         store.save(configuration: configuration)
-        persistSession()
+        reconcile(at: now)
     }
 
     func startBreakNow() {

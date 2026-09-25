@@ -1,12 +1,14 @@
 import Foundation
 
 struct SessionEngine: Sendable {
-    static let breakWarningLeadTime: TimeInterval = 60
+    static let breakWarningLeadTime: TimeInterval = 20
 
     private(set) var configuration: FocusConfiguration
     private(set) var activeConfiguration: FocusConfiguration
     private(set) var session: FocusSession
     private(set) var hasShownBreakWarning = false
+    private(set) var completedBreaks = 0
+    private(set) var completedBreaksDay: Date?
 
     init(
         configuration: FocusConfiguration = FocusConfiguration(),
@@ -22,14 +24,26 @@ struct SessionEngine: Sendable {
         activeConfiguration = restoredState.activeConfiguration
         session = restoredState.session
         hasShownBreakWarning = restoredState.hasShownBreakWarning
+        completedBreaks = restoredState.completedBreaks
+        completedBreaksDay = restoredState.completedBreaksDay
     }
 
     var state: SessionState {
         SessionState(
             session: session,
             activeConfiguration: activeConfiguration,
-            hasShownBreakWarning: hasShownBreakWarning
+            hasShownBreakWarning: hasShownBreakWarning,
+            completedBreaks: completedBreaks,
+            completedBreaksDay: completedBreaksDay
         )
+    }
+
+    func breaksTakenToday(at now: Date = Date()) -> Int {
+        guard let completedBreaksDay,
+              Calendar.current.isDate(completedBreaksDay, inSameDayAs: now) else {
+            return 0
+        }
+        return completedBreaks
     }
 
     var nextEventDate: Date {
@@ -68,7 +82,35 @@ struct SessionEngine: Sendable {
         )
     }
 
-    mutating func updateConfiguration(_ configuration: FocusConfiguration) {
+    mutating func prepareForLaunch(at now: Date = Date()) {
+        // A break or its warning must not take over the screen as the app opens.
+        // Keep a focus session only when there is enough time before its warning.
+        if session.phase == .onBreak ||
+            session.endsAt.timeIntervalSince(now) <= Self.breakWarningLeadTime ||
+            hasShownBreakWarning {
+            startFocus(at: now)
+            return
+        }
+
+        if let reminderAt = session.nextMicroReminderAt, reminderAt <= now {
+            session.nextMicroReminderAt = nextFutureMicroReminder(
+                after: reminderAt,
+                relativeTo: now,
+                focusEndsAt: session.endsAt
+            )
+        }
+    }
+
+    mutating func updateConfiguration(
+        _ configuration: FocusConfiguration,
+        at now: Date = Date()
+    ) {
+        if session.phase == .focusing,
+           configuration.focusDuration != self.configuration.focusDuration {
+            activeConfiguration.focusDuration = configuration.focusDuration
+            session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)
+            hasShownBreakWarning = false
+        }
         self.configuration = configuration
     }
 
@@ -114,6 +156,7 @@ struct SessionEngine: Sendable {
                 return []
             }
 
+            recordCompletedBreak(at: now)
             startFocus(at: now)
             return [.breakEnded]
         }
@@ -130,7 +173,15 @@ struct SessionEngine: Sendable {
     }
 
     mutating func completeBreak(at now: Date = Date()) {
+        if session.phase == .onBreak {
+            recordCompletedBreak(at: now)
+        }
         startFocus(at: now)
+    }
+
+    private mutating func recordCompletedBreak(at now: Date) {
+        completedBreaks = breaksTakenToday(at: now) + 1
+        completedBreaksDay = now
     }
 
     mutating func snooze() {
