@@ -23,13 +23,6 @@ enum BreakBackground: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum BreakBackgroundStyle: String, Codable, CaseIterable, Identifiable, Sendable {
-    case clear
-    case frost
-
-    var id: Self { self }
-}
-
 enum BreakLayout: String, Codable, CaseIterable, Identifiable, Sendable {
     case horizon
     case gentleBar
@@ -80,8 +73,6 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var breakDuration: TimeInterval
     var snoozeDuration: TimeInterval
     var breakBackground: BreakBackground
-    var breakBackgroundStyle: BreakBackgroundStyle
-    var breakOverlayDim: Double
     var breakLayout: BreakLayout
     var breakSoundEnabled: Bool
     var breakSound: BreakSound
@@ -95,8 +86,6 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         breakDuration: TimeInterval = 5 * 60,
         snoozeDuration: TimeInterval = 5 * 60,
         breakBackground: BreakBackground = .mountainLake,
-        breakBackgroundStyle: BreakBackgroundStyle = .clear,
-        breakOverlayDim: Double = 0.40,
         breakLayout: BreakLayout = .horizon,
         breakSoundEnabled: Bool = false,
         breakSound: BreakSound = .glass,
@@ -109,8 +98,6 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.breakDuration = max(1, breakDuration)
         self.snoozeDuration = max(1, snoozeDuration)
         self.breakBackground = breakBackground
-        self.breakBackgroundStyle = breakBackgroundStyle
-        self.breakOverlayDim = min(max(breakOverlayDim, 0.05), 0.90)
         self.breakLayout = breakLayout
         self.breakSoundEnabled = breakSoundEnabled
         self.breakSound = breakSound
@@ -125,8 +112,6 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case breakDuration
         case snoozeDuration
         case breakBackground
-        case breakBackgroundStyle
-        case breakOverlayDim
         case breakLayout
         case breakSoundEnabled
         case breakSound
@@ -146,14 +131,6 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
                 BreakBackground.self,
                 forKey: .breakBackground
             ) ?? .mountainLake,
-            breakBackgroundStyle: try container.decodeIfPresent(
-                BreakBackgroundStyle.self,
-                forKey: .breakBackgroundStyle
-            ) ?? .clear,
-            breakOverlayDim: try container.decodeIfPresent(
-                Double.self,
-                forKey: .breakOverlayDim
-            ) ?? 0.40,
             breakLayout: try container.decodeIfPresent(
                 BreakLayout.self,
                 forKey: .breakLayout

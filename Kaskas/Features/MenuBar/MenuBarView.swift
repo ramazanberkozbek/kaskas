@@ -141,12 +141,15 @@ struct MenuBarView: View {
 
     private var footer: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
-            SettingsLink {
+            Button {
+                controller.openSettings()
+            } label: {
                 Text("menu.settings")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(",", modifiers: .command)
 
             Button {
                 NSApplication.shared.terminate(nil)

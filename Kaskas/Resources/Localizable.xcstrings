@@ -1,1067 +1,1099 @@
 {
-  "sourceLanguage": "tr",
-  "strings": {
-    "": {},
-    " ": {},
-    "%lld%%": {},
-    "00:20": {},
-    "app.name": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kaskas"
+  "sourceLanguage" : "tr",
+  "strings" : {
+    "" : {
+
+    },
+    " " : {
+
+    },
+    "00:20" : {
+
+    },
+    "app.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas"
+          }
+        }
+      }
+    },
+    "break.backgroundHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arka planı daha sonra Ayarlar’dan değiştirebilirsin."
+          }
+        }
+      }
+    },
+    "break.complete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı Bitir"
           }
         }
       }
     },
-    "break.backgroundHint": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arka planı daha sonra Ayarlar’dan değiştirebilirsin."
+    "break.lockScreen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekranı Kilitle"
           }
         }
       }
     },
-    "break.complete": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Molayı Bitir"
+    "break.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekrandan uzaklaş, gözlerini ve zihnini dinlendir."
           }
         }
       }
     },
-    "break.lockScreen": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekranı Kilitle"
+    "break.press" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BASIN:"
           }
         }
       }
     },
-    "break.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekrandan uzaklaş, gözlerini ve zihnini dinlendir."
+    "break.remaining.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalan mola süresi"
           }
         }
       }
     },
-    "break.press": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "BASIN:"
+    "break.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geç"
           }
         }
       }
     },
-    "break.remaining.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kalan mola süresi"
+    "break.snooze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ertele"
           }
         }
       }
     },
-    "break.skip": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geç"
+    "break.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uzağa bak ve dinlen"
           }
         }
       }
     },
-    "break.snooze": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ertele"
+    "break.toSkip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GEÇMEK İÇİN"
           }
         }
       }
+    },
+    "esc" : {
+
+    },
+    "Kapat" : {
+
     },
-    "break.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uzağa bak ve dinlen"
+    "menu.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktif"
           }
         }
       }
     },
-    "break.toSkip": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GEÇMEK İÇİN"
+    "menu.atTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bitiş"
           }
         }
       }
     },
-    "esc": {},
-    "menu.active": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aktif"
+    "menu.break" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola"
           }
         }
       }
     },
-    "menu.atTime": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bitiş"
+    "menu.completeBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı Bitir"
           }
         }
       }
     },
-    "menu.break": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola"
+    "menu.nextBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıradaki mola"
           }
         }
       }
     },
-    "menu.completeBreak": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Molayı Bitir"
+    "menu.quit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas'tan Çık"
           }
         }
       }
     },
-    "menu.nextBreak": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sıradaki mola"
+    "menu.ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışmaya hazır"
           }
         }
       }
     },
-    "menu.quit": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kaskas'tan Çık"
+    "menu.remaining" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalan süre"
           }
         }
       }
     },
-    "menu.ready": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çalışmaya hazır"
+    "menu.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar…"
           }
         }
       }
     },
-    "menu.remaining": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kalan süre"
+    "menu.snooze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı Ertele"
           }
         }
       }
     },
-    "menu.settings": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ayarlar…"
+    "menu.startBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi Mola Ver"
           }
         }
       }
     },
-    "menu.snooze": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Molayı Ertele"
+    "reminder.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gözlerini dinlendir ve omuzlarını gevşet."
           }
         }
       }
     },
-    "menu.startBreak": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şimdi Mola Ver"
+    "reminder.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa bir nefes"
           }
         }
       }
     },
-    "reminder.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gözlerini dinlendir ve omuzlarını gevşet."
+    "settings.breakAppearance.aurora" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuzey Işıkları"
           }
         }
       }
     },
-    "reminder.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kısa bir nefes"
+    "settings.breakAppearance.calmGradient" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakin renkler"
           }
         }
       }
     },
-    "settings.breakAppearance.aurora": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kuzey Işıkları"
+    "settings.breakAppearance.chooseImagePrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arka plan görseli seçin"
           }
         }
       }
     },
-    "settings.breakAppearance.calmGradient": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sakin renkler"
+    "settings.breakAppearance.cosmic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derin Uzay"
           }
         }
       }
     },
-    "settings.breakAppearance.chooseImagePrompt": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arka plan görseli seçin"
+    "settings.breakAppearance.custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel Fotoğraf"
           }
         }
       }
     },
-    "settings.breakAppearance.clear": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Net"
+    "settings.breakAppearance.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçiminiz tüm sonraki mola ekranlarında kullanılır."
           }
         }
       }
     },
-    "settings.breakAppearance.cosmic": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Derin Uzay"
+    "settings.breakAppearance.desertDunes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kum Tepeleri"
           }
         }
       }
     },
-    "settings.breakAppearance.custom": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Özel Fotoğraf"
+    "settings.breakAppearance.fullscreenPreview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam Ekran Önizle"
           }
         }
       }
     },
-    "settings.breakAppearance.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seçiminiz tüm sonraki mola ekranlarında kullanılır."
+    "settings.breakAppearance.livePreview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canlı Önizleme"
           }
         }
       }
     },
-    "settings.breakAppearance.desertDunes": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kum Tepeleri"
+    "settings.breakAppearance.mountainLake" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dağ Gölü"
           }
         }
       }
     },
-    "settings.breakAppearance.frost": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buzlu"
+    "settings.breakAppearance.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sade"
           }
         }
       }
     },
-    "settings.breakAppearance.fullscreenPreview": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tam Ekran Önizle"
+    "settings.breakAppearance.sectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranınızın görünümünü özelleştirin"
           }
         }
       }
     },
-    "settings.breakAppearance.livePreview": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Canlı Önizleme"
+    "settings.breakAppearance.sectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ARKA PLAN"
           }
         }
       }
     },
-    "settings.breakAppearance.mountainLake": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dağ Gölü"
+    "settings.breakAppearance.snowPeaks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karlı Zirveler"
           }
         }
       }
     },
-    "settings.breakAppearance.none": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sade"
+    "settings.breakAppearance.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranı arka planı"
           }
         }
       }
     },
-    "settings.breakAppearance.overlay": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Karartma yoğunluğu"
+    "settings.breakAppearance.upload" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğraf Seç..."
           }
         }
       }
     },
-    "settings.breakAppearance.overlayDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yazıların rahat okunması için arka planın ne kadar karartılacağını ayarlar."
+    "settings.breakDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola süresi"
           }
         }
       }
     },
-    "settings.breakAppearance.sectionSubtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola ekranınızın görünümünü özelleştirin"
+    "settings.breakDuration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her molanın ne kadar süreceği"
           }
         }
       }
     },
-    "settings.breakAppearance.sectionTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ARKA PLAN"
+    "settings.breakLayout.gentleBar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentle Bar"
           }
         }
       }
     },
-    "settings.breakAppearance.snowPeaks": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Karlı Zirveler"
+    "settings.breakLayout.gentleBarDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlık sol altta, sayaç ve düğmeler sağ altta gösterilir."
           }
         }
       }
     },
-    "settings.breakAppearance.style": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stil"
+    "settings.breakLayout.horizon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horizon"
           }
         }
       }
     },
-    "settings.breakAppearance.styleDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buzlu, arka planı yumuşakça bulanıklaştırır. Net, görseli berrak gösterir."
+    "settings.breakLayout.horizonDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlık ve sayaç ekranın ortasında gösterilir."
           }
         }
       }
     },
-    "settings.breakAppearance.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola ekranı arka planı"
+    "settings.breakLayout.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranının görünümünü seçin"
           }
         }
       }
     },
-    "settings.breakAppearance.upload": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fotoğraf Seç..."
+    "settings.breakLayout.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YERLEŞİM"
           }
         }
       }
     },
-    "settings.breakDuration": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola süresi"
+    "settings.breakSound.choice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses"
           }
         }
       }
     },
-    "settings.breakDuration.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Her molanın ne kadar süreceği"
+    "settings.breakSound.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola başladığında ses çal"
           }
         }
       }
     },
-    "settings.comingSoon": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu ayar yakında kullanıma açılacak."
+    "settings.breakSound.enabledDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranı açıldığında seçili sesi bir kez çal"
           }
         }
       }
     },
-    "settings.focus.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odak ve mola"
+    "settings.breakSound.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola başladığında isteğe bağlı bir ses çalınır"
           }
         }
       }
     },
-    "settings.focusDuration": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tam mola aralığı"
+    "settings.breakSound.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MOLA SESİ"
           }
         }
       }
     },
-    "settings.focusDuration.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kaskas’ın ne sıklıkla mola hatırlatacağı"
+    "settings.comingSoon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu ayar yakında kullanıma açılacak."
           }
         }
       }
     },
-    "settings.general.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Genel"
+    "settings.focus.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odak ve mola"
           }
         }
       }
     },
-    "settings.nextCycle.note": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Değişiklikler devam eden oturumu etkilemeden sonraki odak döngüsünde uygulanır."
+    "settings.focusDesign.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranı arka planını seçin ve önizleyin"
           }
         }
       }
     },
-    "settings.privacy.local": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ayarlar ve oturum bilgileri yalnızca bu Mac’te saklanır."
+    "settings.focusDesign.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odak Tasarım"
           }
         }
       }
     },
-    "settings.privacy.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gizlilik"
+    "settings.focusDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam mola aralığı"
           }
         }
       }
     },
-    "settings.reminderInterval": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Küçük hatırlatma aralığı"
+    "settings.focusDuration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas’ın ne sıklıkla mola hatırlatacağı"
           }
         }
       }
     },
-    "settings.reminderInterval.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kısa sağlık hatırlatmaları arasındaki süre"
+    "settings.general.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genel"
           }
         }
       }
     },
-    "settings.schedule.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola Programı"
+    "settings.microReminderColor.blue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mavi"
           }
         }
       }
     },
-    "settings.sidebar.alerts": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uyarılar"
+    "settings.microReminderColor.lavender" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavanta"
           }
         }
       }
     },
-    "settings.sidebar.focus": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odak"
+    "settings.microReminderColor.mint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nane"
           }
         }
       }
     },
-    "settings.sidebar.general": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Genel"
+    "settings.microReminderColor.peach" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şeftali"
           }
         }
       }
     },
-    "settings.sidebar.smartPause": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Akıllı Mola"
+    "settings.microReminderColor.pink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pembe"
           }
         }
       }
     },
-    "settings.sidebar.statistics": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İstatistikler"
+    "settings.microReminderColor.rainbow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gökkuşağı"
           }
         }
       }
     },
-    "settings.sidebar.wellness": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağlık"
+    "settings.microReminderColor.white" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beyaz"
           }
         }
       }
     },
-    "settings.snoozeDuration": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erteleme süresi"
+    "settings.microReminderColor.yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sarı"
           }
         }
       }
     },
-    "settings.snoozeDuration.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeniden hatırlatmadan önce beklenecek süre"
+    "settings.microReminderDesign.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alev maskotunun rengini seçin ve önizleyin"
           }
         }
       }
     },
-    "settings.status.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Durum"
+    "settings.microReminderDesign.mascot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MASKOT"
           }
         }
       }
     },
-    "settings.status.ready": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hazır"
+    "settings.microReminderDesign.sectionDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışırken gözlerinize kısa bir mola verin"
           }
         }
       }
     },
-    "settings.wellness.section": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağlık Hatırlatmaları"
+    "settings.microReminderDesign.sectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GÖZ KIRPMA HATIRLATICISI"
           }
         }
       }
     },
-    "warning.fiveMinutes": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "+5 dk"
+    "settings.microReminderDesign.sidekick" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maskot"
           }
         }
       }
     },
-    "warning.oneMinute": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "+1 dk"
+    "settings.microReminderDesign.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa Mola Tasarımı"
           }
         }
       }
     },
-    "warning.skip": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Molayı geç"
+    "settings.microReminderMascot.flame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alev"
           }
         }
       }
     },
-    "warning.startNow": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şimdi başlat"
+    "settings.nextCycle.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikler devam eden oturumu etkilemeden sonraki odak döngüsünde uygulanır."
           }
         }
       }
     },
-    "warning.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ekrandan uzaklaş ve gözlerini dinlendir"
+    "settings.privacy.local" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar ve oturum bilgileri yalnızca bu Mac’te saklanır."
           }
         }
       }
     },
-    "warning.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Molaya az kaldı"
+    "settings.privacy.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizlilik"
           }
         }
       }
     },
-    "settings.microReminderColor.blue": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mavi"
+    "settings.reminderInterval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Küçük hatırlatma aralığı"
           }
         }
       }
     },
-    "settings.microReminderColor.lavender": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lavanta"
+    "settings.reminderInterval.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa sağlık hatırlatmaları arasındaki süre"
           }
         }
       }
     },
-    "settings.microReminderColor.mint": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nane"
+    "settings.schedule.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola Programı"
           }
         }
       }
     },
-    "settings.microReminderColor.peach": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Şeftali"
+    "settings.sidebar.alerts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uyarılar"
           }
         }
       }
     },
-    "settings.microReminderColor.pink": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pembe"
+    "settings.sidebar.focus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odak"
           }
         }
       }
     },
-    "settings.microReminderColor.rainbow": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gökkuşağı"
+    "settings.sidebar.general" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genel"
           }
         }
       }
     },
-    "settings.microReminderColor.white": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beyaz"
+    "settings.sidebar.smartPause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akıllı Mola"
           }
         }
       }
     },
-    "settings.microReminderColor.yellow": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sarı"
+    "settings.sidebar.statistics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İstatistikler"
           }
         }
       }
     },
-    "settings.microReminderMascot.flame": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alev"
+    "settings.sidebar.wellness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağlık"
           }
         }
       }
     },
-    "settings.breakLayout.gentleBar": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zarif Çubuk"
+    "settings.snoozeDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erteleme süresi"
           }
         }
       }
     },
-    "settings.breakLayout.gentleBarDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geri sayım ve butonlar ekranın alt kısmında zarif bir çubukta yer alır."
+    "settings.snoozeDuration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden hatırlatmadan önce beklenecek süre"
           }
         }
       }
     },
-    "settings.breakLayout.horizon": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ufuk"
+    "settings.status.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durum"
           }
         }
       }
     },
-    "settings.breakLayout.horizonDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geri sayım ekranın ortasında odak noktasıdır."
+    "settings.status.ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazır"
           }
         }
       }
     },
-    "settings.breakLayout.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola ekranında geri sayım ve içeriğin nasıl yerleşeceğini seçin"
+    "settings.wellness.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağlık Hatırlatmaları"
           }
         }
       }
     },
-    "settings.breakLayout.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MOLA DÜZENİ"
+    "warning.fiveMinutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 dk"
           }
         }
       }
     },
-    "settings.breakSound.choice": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ses"
+    "warning.oneMinute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 dk"
           }
         }
       }
     },
-    "settings.breakSound.enabled": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola başladığında ses çal"
+    "warning.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı geç"
           }
         }
       }
     },
-    "settings.breakSound.enabledDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola ekranı açıldığında seçili sesi bir kez çal"
+    "warning.startNow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi başlat"
           }
         }
       }
     },
-    "settings.breakSound.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mola başladığında isteğe bağlı bir ses çalınır"
+    "warning.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekrandan uzaklaş ve gözlerini dinlendir"
           }
         }
       }
     },
-    "settings.breakSound.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MOLA SESİ"
+    "warning.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molaya az kaldı"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

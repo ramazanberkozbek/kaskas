@@ -14,6 +14,7 @@ final class SessionController {
     @ObservationIgnored private let microReminderPresenter: MicroReminderPresenter
     @ObservationIgnored private let breakWarningPresenter: BreakWarningPresenter
     @ObservationIgnored private let breakPresenter: BreakPresenter
+    @ObservationIgnored private let settingsPresenter: SettingsPresenter
     @ObservationIgnored private var hasStarted = false
 
     init(
@@ -22,6 +23,7 @@ final class SessionController {
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
         breakWarningPresenter: BreakWarningPresenter = BreakWarningPresenter(),
         breakPresenter: BreakPresenter = BreakPresenter(),
+        settingsPresenter: SettingsPresenter = SettingsPresenter(),
         now: Date = Date()
     ) {
         let configuration = store.loadConfiguration()
@@ -31,6 +33,7 @@ final class SessionController {
         self.microReminderPresenter = microReminderPresenter
         self.breakWarningPresenter = breakWarningPresenter
         self.breakPresenter = breakPresenter
+        self.settingsPresenter = settingsPresenter
 
         let engine: SessionEngine
         if let restoredState = store.loadSessionState() {
@@ -59,6 +62,7 @@ final class SessionController {
         microReminderPresenter.dismiss()
         breakWarningPresenter.dismiss()
         breakPresenter.dismiss()
+        settingsPresenter.dismiss()
         persistSession()
     }
 
@@ -124,9 +128,7 @@ final class SessionController {
 
     func openSettings() {
         breakPresenter.dismiss()
-        NSApp.activate(ignoringOtherApps: true)
-        let selector = Selector(("showSettingsWindow:"))
-        NSApp.sendAction(selector, to: nil as AnyObject?, from: nil as AnyObject?)
+        settingsPresenter.show(controller: self)
     }
 
     func previewBreak() {

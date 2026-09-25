@@ -18,15 +18,5 @@ struct KaskasApp: App {
             }
         }
         .menuBarExtraStyle(.window)
-
-        Settings {
-            SettingsView(controller: appDelegate.sessionController)
-        }
-        .defaultSize(
-            width: Theme.Size.settingsWidth,
-            height: Theme.Size.settingsHeight
-        )
-        .windowResizability(.contentSize)
-        .windowToolbarStyle(.unified(showsTitle: false))
     }
 }

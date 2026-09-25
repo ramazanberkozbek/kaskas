@@ -223,21 +223,7 @@ struct BreakActionButton: View {
 
 struct BreakBackgroundView: View {
     let background: BreakBackground
-    var style: BreakBackgroundStyle? = nil
-    var overlayDim: Double? = nil
     let customWallpaperPath: String?
-
-    init(
-        background: BreakBackground,
-        style: BreakBackgroundStyle? = nil,
-        overlayDim: Double? = nil,
-        customWallpaperPath: String? = nil
-    ) {
-        self.background = background
-        self.style = style
-        self.overlayDim = overlayDim
-        self.customWallpaperPath = customWallpaperPath
-    }
 
     var body: some View {
         GeometryReader { geometry in
