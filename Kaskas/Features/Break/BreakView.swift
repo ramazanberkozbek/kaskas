@@ -33,80 +33,142 @@ struct BreakView: View {
             ZStack {
                 BreakBackgroundView(
                     background: configuration.breakBackground,
-                    style: configuration.breakBackgroundStyle,
-                    overlayDim: configuration.breakOverlayDim,
                     customWallpaperPath: configuration.customWallpaperPath
                 )
 
-                VStack(spacing: 0) {
-                    // Top localized date (e.g., "Perşembe, 24 Eyl")
-                    Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .tracking(0.5)
-                        .padding(.top, 48)
+                if configuration.breakLayout == .gentleBar {
+                    gentleBarLayout(now: context.date)
+                } else {
+                    VStack(spacing: 0) {
+                        // Top localized date (e.g., "Perşembe, 24 Eyl")
+                        Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.85))
+                            .tracking(0.5)
+                            .padding(.top, 48)
 
-                    Spacer()
+                        Spacer()
 
-                    // Center Hero Content
-                    VStack(spacing: 34) {
-                        VStack(spacing: 12) {
-                            Text("break.title")
-                                .font(.system(size: 56, weight: .bold, design: .rounded))
+                        // Center Hero Content
+                        VStack(spacing: 34) {
+                            VStack(spacing: 12) {
+                                Text("break.title")
+                                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.35), radius: 10, y: 3)
+
+                                Text("break.message")
+                                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.88))
+                                    .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
+                            }
+
+                            let formattedRemaining = Self.formattedRemaining(
+                                until: endsAt,
+                                now: context.date
+                            )
+
+                            Text(formattedRemaining)
+                                .font(.system(size: 96, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .contentTransition(.numericText())
                                 .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.35), radius: 10, y: 3)
-
-                            Text("break.message")
-                                .font(.system(size: 20, weight: .medium, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.88))
-                                .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
+                                .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
+                                .accessibilityLabel("break.remaining.label")
+                                .accessibilityValue(formattedRemaining)
                         }
+                        .multilineTextAlignment(.center)
 
-                        let formattedRemaining = Self.formattedRemaining(
-                            until: endsAt,
-                            now: context.date
-                        )
+                        Spacer()
 
-                        Text(formattedRemaining)
-                            .font(.system(size: 96, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .contentTransition(.numericText())
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
-                            .accessibilityLabel("break.remaining.label")
-                            .accessibilityValue(formattedRemaining)
+                        // Action Buttons at bottom: Snooze, Skip, Lock Screen
+                        HStack(spacing: 16) {
+                            BreakActionButton(
+                                title: "break.snooze",
+                                icon: "clock",
+                                action: onSnooze
+                            )
+
+                            BreakActionButton(
+                                title: "break.skip",
+                                icon: "forward.fill",
+                                action: onSkip
+                            )
+
+                            BreakActionButton(
+                                title: "break.lockScreen",
+                                icon: "lock.fill",
+                                action: onLockScreen
+                            )
+                        }
+                        .padding(.bottom, 64)
                     }
-                    .multilineTextAlignment(.center)
-
-                    Spacer()
-
-                    // Action Buttons at bottom: Snooze, Skip, Lock Screen
-                    HStack(spacing: 16) {
-                        BreakActionButton(
-                            title: "break.snooze",
-                            icon: "clock",
-                            action: onSnooze
-                        )
-
-                        BreakActionButton(
-                            title: "break.skip",
-                            icon: "forward.fill",
-                            action: onSkip
-                        )
-
-                        BreakActionButton(
-                            title: "break.lockScreen",
-                            icon: "lock.fill",
-                            action: onLockScreen
-                        )
-                    }
-                    .padding(.bottom, 64)
+                    .padding(.horizontal, Theme.Spacing.extraLarge)
                 }
-                .padding(.horizontal, Theme.Spacing.extraLarge)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
         }
+    }
+
+    private func gentleBarLayout(now: Date) -> some View {
+        VStack(spacing: 0) {
+            Text(now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.top, 48)
+
+            Spacer()
+
+            HStack(alignment: .bottom, spacing: 40) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("break.title")
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.65)
+                        .lineLimit(2)
+                        .foregroundStyle(.white)
+
+                    Text("break.message")
+                        .font(.system(size: 19, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.88))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .trailing, spacing: 18) {
+                    let remaining = Self.formattedRemaining(until: endsAt, now: now)
+                    Text(remaining)
+                        .font(.system(size: 88, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .foregroundStyle(.white)
+                        .accessibilityLabel("break.remaining.label")
+                        .accessibilityValue(remaining)
+
+                    HStack(spacing: 10) {
+                        BreakActionButton(title: "break.snooze", icon: "clock", action: onSnooze)
+                        BreakActionButton(title: "break.skip", icon: "forward.fill", action: onSkip)
+                        BreakActionButton(title: "break.lockScreen", icon: "lock.fill", action: onLockScreen)
+                    }
+                }
+                .fixedSize(horizontal: true, vertical: false)
+            }
+            .shadow(color: .black.opacity(0.45), radius: 9, y: 3)
+            .padding(.bottom, 46)
+
+            HStack(spacing: 6) {
+                Text("break.press")
+                Text("esc")
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 4))
+                Text("break.toSkip")
+            }
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundStyle(.white.opacity(0.8))
+            .padding(.bottom, 28)
+        }
+        .padding(.horizontal, 48)
     }
 
     private static func formattedRemaining(until endDate: Date, now: Date) -> String {
@@ -161,9 +223,21 @@ struct BreakActionButton: View {
 
 struct BreakBackgroundView: View {
     let background: BreakBackground
-    let style: BreakBackgroundStyle
-    let overlayDim: Double
+    var style: BreakBackgroundStyle? = nil
+    var overlayDim: Double? = nil
     let customWallpaperPath: String?
+
+    init(
+        background: BreakBackground,
+        style: BreakBackgroundStyle? = nil,
+        overlayDim: Double? = nil,
+        customWallpaperPath: String? = nil
+    ) {
+        self.background = background
+        self.style = style
+        self.overlayDim = overlayDim
+        self.customWallpaperPath = customWallpaperPath
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -172,18 +246,8 @@ struct BreakBackgroundView: View {
                 imageLayer
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
-                    .blur(radius: style == .frost ? 22 : 0)
 
-                // Soft dark overlay for contrast & readability
-                LinearGradient(
-                    colors: [
-                        Color.black.opacity(overlayDim * 0.55),
-                        Color.black.opacity(overlayDim * 0.25),
-                        Color.black.opacity(overlayDim * 0.65)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                Color.black.opacity(0.35)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }

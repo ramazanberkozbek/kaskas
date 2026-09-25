@@ -59,6 +59,10 @@ final class BreakPresenter {
         window.makeKeyAndOrderFront(nil)
         self.window = window
         presentedEndDate = endsAt
+
+        if !isPreview, configuration.breakSoundEnabled {
+            NSSound(named: NSSound.Name(configuration.breakSound.rawValue))?.play()
+        }
     }
 
     func dismiss() {

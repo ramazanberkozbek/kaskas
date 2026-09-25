@@ -940,6 +940,127 @@
           }
         }
       }
+    },
+    "settings.breakLayout.gentleBar": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zarif Çubuk"
+          }
+        }
+      }
+    },
+    "settings.breakLayout.gentleBarDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri sayım ve butonlar ekranın alt kısmında zarif bir çubukta yer alır."
+          }
+        }
+      }
+    },
+    "settings.breakLayout.horizon": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ufuk"
+          }
+        }
+      }
+    },
+    "settings.breakLayout.horizonDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri sayım ekranın ortasında odak noktasıdır."
+          }
+        }
+      }
+    },
+    "settings.breakLayout.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mola ekranında geri sayım ve içeriğin nasıl yerleşeceğini seçin"
+          }
+        }
+      }
+    },
+    "settings.breakLayout.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MOLA DÜZENİ"
+          }
+        }
+      }
+    },
+    "settings.breakSound.choice": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ses"
+          }
+        }
+      }
+    },
+    "settings.breakSound.enabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mola başladığında ses çal"
+          }
+        }
+      }
+    },
+    "settings.breakSound.enabledDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mola ekranı açıldığında seçili sesi bir kez çal"
+          }
+        }
+      }
+    },
+    "settings.breakSound.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mola başladığında isteğe bağlı bir ses çalınır"
+          }
+        }
+      }
+    },
+    "settings.breakSound.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MOLA SESİ"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

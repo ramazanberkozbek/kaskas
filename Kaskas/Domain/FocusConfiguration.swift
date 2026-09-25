@@ -30,6 +30,23 @@ enum BreakBackgroundStyle: String, Codable, CaseIterable, Identifiable, Sendable
     var id: Self { self }
 }
 
+enum BreakLayout: String, Codable, CaseIterable, Identifiable, Sendable {
+    case horizon
+    case gentleBar
+
+    var id: Self { self }
+}
+
+enum BreakSound: String, Codable, CaseIterable, Identifiable, Sendable {
+    case glass = "Glass"
+    case ping = "Ping"
+    case pop = "Pop"
+    case tink = "Tink"
+    case hero = "Hero"
+
+    var id: Self { self }
+}
+
 enum MicroReminderMascot: String, Codable, CaseIterable, Identifiable, Sendable {
     case flame
 
@@ -65,6 +82,9 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var breakBackground: BreakBackground
     var breakBackgroundStyle: BreakBackgroundStyle
     var breakOverlayDim: Double
+    var breakLayout: BreakLayout
+    var breakSoundEnabled: Bool
+    var breakSound: BreakSound
     var microReminderMascot: MicroReminderMascot
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
@@ -77,6 +97,9 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         breakBackground: BreakBackground = .mountainLake,
         breakBackgroundStyle: BreakBackgroundStyle = .clear,
         breakOverlayDim: Double = 0.40,
+        breakLayout: BreakLayout = .horizon,
+        breakSoundEnabled: Bool = false,
+        breakSound: BreakSound = .glass,
         microReminderMascot: MicroReminderMascot = .flame,
         microReminderColor: MicroReminderColor = .peach,
         customWallpaperPath: String? = nil
@@ -88,6 +111,9 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.breakBackground = breakBackground
         self.breakBackgroundStyle = breakBackgroundStyle
         self.breakOverlayDim = min(max(breakOverlayDim, 0.05), 0.90)
+        self.breakLayout = breakLayout
+        self.breakSoundEnabled = breakSoundEnabled
+        self.breakSound = breakSound
         self.microReminderMascot = microReminderMascot
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
@@ -101,6 +127,9 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case breakBackground
         case breakBackgroundStyle
         case breakOverlayDim
+        case breakLayout
+        case breakSoundEnabled
+        case breakSound
         case microReminderMascot
         case microReminderColor
         case customWallpaperPath
@@ -125,6 +154,18 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
                 Double.self,
                 forKey: .breakOverlayDim
             ) ?? 0.40,
+            breakLayout: try container.decodeIfPresent(
+                BreakLayout.self,
+                forKey: .breakLayout
+            ) ?? .horizon,
+            breakSoundEnabled: try container.decodeIfPresent(
+                Bool.self,
+                forKey: .breakSoundEnabled
+            ) ?? false,
+            breakSound: try container.decodeIfPresent(
+                BreakSound.self,
+                forKey: .breakSound
+            ) ?? .glass,
             microReminderMascot: (try? container.decode(
                 MicroReminderMascot.self,
                 forKey: .microReminderMascot
