@@ -1,9 +1,12 @@
 import Foundation
 
 struct SessionEngine: Sendable {
+    static let breakWarningLeadTime: TimeInterval = 60
+
     private(set) var configuration: FocusConfiguration
     private(set) var activeConfiguration: FocusConfiguration
     private(set) var session: FocusSession
+    private(set) var hasShownBreakWarning = false
 
     init(
         configuration: FocusConfiguration = FocusConfiguration(),
@@ -18,22 +21,32 @@ struct SessionEngine: Sendable {
         self.configuration = configuration
         activeConfiguration = restoredState.activeConfiguration
         session = restoredState.session
+        hasShownBreakWarning = restoredState.hasShownBreakWarning
     }
 
     var state: SessionState {
         SessionState(
             session: session,
-            activeConfiguration: activeConfiguration
+            activeConfiguration: activeConfiguration,
+            hasShownBreakWarning: hasShownBreakWarning
         )
     }
 
     var nextEventDate: Date {
         switch session.phase {
         case .focusing:
-            guard let microReminderAt = session.nextMicroReminderAt else {
-                return session.endsAt
+            var nextDate = session.endsAt
+            if let microReminderAt = session.nextMicroReminderAt {
+                nextDate = min(nextDate, microReminderAt)
             }
-            return min(microReminderAt, session.endsAt)
+            if !hasShownBreakWarning {
+                let warningAt = max(
+                    session.startedAt,
+                    session.endsAt.addingTimeInterval(-Self.breakWarningLeadTime)
+                )
+                nextDate = min(nextDate, warningAt)
+            }
+            return nextDate
 
         case .onBreak:
             return session.endsAt
@@ -67,6 +80,24 @@ struct SessionEngine: Sendable {
                 return [.fullBreakDue]
             }
 
+            let warningAt = max(
+                session.startedAt,
+                session.endsAt.addingTimeInterval(-Self.breakWarningLeadTime)
+            )
+            if !hasShownBreakWarning, now >= warningAt {
+                hasShownBreakWarning = true
+                session.nextMicroReminderAt = session.nextMicroReminderAt.flatMap { reminderAt in
+                    now >= reminderAt
+                        ? nextFutureMicroReminder(
+                            after: reminderAt,
+                            relativeTo: now,
+                            focusEndsAt: session.endsAt
+                        )
+                        : reminderAt
+                }
+                return [.breakApproaching]
+            }
+
             guard let reminderAt = session.nextMicroReminderAt, now >= reminderAt else {
                 return []
             }
@@ -89,6 +120,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func startBreak(at now: Date = Date()) {
+        hasShownBreakWarning = false
         session = FocusSession(
             phase: .onBreak,
             startedAt: now,
@@ -107,9 +139,17 @@ struct SessionEngine: Sendable {
         }
 
         session.endsAt = session.endsAt.addingTimeInterval(activeConfiguration.snoozeDuration)
+        hasShownBreakWarning = false
+    }
+
+    mutating func postponeBreak(by duration: TimeInterval) {
+        guard session.phase == .focusing else { return }
+        session.endsAt = session.endsAt.addingTimeInterval(max(1, duration))
+        hasShownBreakWarning = duration <= Self.breakWarningLeadTime
     }
 
     mutating func snoozeBreak(at now: Date = Date()) {
+        hasShownBreakWarning = false
         session = FocusSession(
             phase: .focusing,
             startedAt: now,
@@ -119,6 +159,7 @@ struct SessionEngine: Sendable {
     }
 
     private mutating func startFocus(at now: Date) {
+        hasShownBreakWarning = false
         activeConfiguration = configuration
         session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)
     }

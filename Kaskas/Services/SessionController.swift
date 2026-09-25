@@ -12,6 +12,7 @@ final class SessionController {
     @ObservationIgnored private let scheduler: SessionScheduler
     @ObservationIgnored private let store: SessionStore
     @ObservationIgnored private let microReminderPresenter: MicroReminderPresenter
+    @ObservationIgnored private let breakWarningPresenter: BreakWarningPresenter
     @ObservationIgnored private let breakPresenter: BreakPresenter
     @ObservationIgnored private var hasStarted = false
 
@@ -19,6 +20,7 @@ final class SessionController {
         store: SessionStore = SessionStore(),
         scheduler: SessionScheduler = SessionScheduler(),
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
+        breakWarningPresenter: BreakWarningPresenter = BreakWarningPresenter(),
         breakPresenter: BreakPresenter = BreakPresenter(),
         now: Date = Date()
     ) {
@@ -27,6 +29,7 @@ final class SessionController {
         self.store = store
         self.scheduler = scheduler
         self.microReminderPresenter = microReminderPresenter
+        self.breakWarningPresenter = breakWarningPresenter
         self.breakPresenter = breakPresenter
 
         let engine: SessionEngine
@@ -53,6 +56,9 @@ final class SessionController {
 
     func stop() {
         scheduler.cancel()
+        microReminderPresenter.dismiss()
+        breakWarningPresenter.dismiss()
+        breakPresenter.dismiss()
         persistSession()
     }
 
@@ -67,6 +73,12 @@ final class SessionController {
 
         if events.isEmpty, engine.session.phase == .onBreak {
             presentCurrentBreak()
+        }
+
+        if engine.session.phase == .focusing,
+           engine.hasShownBreakWarning,
+           now < engine.session.endsAt {
+            presentBreakWarning()
         }
 
         scheduleNextEvent()
@@ -85,6 +97,7 @@ final class SessionController {
 
     func startBreakNow() {
         let now = Date()
+        breakWarningPresenter.dismiss()
         engine.startBreak(at: now)
         refreshSnapshot(at: now)
         persistSession()
@@ -94,6 +107,7 @@ final class SessionController {
 
     func snooze() {
         engine.snooze()
+        breakWarningPresenter.dismiss()
         refreshSnapshot()
         persistSession()
         scheduleNextEvent()
@@ -137,6 +151,7 @@ final class SessionController {
 
     func completeBreak() {
         let now = Date()
+        breakWarningPresenter.dismiss()
         engine.completeBreak(at: now)
         refreshSnapshot(at: now)
         breakPresenter.dismiss()
@@ -149,13 +164,44 @@ final class SessionController {
         case .microReminderDue:
             microReminderPresenter.show()
 
+        case .breakApproaching:
+            microReminderPresenter.dismiss()
+            presentBreakWarning()
+
         case .fullBreakDue:
             microReminderPresenter.dismiss()
+            breakWarningPresenter.dismiss()
             presentCurrentBreak()
 
         case .breakEnded:
             breakPresenter.dismiss()
         }
+    }
+
+    private func presentBreakWarning() {
+        breakWarningPresenter.show(
+            endsAt: engine.session.endsAt,
+            onStart: { [weak self] in self?.startBreakNow() },
+            onPostpone: { [weak self] duration in self?.postponeBreak(by: duration) },
+            onSkip: { [weak self] in self?.skipUpcomingBreak() }
+        )
+    }
+
+    private func postponeBreak(by duration: TimeInterval) {
+        engine.postponeBreak(by: duration)
+        breakWarningPresenter.dismiss()
+        refreshSnapshot()
+        persistSession()
+        scheduleNextEvent()
+    }
+
+    private func skipUpcomingBreak() {
+        let now = Date()
+        engine.completeBreak(at: now)
+        breakWarningPresenter.dismiss()
+        refreshSnapshot(at: now)
+        persistSession()
+        scheduleNextEvent()
     }
 
     private func presentCurrentBreak() {

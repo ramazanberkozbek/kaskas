@@ -58,6 +58,53 @@ struct SessionEngineTests {
     }
 
     @Test
+    func warnsOneMinuteBeforeBreakOnlyOnce() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let warningAt = startDate.addingTimeInterval(44 * 60)
+
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(20 * 60))
+        _ = engine.process(at: startDate.addingTimeInterval(20 * 60))
+        _ = engine.process(at: startDate.addingTimeInterval(40 * 60))
+        #expect(engine.nextEventDate == warningAt)
+        #expect(engine.process(at: warningAt) == [.breakApproaching])
+        #expect(engine.process(at: warningAt).isEmpty)
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(45 * 60))
+    }
+
+    @Test
+    func postponingBreakSchedulesAnotherWarning() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let warningAt = startDate.addingTimeInterval(44 * 60)
+        _ = engine.process(at: warningAt)
+
+        engine.postponeBreak(by: 5 * 60)
+
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(50 * 60))
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(49 * 60))
+        #expect(engine.process(at: startDate.addingTimeInterval(49 * 60)) == [.breakApproaching])
+    }
+
+    @Test
+    func oneMinutePostponementDoesNotImmediatelyRepeatWarning() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        _ = engine.process(at: startDate.addingTimeInterval(44 * 60 + 53))
+
+        engine.postponeBreak(by: 60)
+
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(46 * 60))
+    }
+
+    @Test
+    func restoredWarningIsNotShownAgain() {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        _ = original.process(at: startDate.addingTimeInterval(44 * 60))
+        var restored = SessionEngine(configuration: configuration, restoredState: original.state)
+
+        #expect(restored.process(at: startDate.addingTimeInterval(44 * 60)).isEmpty)
+        #expect(restored.nextEventDate == startDate.addingTimeInterval(45 * 60))
+    }
+
+    @Test
     func fullBreakTakesPriorityOverMissedMicroReminders() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let wakeDate = startDate.addingTimeInterval(60 * 60)
