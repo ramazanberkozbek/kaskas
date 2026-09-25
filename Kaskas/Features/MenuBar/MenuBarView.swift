@@ -6,6 +6,12 @@ struct MenuBarView: View {
     let controller: SessionController
 
     @State private var now = Date.now
+    @State private var hoveredFooterItem: FooterItem?
+
+    private enum FooterItem {
+        case settings
+        case quit
+    }
 
     private let clock = Timer.publish(
         every: 1,
@@ -20,24 +26,30 @@ struct MenuBarView: View {
             header(for: snapshot)
 
             countdown(for: snapshot)
-                .padding(.top, Theme.Spacing.medium)
+                .padding(.top, 8)
 
             ProgressView(value: snapshot.progress)
                 .progressViewStyle(.linear)
-                .tint(.accentColor)
-                .padding(.top, Theme.Spacing.medium)
+                .tint(Color(red: 0.35, green: 0.72, blue: 0.29))
+                .padding(.top, 7)
 
             Divider()
-                .padding(.vertical, Theme.Spacing.large)
+                .padding(.top, 18)
+                .padding(.bottom, 11)
 
             actions(for: snapshot)
 
             Divider()
-                .padding(.vertical, Theme.Spacing.large)
+                .padding(.top, 11)
+
+            todayRow
+
+            Divider()
 
             footer
+                .padding(.top, 8)
         }
-        .padding(Theme.Spacing.large)
+        .padding(16)
         .frame(width: Theme.Size.menuWidth)
         .onAppear {
             let currentDate = Date.now
@@ -56,44 +68,32 @@ struct MenuBarView: View {
     }
 
     private func header(for snapshot: SessionSnapshot) -> some View {
-        HStack(spacing: Theme.Spacing.medium) {
+        HStack {
             Text(snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break")
-                .font(.caption.weight(.bold))
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
+                .tracking(1)
 
             Spacer()
-
-            HStack(spacing: Theme.Spacing.small) {
-                Circle()
-                    .fill(.green)
-                    .frame(width: 7, height: 7)
-
-                Text("menu.active")
-            }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.green)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(.green.opacity(0.14), in: RoundedRectangle(cornerRadius: 7))
         }
     }
 
     private func countdown(for snapshot: SessionSnapshot) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.medium) {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(
                 timerInterval: snapshot.startedAt...snapshot.endsAt,
                 pauseTime: nil,
                 countsDown: true,
                 showsHours: false
             )
-            .font(.system(size: 42, weight: .semibold, design: .rounded))
+            .font(.system(size: 30, weight: .bold))
             .monospacedDigit()
             .contentTransition(.numericText())
             .accessibilityLabel("menu.remaining")
 
             (Text("menu.atTime") + Text(" ") + Text(snapshot.endsAt, style: .time))
-                .font(.body.weight(.medium))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
 
             Spacer(minLength: 0)
@@ -103,7 +103,7 @@ struct MenuBarView: View {
     @ViewBuilder
     private func actions(for snapshot: SessionSnapshot) -> some View {
         if snapshot.phase == .focusing {
-            HStack(spacing: Theme.Spacing.medium) {
+            HStack(spacing: 6) {
                 actionButton(
                     "menu.startBreak",
                     systemImage: "play.circle",
@@ -132,34 +132,73 @@ struct MenuBarView: View {
     ) -> some View {
         Button(action: action) {
             Label(titleKey, systemImage: systemImage)
-                .font(.body.weight(.semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .frame(maxWidth: .infinity, minHeight: 34)
+                .contentShape(RoundedRectangle(cornerRadius: 8))
         }
-        .buttonStyle(.bordered)
-        .controlSize(.large)
+        .buttonStyle(.plain)
+        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var todayRow: some View {
+        HStack {
+            Text("menu.today")
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            Text(controller.breaksTakenToday(at: now).formatted())
+                .foregroundStyle(.primary)
+
+            Text("menu.breaksTaken")
+                .foregroundStyle(.secondary)
+        }
+        .font(.system(size: 11, weight: .semibold))
+        .frame(height: 42)
+        .padding(.horizontal, 2)
     }
 
     private var footer: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
-            Button {
+        VStack(alignment: .leading, spacing: 0) {
+            footerButton("menu.settings", item: .settings) {
                 controller.openSettings()
-            } label: {
-                Text("menu.settings")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
             .keyboardShortcut(",", modifiers: .command)
 
-            Button {
+            footerButton("menu.quit", item: .quit) {
                 NSApplication.shared.terminate(nil)
-            } label: {
-                Text("menu.quit")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
         }
-        .font(.body.weight(.medium))
+        .font(.system(size: 12, weight: .medium))
+        .padding(.horizontal, -11)
+    }
+
+    private func footerButton(
+        _ titleKey: LocalizedStringKey,
+        item: FooterItem,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(titleKey)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(height: 24)
+                .padding(.horizontal, 11)
+                .contentShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(hoveredFooterItem == item ? .white : .primary)
+        .background(
+            hoveredFooterItem == item
+                ? Color(red: 0.21, green: 0.53, blue: 0.12)
+                : .clear,
+            in: RoundedRectangle(cornerRadius: 8)
+        )
+        .onHover { isHovering in
+            if isHovering {
+                hoveredFooterItem = item
+            } else if hoveredFooterItem == item {
+                hoveredFooterItem = nil
+            }
+        }
     }
 }
