@@ -50,9 +50,10 @@ final class BreakWarningPresenter {
         panel.hasShadow = false
         panel.level = .statusBar
         panel.hidesOnDeactivate = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
         panel.isReleasedWhenClosed = false
         panel.orderFrontRegardless()
+        panel.makeKey()
 
         self.panel = panel
         presentedEndDate = endsAt

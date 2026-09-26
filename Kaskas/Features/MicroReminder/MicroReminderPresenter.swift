@@ -37,7 +37,7 @@ final class MicroReminderPresenter {
         panel.level = .screenSaver
         panel.hidesOnDeactivate = false
         panel.ignoresMouseEvents = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
 
         panel.setFrame(screen.frame, display: true)
         panel.orderFrontRegardless()

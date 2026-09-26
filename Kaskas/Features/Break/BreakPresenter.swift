@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 final class BreakPresenter {
-    private var window: BreakWindow?
+    private var window: BreakPanel?
     private var presentedEndDate: Date?
     private var isShowingPreview = false
 
@@ -23,8 +23,7 @@ final class BreakPresenter {
         dismiss()
 
         let mouseLocation = NSEvent.mouseLocation
-        let screen = NSApp.keyWindow?.screen
-            ?? NSScreen.screens.first { $0.frame.contains(mouseLocation) }
+        let screen = NSScreen.screens.first { $0.frame.contains(mouseLocation) }
             ?? NSScreen.main
             ?? NSScreen.screens.first
         guard let screen else {
@@ -41,9 +40,9 @@ final class BreakPresenter {
             onOpenSettings: onOpenSettings
         )
         let hostingController = NSHostingController(rootView: rootView)
-        let window = BreakWindow(
+        let window = BreakPanel(
             contentRect: screen.frame,
-            styleMask: [.borderless],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false,
             screen: screen
@@ -52,12 +51,13 @@ final class BreakPresenter {
         window.contentViewController = hostingController
         window.backgroundColor = .black
         window.level = .screenSaver
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications]
+        window.hidesOnDeactivate = false
         window.isReleasedWhenClosed = false
         window.setFrame(screen.frame, display: true)
 
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        window.makeKey()
         self.window = window
         presentedEndDate = endsAt
         isShowingPreview = isPreview
@@ -79,11 +79,11 @@ final class BreakPresenter {
     }
 }
 
-private final class BreakWindow: NSWindow {
+private final class BreakPanel: NSPanel {
     var onEscape: (() -> Void)?
 
     override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+    override var canBecomeMain: Bool { false }
 
     override func cancelOperation(_ sender: Any?) {
         onEscape?()

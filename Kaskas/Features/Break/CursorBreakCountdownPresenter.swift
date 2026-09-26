@@ -1,12 +1,10 @@
 import AppKit
-import Darwin
 import SwiftUI
 
 @MainActor
 final class CursorBreakCountdownPresenter {
     private var panel: NSPanel?
     private var trackingTimer: Timer?
-    private var hideCount = 0
 
     func show(endsAt: Date) {
         dismiss()
@@ -28,14 +26,12 @@ final class CursorBreakCountdownPresenter {
         panel.ignoresMouseEvents = true
         panel.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()) + 1)
         panel.hidesOnDeactivate = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
         panel.isReleasedWhenClosed = false
 
         self.panel = panel
         movePanelToCursor()
         panel.orderFrontRegardless()
-        allowBackgroundCursorChanges()
-        hideSystemCursorIfVisible()
 
         let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -44,7 +40,6 @@ final class CursorBreakCountdownPresenter {
                     self.dismiss()
                 } else {
                     self.movePanelToCursor()
-                    self.hideSystemCursorIfVisible()
                 }
             }
         }
@@ -57,11 +52,6 @@ final class CursorBreakCountdownPresenter {
         trackingTimer = nil
         panel?.orderOut(nil)
         panel = nil
-
-        for _ in 0..<hideCount {
-            CGDisplayShowCursor(CGMainDisplayID())
-        }
-        hideCount = 0
     }
 
     private func movePanelToCursor() {
@@ -71,48 +61,15 @@ final class CursorBreakCountdownPresenter {
             ?? NSScreen.main else { return }
 
         let size = CursorBreakCountdownView.panelSize
-        let x = pointer.x + size.width <= screen.frame.maxX
-            ? pointer.x - 2
-            : pointer.x - size.width + 2
-        let y = pointer.y - size.height >= screen.frame.minY
-            ? pointer.y - size.height + 2
-            : pointer.y + 2
+        let gap: CGFloat = 16
+        let x = pointer.x + size.width + gap <= screen.frame.maxX
+            ? pointer.x + gap
+            : pointer.x - size.width - gap
+        let y = pointer.y + size.height + gap <= screen.frame.maxY
+            ? pointer.y + gap
+            : pointer.y - size.height - gap
         panel.setFrameOrigin(NSPoint(x: x, y: y))
         if !panel.isVisible { panel.orderFrontRegardless() }
-    }
-
-    private func hideSystemCursorIfVisible() {
-        if let isVisible = Self.cursorIsVisible {
-            if !isVisible() { return }
-        } else if hideCount > 0 {
-            return
-        }
-        if CGDisplayHideCursor(CGMainDisplayID()) == .success {
-            hideCount += 1
-        }
-    }
-
-    private static let cursorIsVisible: (() -> Bool)? = {
-        guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGCursorIsVisible") else {
-            return nil
-        }
-        typealias VisibilityFunction = @convention(c) () -> boolean_t
-        let function = unsafeBitCast(symbol, to: VisibilityFunction.self)
-        return { function() != 0 }
-    }()
-
-    // A menu bar app is rarely foreground. This window-server property permits
-    // cursor hiding while another app is active; failure leaves the overlay visible.
-    private func allowBackgroundCursorChanges() {
-        typealias MainConnectionFunction = @convention(c) () -> Int32
-        typealias SetPropertyFunction = @convention(c) (Int32, Int32, CFString, CFTypeRef) -> Int32
-        let handle = UnsafeMutableRawPointer(bitPattern: -2)
-        guard let connectionSymbol = dlsym(handle, "CGSMainConnectionID"),
-              let propertySymbol = dlsym(handle, "CGSSetConnectionProperty") else { return }
-        let mainConnection = unsafeBitCast(connectionSymbol, to: MainConnectionFunction.self)
-        let setProperty = unsafeBitCast(propertySymbol, to: SetPropertyFunction.self)
-        let connection = mainConnection()
-        _ = setProperty(connection, connection, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
     }
 }
 
@@ -122,9 +79,10 @@ private struct CursorBreakCountdownView: View {
     let endsAt: Date
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
-            let remaining = max(0, Int(endsAt.timeIntervalSince(context.date).rounded(.up)))
-            let progress = min(1, Double(remaining) / SessionEngine.breakWarningLeadTime)
+        TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { context in
+            let remaining = max(0, endsAt.timeIntervalSince(context.date))
+            let seconds = Int(remaining.rounded(.up))
+            let progress = min(1, remaining / SessionEngine.breakWarningLeadTime)
 
             HStack(spacing: 7) {
                 Circle()
@@ -137,7 +95,7 @@ private struct CursorBreakCountdownView: View {
                     }
                     .frame(width: 27, height: 27)
 
-                Text(remaining.formatted())
+                Text(seconds.formatted())
                     .font(.system(size: 15, weight: .semibold))
                     .monospacedDigit()
 
@@ -145,7 +103,7 @@ private struct CursorBreakCountdownView: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.white.opacity(0.42))
 
-                Text("Break")
+                Text("menu.break")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.white.opacity(0.55))
                     .fixedSize(horizontal: true, vertical: false)
