@@ -7,28 +7,25 @@ struct SettingsDurationRow: View {
     let options: [TimeInterval]
 
     var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.body.weight(.medium))
-                Text(subtitle)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Picker("", selection: $selection) {
+        LabeledContent {
+            Picker(title, selection: $selection) {
                 ForEach(options, id: \.self) { duration in
                     Text(Self.formattedDuration(duration))
                         .tag(duration)
                 }
             }
             .labelsHidden()
+            .pickerStyle(.menu)
             .frame(width: 150)
+        } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                Text(subtitle)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
     }
 
     private static func formattedDuration(_ seconds: TimeInterval) -> String {

@@ -7,6 +7,7 @@ struct FocusSettingsView: View {
 
     private let focusDurations: [TimeInterval] = [10, 15, 20, 30, 45, 60, 90].map { $0 * 60 }
     private let breakDurations: [TimeInterval] = [1, 3, 5, 10, 15].map { $0 * 60 }
+    private let longBreakDurations: [TimeInterval] = [3, 5, 10, 15, 20, 30].map { $0 * 60 }
     private let snoozeDurations: [TimeInterval] = [3, 5, 10, 15].map { $0 * 60 }
 
     var body: some View {
@@ -19,121 +20,184 @@ struct FocusSettingsView: View {
                 showingMicroReminderDesign = false
             }
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("settings.schedule.title")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.secondary)
-
-                        VStack(spacing: 0) {
-                            SettingsDurationRow(
-                                title: "settings.focusDuration",
-                                subtitle: "settings.focusDuration.description",
-                                selection: binding(for: \FocusConfiguration.focusDuration),
-                                options: focusDurations
-                            )
-
-                            Divider().padding(.horizontal, 16)
-
-                            SettingsDurationRow(
-                                title: "settings.breakDuration",
-                                subtitle: "settings.breakDuration.description",
-                                selection: binding(for: \FocusConfiguration.breakDuration),
-                                options: breakDurations
-                            )
-
-                            Divider().padding(.horizontal, 16)
-
-                            SettingsDurationRow(
-                                title: "settings.snoozeDuration",
-                                subtitle: "settings.snoozeDuration.description",
-                                selection: binding(for: \FocusConfiguration.snoozeDuration),
-                                options: snoozeDurations
-                            )
-                        }
-                        .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(.white.opacity(0.1), lineWidth: 1)
-                        }
-
-                        Text("settings.nextCycle.note")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-                    }
-
-                    Button {
-                        showingDesign = true
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "paintpalette")
-                                .font(.title3)
-                                .frame(width: 28)
-                                .foregroundStyle(Color.accentColor)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("settings.focusDesign.title")
-                                    .font(.body.weight(.medium))
-                                Text("settings.focusDesign.description")
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(16)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                    Button {
-                        showingMicroReminderDesign = true
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "sparkles")
-                                .font(.title3)
-                                .frame(width: 28)
-                                .foregroundStyle(Color.accentColor)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("settings.microReminderDesign.title")
-                                    .font(.body.weight(.medium))
-                                Text("settings.microReminderDesign.description")
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(16)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            Form {
+                Section {
+                    SettingsDurationRow(
+                        title: "settings.focusDuration",
+                        subtitle: "settings.focusDuration.description",
+                        selection: binding(for: \FocusConfiguration.focusDuration),
+                        options: focusDurations
+                    )
+                    SettingsDurationRow(
+                        title: "settings.breakDuration",
+                        subtitle: "settings.breakDuration.description",
+                        selection: binding(for: \FocusConfiguration.breakDuration),
+                        options: breakDurations
+                    )
+                    SettingsDurationRow(
+                        title: "settings.snoozeDuration",
+                        subtitle: "settings.snoozeDuration.description",
+                        selection: binding(for: \FocusConfiguration.snoozeDuration),
+                        options: snoozeDurations
+                    )
+                } header: {
+                    Text("settings.schedule.title")
+                } footer: {
+                    Text("settings.nextCycle.note")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
+
+                Section {
+                    Toggle(isOn: binding(for: \FocusConfiguration.longBreakEnabled)) {
+                        settingLabel("settings.longBreak.title", "settings.longBreak.description")
+                    }
+                    .toggleStyle(.switch)
+
+                    LabeledContent {
+                        Stepper(
+                            "Her \(controller.configuration.longBreakFrequency). molada",
+                            value: binding(for: \FocusConfiguration.longBreakFrequency),
+                            in: 1...10
+                        )
+                        .fixedSize()
+                    } label: {
+                        settingLabel("settings.longBreak.frequency", "settings.longBreak.frequency.description")
+                    }
+                    .disabled(!controller.configuration.longBreakEnabled)
+
+                    SettingsDurationRow(
+                        title: "settings.longBreak.duration",
+                        subtitle: "settings.longBreak.duration.description",
+                        selection: binding(for: \FocusConfiguration.longBreakDuration),
+                        options: longBreakDurations
+                    )
+                    .disabled(!controller.configuration.longBreakEnabled)
+                } header: {
+                    Text("settings.longBreak.title")
+                }
+
+                Section {
+                    Toggle(isOn: binding(for: \FocusConfiguration.breakSoundEnabled)) {
+                        settingLabel("settings.breakSound.enabled", "settings.breakSound.enabledDescription")
+                    }
+                    .toggleStyle(.switch)
+
+                    soundPickerRow(
+                        title: "settings.breakSound.startChoice",
+                        selection: soundSelection(for: \FocusConfiguration.breakSound),
+                        isEnabled: controller.configuration.breakSoundEnabled
+                    )
+
+                    Toggle(isOn: binding(for: \FocusConfiguration.breakEndSoundEnabled)) {
+                        settingLabel("settings.breakSound.endEnabled", "settings.breakSound.endEnabledDescription")
+                    }
+                    .toggleStyle(.switch)
+
+                    soundPickerRow(
+                        title: "settings.breakSound.endChoice",
+                        selection: soundSelection(for: \FocusConfiguration.breakEndSound),
+                        isEnabled: controller.configuration.breakEndSoundEnabled
+                    )
+                } header: {
+                    Text("settings.breakSound.title")
+                } footer: {
+                    Text("settings.breakSound.subtitle")
+                }
+
+                Section {
+                    settingsDestination(
+                        "settings.focusDesign.title",
+                        subtitle: "settings.focusDesign.description",
+                        symbol: "paintpalette"
+                    ) {
+                        showingDesign = true
+                    }
+                    settingsDestination(
+                        "settings.microReminderDesign.title",
+                        subtitle: "settings.microReminderDesign.description",
+                        symbol: "sparkles"
+                    ) {
+                        showingMicroReminderDesign = true
+                    }
+                }
             }
+            .formStyle(.grouped)
         }
     }
 
-    private func binding(
-        for keyPath: WritableKeyPath<FocusConfiguration, TimeInterval>
-    ) -> Binding<TimeInterval> {
+    private func settingLabel(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+            Text(subtitle)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func settingsDestination(
+        _ title: LocalizedStringKey,
+        subtitle: LocalizedStringKey,
+        symbol: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 22)
+                settingLabel(title, subtitle)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func soundPickerRow(
+        title: LocalizedStringKey,
+        selection: Binding<BreakSound>,
+        isEnabled: Bool
+    ) -> some View {
+        LabeledContent {
+            Picker(title, selection: selection) {
+                ForEach(BreakSound.allCases) { sound in
+                    Text(sound.rawValue).tag(sound)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 150)
+        } label: {
+            Text(title)
+        }
+        .disabled(!isEnabled)
+    }
+
+    private func binding<Value>(
+        for keyPath: WritableKeyPath<FocusConfiguration, Value>
+    ) -> Binding<Value> {
         Binding {
             controller.configuration[keyPath: keyPath]
         } set: { newValue in
             var configuration = controller.configuration
             configuration[keyPath: keyPath] = newValue
             controller.updateConfiguration(configuration)
+        }
+    }
+
+    private func soundSelection(
+        for keyPath: WritableKeyPath<FocusConfiguration, BreakSound>
+    ) -> Binding<BreakSound> {
+        Binding {
+            controller.configuration[keyPath: keyPath]
+        } set: { newValue in
+            guard controller.configuration[keyPath: keyPath] != newValue else { return }
+            var configuration = controller.configuration
+            configuration[keyPath: keyPath] = newValue
+            controller.updateConfiguration(configuration)
+            BreakSoundPlayer.preview(newValue)
         }
     }
 }

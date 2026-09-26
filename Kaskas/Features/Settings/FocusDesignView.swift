@@ -152,47 +152,6 @@ struct FocusDesignView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("settings.breakSound.title")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
-                    Text("settings.breakSound.subtitle")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-
-                    VStack(spacing: 0) {
-                        Toggle(isOn: soundEnabled) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("settings.breakSound.enabled")
-                                    .font(.body.weight(.medium))
-                                Text("settings.breakSound.enabledDescription")
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(16)
-
-                        Divider()
-
-                        HStack {
-                            Text("settings.breakSound.choice")
-                                .foregroundStyle(controller.configuration.breakSoundEnabled ? .primary : .secondary)
-                            Spacer()
-                            Picker("settings.breakSound.choice", selection: soundChoice) {
-                                ForEach(BreakSound.allCases) { sound in
-                                    Text(sound.rawValue).tag(sound)
-                                }
-                            }
-                            .labelsHidden()
-                            .frame(width: 150)
-                            .disabled(!controller.configuration.breakSoundEnabled)
-                        }
-                        .padding(16)
-                    }
-                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
                     Text("settings.breakLayout.title")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.secondary)
@@ -241,26 +200,6 @@ struct FocusDesignView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
-        }
-    }
-
-    private var soundEnabled: Binding<Bool> {
-        Binding {
-            controller.configuration.breakSoundEnabled
-        } set: { value in
-            var configuration = controller.configuration
-            configuration.breakSoundEnabled = value
-            controller.updateConfiguration(configuration)
-        }
-    }
-
-    private var soundChoice: Binding<BreakSound> {
-        Binding {
-            controller.configuration.breakSound
-        } set: { value in
-            var configuration = controller.configuration
-            configuration.breakSound = value
-            controller.updateConfiguration(configuration)
         }
     }
 
