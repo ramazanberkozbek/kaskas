@@ -31,9 +31,21 @@ private struct MenuBarStatusLabel: View {
                 .scaledToFit()
                 .frame(width: 16, height: 16)
 
-            Text(remaining < 60 ? "<1d" : "\(Int(ceil(remaining / 60)))d")
-                .monospacedDigit()
+            if controller.isPaused {
+                Text("menu.paused")
+            } else {
+                Text(Self.formattedRemaining(remaining))
+                    .monospacedDigit()
+            }
         }
         .onReceive(clock) { now = $0 }
+    }
+
+    private static func formattedRemaining(_ remaining: TimeInterval) -> String {
+        let minutes = max(1, Int(ceil(remaining / 60)))
+        if minutes < 60 { return "\(minutes) dk" }
+        let hours = minutes / 60
+        let extraMinutes = minutes % 60
+        return extraMinutes == 0 ? "\(hours) sa" : "\(hours) sa \(extraMinutes) dk"
     }
 }
