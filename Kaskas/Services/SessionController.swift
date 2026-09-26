@@ -131,11 +131,12 @@ final class SessionController {
             at: now,
             meetingActive: configuration.pauseDuringMeetings && meetingMonitor.sample()
         )
+        if engine.manualPauseStartedAt != nil { persistSession(at: now) }
         reconcile(at: now)
     }
 
     func reconcile(at now: Date = Date()) {
-        guard engine.systemPauseStartedAt == nil else { return }
+        guard engine.systemPauseStartedAt == nil, engine.manualPauseStartedAt == nil else { return }
         _ = handleMeetingActivity(
             configuration.pauseDuringMeetings && meetingMonitor.sample(),
             at: now
@@ -202,17 +203,23 @@ final class SessionController {
         }
         engine.updateConfiguration(configuration, at: now)
         store.save(configuration: configuration)
-        reconcile(at: now)
+        if engine.manualPauseStartedAt != nil {
+            refreshSnapshot(at: now)
+            persistSession(at: now)
+        } else {
+            reconcile(at: now)
+        }
     }
 
     func startBreakNow() {
         let now = Date()
         skippedBreakNotifier.dismiss()
         breakWarningPresenter.dismiss()
-        engine.startBreak(at: now)
+        engine.startBreak(at: now, scheduled: false)
         refreshSnapshot(at: now)
         persistSession(at: now)
         presentCurrentBreak()
+        playBreakStartSound()
         scheduleNextEvent()
     }
 
@@ -237,6 +244,24 @@ final class SessionController {
     func openSettings() {
         breakPresenter.dismiss()
         settingsPresenter.show(controller: self)
+    }
+
+    func toggleManualPause() {
+        let now = Date()
+        if engine.manualPauseStartedAt == nil {
+            engine.beginManualPause(at: now)
+            guard engine.manualPauseStartedAt != nil else { return }
+            scheduler.cancel()
+            microReminderPresenter.dismiss()
+            breakWarningPresenter.dismiss()
+            breakPresenter.dismiss()
+            skippedBreakNotifier.dismiss()
+            refreshSnapshot(at: now)
+            persistSession(at: now)
+        } else {
+            engine.endManualPause(at: now)
+            reconcile(at: now)
+        }
     }
 
     func previewBreak() {
@@ -321,6 +346,7 @@ final class SessionController {
         persistSession(record: previousSession.phase == .onBreak ? .transition(
             from: previousSession, at: now, outcome: .completed, source: .manual
         ) : nil, at: now)
+        if previousSession.phase == .onBreak { playBreakEndSound() }
         scheduleNextEvent()
     }
 
@@ -340,10 +366,22 @@ final class SessionController {
             microReminderPresenter.dismiss()
             breakWarningPresenter.dismiss()
             presentCurrentBreak()
+            playBreakStartSound()
 
         case .breakEnded:
             breakPresenter.dismiss()
+            playBreakEndSound()
         }
+    }
+
+    private func playBreakStartSound() {
+        guard configuration.breakSoundEnabled else { return }
+        BreakSoundPlayer.play(configuration.breakSound)
+    }
+
+    private func playBreakEndSound() {
+        guard configuration.breakEndSoundEnabled else { return }
+        BreakSoundPlayer.play(configuration.breakEndSound)
     }
 
     private func presentBreakWarning() {
@@ -401,7 +439,7 @@ final class SessionController {
     }
 
     private func scheduleNextEvent() {
-        guard engine.systemPauseStartedAt == nil else {
+        guard engine.systemPauseStartedAt == nil, engine.manualPauseStartedAt == nil else {
             scheduler.cancel()
             return
         }
@@ -436,7 +474,7 @@ final class SessionController {
         if engine.systemPauseStartedAt != nil {
             return activityTracker.journal.cursor?.kind ?? .computerInactive
         }
-        if engine.meetingPauseStartedAt != nil { return .kaskasPaused }
+        if engine.meetingPauseStartedAt != nil || engine.manualPauseStartedAt != nil { return .kaskasPaused }
         return engine.session.phase == .focusing ? .studying : .breakTime
     }
 

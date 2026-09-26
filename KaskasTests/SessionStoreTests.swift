@@ -29,6 +29,11 @@ struct SessionStoreTests {
         #expect(configuration.breakLayout == .horizon)
         #expect(configuration.breakSoundEnabled == false)
         #expect(configuration.breakSound == .glass)
+        #expect(configuration.breakEndSoundEnabled == false)
+        #expect(configuration.breakEndSound == .glass)
+        #expect(configuration.longBreakEnabled == false)
+        #expect(configuration.longBreakFrequency == 3)
+        #expect(configuration.longBreakDuration == 10 * 60)
         #expect(configuration.microReminderMascot == .flame)
         #expect(configuration.microReminderColor == .peach)
         #expect(configuration.menuBarDisplayMode == .iconAndTimer)
@@ -45,10 +50,15 @@ struct SessionStoreTests {
             focusDuration: 60 * 60,
             microReminderInterval: 15 * 60,
             breakDuration: 10 * 60,
+            longBreakEnabled: true,
+            longBreakFrequency: 4,
+            longBreakDuration: 20 * 60,
             snoozeDuration: 10 * 60,
             breakLayout: .gentleBar,
             breakSoundEnabled: true,
             breakSound: .ping,
+            breakEndSoundEnabled: true,
+            breakEndSound: .tink,
             microReminderMascot: .flame,
             microReminderColor: .blue,
             menuBarDisplayMode: .timerOnly
@@ -67,6 +77,8 @@ struct SessionStoreTests {
         #expect(savedValues["microReminderMascot"] as? String == "flame")
         #expect(savedValues["microReminderColor"] as? String == "blue")
         #expect(savedValues["menuBarDisplayMode"] as? String == "timerOnly")
+        #expect(savedValues["breakEndSoundEnabled"] as? Bool == true)
+        #expect(savedValues["breakEndSound"] as? String == "Tink")
         #expect(store.loadSessionState() == engine.state)
         #expect(store.loadSessionState()?.consecutiveSkippedBreaks == 2)
     }

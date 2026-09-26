@@ -79,11 +79,16 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var focusDuration: TimeInterval
     var microReminderInterval: TimeInterval
     var breakDuration: TimeInterval
+    var longBreakEnabled: Bool
+    var longBreakFrequency: Int
+    var longBreakDuration: TimeInterval
     var snoozeDuration: TimeInterval
     var breakBackground: BreakBackground
     var breakLayout: BreakLayout
     var breakSoundEnabled: Bool
     var breakSound: BreakSound
+    var breakEndSoundEnabled: Bool
+    var breakEndSound: BreakSound
     var microReminderMascot: MicroReminderMascot
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
@@ -94,11 +99,16 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         focusDuration: TimeInterval = 45 * 60,
         microReminderInterval: TimeInterval = 20 * 60,
         breakDuration: TimeInterval = 5 * 60,
+        longBreakEnabled: Bool = false,
+        longBreakFrequency: Int = 3,
+        longBreakDuration: TimeInterval = 10 * 60,
         snoozeDuration: TimeInterval = 5 * 60,
         breakBackground: BreakBackground = .mountainLake,
         breakLayout: BreakLayout = .horizon,
         breakSoundEnabled: Bool = false,
         breakSound: BreakSound = .glass,
+        breakEndSoundEnabled: Bool = false,
+        breakEndSound: BreakSound = .glass,
         microReminderMascot: MicroReminderMascot = .flame,
         microReminderColor: MicroReminderColor = .peach,
         customWallpaperPath: String? = nil,
@@ -108,11 +118,16 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.focusDuration = max(1, focusDuration)
         self.microReminderInterval = max(1, microReminderInterval)
         self.breakDuration = max(1, breakDuration)
+        self.longBreakEnabled = longBreakEnabled
+        self.longBreakFrequency = max(1, longBreakFrequency)
+        self.longBreakDuration = max(1, longBreakDuration)
         self.snoozeDuration = max(1, snoozeDuration)
         self.breakBackground = breakBackground
         self.breakLayout = breakLayout
         self.breakSoundEnabled = breakSoundEnabled
         self.breakSound = breakSound
+        self.breakEndSoundEnabled = breakEndSoundEnabled
+        self.breakEndSound = breakEndSound
         self.microReminderMascot = microReminderMascot
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
@@ -124,11 +139,16 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case focusDuration
         case microReminderInterval
         case breakDuration
+        case longBreakEnabled
+        case longBreakFrequency
+        case longBreakDuration
         case snoozeDuration
         case breakBackground
         case breakLayout
         case breakSoundEnabled
         case breakSound
+        case breakEndSoundEnabled
+        case breakEndSound
         case microReminderMascot
         case microReminderColor
         case customWallpaperPath
@@ -142,6 +162,9 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             focusDuration: try container.decode(TimeInterval.self, forKey: .focusDuration),
             microReminderInterval: try container.decode(TimeInterval.self, forKey: .microReminderInterval),
             breakDuration: try container.decode(TimeInterval.self, forKey: .breakDuration),
+            longBreakEnabled: try container.decodeIfPresent(Bool.self, forKey: .longBreakEnabled) ?? false,
+            longBreakFrequency: try container.decodeIfPresent(Int.self, forKey: .longBreakFrequency) ?? 3,
+            longBreakDuration: try container.decodeIfPresent(TimeInterval.self, forKey: .longBreakDuration) ?? 10 * 60,
             snoozeDuration: try container.decode(TimeInterval.self, forKey: .snoozeDuration),
             breakBackground: try container.decodeIfPresent(
                 BreakBackground.self,
@@ -158,6 +181,14 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             breakSound: try container.decodeIfPresent(
                 BreakSound.self,
                 forKey: .breakSound
+            ) ?? .glass,
+            breakEndSoundEnabled: try container.decodeIfPresent(
+                Bool.self,
+                forKey: .breakEndSoundEnabled
+            ) ?? false,
+            breakEndSound: try container.decodeIfPresent(
+                BreakSound.self,
+                forKey: .breakEndSound
             ) ?? .glass,
             microReminderMascot: (try? container.decode(
                 MicroReminderMascot.self,

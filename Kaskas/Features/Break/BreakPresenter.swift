@@ -71,9 +71,6 @@ final class BreakPresenter {
         }
         rebuildPanels(on: screens)
 
-        if !isPreview, configuration.breakSoundEnabled {
-            NSSound(named: NSSound.Name(configuration.breakSound.rawValue))?.play()
-        }
     }
 
     func dismiss() {

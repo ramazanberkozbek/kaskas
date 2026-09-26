@@ -13,7 +13,9 @@ struct SessionEngine: Sendable {
     private(set) var completedBreaks = 0
     private(set) var completedBreaksDay: Date?
     private(set) var consecutiveSkippedBreaks = 0
+    private(set) var scheduledBreakCount = 0
     private(set) var meetingPauseStartedAt: Date?
+    private(set) var manualPauseStartedAt: Date?
     private(set) var systemPauseStartedAt: Date?
 
     init(
@@ -33,7 +35,9 @@ struct SessionEngine: Sendable {
         completedBreaks = restoredState.completedBreaks
         completedBreaksDay = restoredState.completedBreaksDay
         consecutiveSkippedBreaks = restoredState.consecutiveSkippedBreaks
+        scheduledBreakCount = restoredState.scheduledBreakCount
         meetingPauseStartedAt = restoredState.meetingPauseStartedAt
+        manualPauseStartedAt = restoredState.manualPauseStartedAt
         systemPauseStartedAt = restoredState.systemPauseStartedAt
     }
 
@@ -45,7 +49,9 @@ struct SessionEngine: Sendable {
             completedBreaks: completedBreaks,
             completedBreaksDay: completedBreaksDay,
             consecutiveSkippedBreaks: consecutiveSkippedBreaks,
+            scheduledBreakCount: scheduledBreakCount,
             meetingPauseStartedAt: meetingPauseStartedAt,
+            manualPauseStartedAt: manualPauseStartedAt,
             systemPauseStartedAt: systemPauseStartedAt
         )
     }
@@ -59,7 +65,7 @@ struct SessionEngine: Sendable {
     }
 
     var nextEventDate: Date? {
-        if meetingPauseStartedAt != nil || systemPauseStartedAt != nil { return nil }
+        if meetingPauseStartedAt != nil || manualPauseStartedAt != nil || systemPauseStartedAt != nil { return nil }
         switch session.phase {
         case .focusing:
             var nextDate = session.endsAt
@@ -82,11 +88,16 @@ struct SessionEngine: Sendable {
 
     func snapshot(at now: Date = Date()) -> SessionSnapshot {
         let totalDuration = max(1, session.endsAt.timeIntervalSince(session.startedAt))
-        let effectiveNow = [meetingPauseStartedAt, systemPauseStartedAt]
+        let effectiveNow = [meetingPauseStartedAt, manualPauseStartedAt, systemPauseStartedAt]
             .compactMap { $0 }
             .reduce(now, min)
         let remaining = max(0, session.endsAt.timeIntervalSince(effectiveNow))
         let elapsed = totalDuration - remaining
+        let nextBreakKind: ScheduledBreakKind? = session.phase == .focusing
+            ? (activeConfiguration.longBreakEnabled
+                && (scheduledBreakCount + 1) % activeConfiguration.longBreakFrequency == 0
+                ? .long : .short)
+            : nil
 
         return SessionSnapshot(
             phase: session.phase,
@@ -95,12 +106,14 @@ struct SessionEngine: Sendable {
             nextMicroReminderAt: session.nextMicroReminderAt,
             remaining: remaining,
             progress: min(max(elapsed / totalDuration, 0), 1),
-            meetingPauseStartedAt: meetingPauseStartedAt
+            nextBreakKind: nextBreakKind,
+            meetingPauseStartedAt: meetingPauseStartedAt,
+            manualPauseStartedAt: manualPauseStartedAt
         )
     }
 
     mutating func prepareForLaunch(at now: Date = Date()) {
-        if meetingPauseStartedAt != nil || systemPauseStartedAt != nil { return }
+        if meetingPauseStartedAt != nil || manualPauseStartedAt != nil || systemPauseStartedAt != nil { return }
         // A break or its warning must not take over the screen as the app opens.
         // Keep a focus session only when there is enough time before its warning.
         if session.phase == .onBreak ||
@@ -128,12 +141,13 @@ struct SessionEngine: Sendable {
             activeConfiguration.focusDuration = configuration.focusDuration
             session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)
             hasShownBreakWarning = false
+            if manualPauseStartedAt != nil { manualPauseStartedAt = now }
         }
         self.configuration = configuration
     }
 
     mutating func process(at now: Date = Date()) -> [SessionEvent] {
-        if meetingPauseStartedAt != nil || systemPauseStartedAt != nil { return [] }
+        if meetingPauseStartedAt != nil || manualPauseStartedAt != nil || systemPauseStartedAt != nil { return [] }
         switch session.phase {
         case .focusing:
             if now >= session.endsAt {
@@ -181,13 +195,20 @@ struct SessionEngine: Sendable {
         }
     }
 
-    mutating func startBreak(at now: Date = Date()) {
+    mutating func startBreak(at now: Date = Date(), scheduled: Bool = true) {
         meetingPauseStartedAt = nil
         hasShownBreakWarning = false
+        if scheduled && activeConfiguration.longBreakEnabled { scheduledBreakCount += 1 }
+        let isLongBreak = scheduled
+            && activeConfiguration.longBreakEnabled
+            && scheduledBreakCount % activeConfiguration.longBreakFrequency == 0
+        let duration = isLongBreak
+            ? activeConfiguration.longBreakDuration
+            : activeConfiguration.breakDuration
         session = FocusSession(
             phase: .onBreak,
             startedAt: now,
-            endsAt: now.addingTimeInterval(activeConfiguration.breakDuration),
+            endsAt: now.addingTimeInterval(duration),
             nextMicroReminderAt: nil
         )
     }
@@ -247,12 +268,16 @@ struct SessionEngine: Sendable {
     private mutating func startFocus(at now: Date) {
         meetingPauseStartedAt = nil
         hasShownBreakWarning = false
+        if activeConfiguration.longBreakEnabled != configuration.longBreakEnabled
+            || activeConfiguration.longBreakFrequency != configuration.longBreakFrequency {
+            scheduledBreakCount = 0
+        }
         activeConfiguration = configuration
         session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)
     }
 
     mutating func beginMeetingPause(at now: Date) {
-        guard meetingPauseStartedAt == nil, systemPauseStartedAt == nil,
+        guard meetingPauseStartedAt == nil, manualPauseStartedAt == nil, systemPauseStartedAt == nil,
               session.phase == .focusing else { return }
         meetingPauseStartedAt = now
         hasShownBreakWarning = false
@@ -267,6 +292,20 @@ struct SessionEngine: Sendable {
         skipPastReminders(at: now)
     }
 
+    mutating func beginManualPause(at now: Date) {
+        guard manualPauseStartedAt == nil, systemPauseStartedAt == nil else { return }
+        if meetingPauseStartedAt != nil { endMeetingPause(at: now) }
+        manualPauseStartedAt = now
+        hasShownBreakWarning = false
+    }
+
+    mutating func endManualPause(at now: Date) {
+        guard systemPauseStartedAt == nil, let startedAt = manualPauseStartedAt else { return }
+        manualPauseStartedAt = nil
+        shiftDeadlines(by: max(0, now.timeIntervalSince(startedAt)))
+        skipPastReminders(at: now)
+    }
+
     mutating func beginSystemPause(at now: Date) {
         guard systemPauseStartedAt == nil else { return }
         systemPauseStartedAt = now
@@ -276,6 +315,8 @@ struct SessionEngine: Sendable {
     mutating func endSystemPause(at now: Date, meetingActive: Bool) {
         guard let startedAt = systemPauseStartedAt else { return }
         systemPauseStartedAt = nil
+
+        if manualPauseStartedAt != nil { return }
 
         if meetingPauseStartedAt != nil {
             if !meetingActive { endMeetingPause(at: now) }

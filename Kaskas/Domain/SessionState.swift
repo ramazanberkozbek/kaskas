@@ -7,7 +7,9 @@ struct SessionState: Codable, Equatable, Sendable {
     let completedBreaks: Int
     let completedBreaksDay: Date?
     let consecutiveSkippedBreaks: Int
+    let scheduledBreakCount: Int
     let meetingPauseStartedAt: Date?
+    let manualPauseStartedAt: Date?
     let systemPauseStartedAt: Date?
 
     init(
@@ -17,7 +19,9 @@ struct SessionState: Codable, Equatable, Sendable {
         completedBreaks: Int = 0,
         completedBreaksDay: Date? = nil,
         consecutiveSkippedBreaks: Int = 0,
+        scheduledBreakCount: Int = 0,
         meetingPauseStartedAt: Date? = nil,
+        manualPauseStartedAt: Date? = nil,
         systemPauseStartedAt: Date? = nil
     ) {
         self.session = session
@@ -26,14 +30,18 @@ struct SessionState: Codable, Equatable, Sendable {
         self.completedBreaks = completedBreaks
         self.completedBreaksDay = completedBreaksDay
         self.consecutiveSkippedBreaks = consecutiveSkippedBreaks
+        self.scheduledBreakCount = scheduledBreakCount
         self.meetingPauseStartedAt = meetingPauseStartedAt
+        self.manualPauseStartedAt = manualPauseStartedAt
         self.systemPauseStartedAt = systemPauseStartedAt
     }
 
     private enum CodingKeys: String, CodingKey {
         case session, activeConfiguration, hasShownBreakWarning, completedBreaks, completedBreaksDay
         case consecutiveSkippedBreaks
+        case scheduledBreakCount
         case meetingPauseStartedAt
+        case manualPauseStartedAt
         case systemPauseStartedAt
     }
 
@@ -48,7 +56,9 @@ struct SessionState: Codable, Equatable, Sendable {
         completedBreaks = try container.decodeIfPresent(Int.self, forKey: .completedBreaks) ?? 0
         completedBreaksDay = try container.decodeIfPresent(Date.self, forKey: .completedBreaksDay)
         consecutiveSkippedBreaks = try container.decodeIfPresent(Int.self, forKey: .consecutiveSkippedBreaks) ?? 0
+        scheduledBreakCount = try container.decodeIfPresent(Int.self, forKey: .scheduledBreakCount) ?? 0
         meetingPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .meetingPauseStartedAt)
+        manualPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .manualPauseStartedAt)
         systemPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .systemPauseStartedAt)
     }
 }

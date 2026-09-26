@@ -112,6 +112,54 @@ struct SessionEngineTests {
     }
 
     @Test
+    func manualPauseFreezesCountdownAndResumesWithoutReplayingEvents() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let pausedAt = startDate.addingTimeInterval(10 * 60)
+        let resumedAt = pausedAt.addingTimeInterval(30 * 60)
+
+        engine.beginManualPause(at: pausedAt)
+        engine.beginManualPause(at: pausedAt.addingTimeInterval(60))
+
+        #expect(engine.manualPauseStartedAt == pausedAt)
+        #expect(engine.snapshot(at: resumedAt).remaining == 35 * 60)
+        #expect(engine.nextEventDate == nil)
+        #expect(engine.process(at: resumedAt).isEmpty)
+
+        engine.endManualPause(at: resumedAt)
+        engine.endManualPause(at: resumedAt.addingTimeInterval(60))
+
+        #expect(engine.manualPauseStartedAt == nil)
+        #expect(engine.snapshot(at: resumedAt).remaining == 35 * 60)
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(75 * 60))
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(50 * 60))
+        #expect(engine.process(at: resumedAt).isEmpty)
+    }
+
+    @Test
+    func manualPauseSurvivesQuitAndSleepWithoutDoubleCounting() throws {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        let pausedAt = startDate.addingTimeInterval(10 * 60)
+        let quitAt = pausedAt.addingTimeInterval(5 * 60)
+        let relaunchedAt = quitAt.addingTimeInterval(60 * 60)
+        let resumedAt = relaunchedAt.addingTimeInterval(5 * 60)
+        original.beginManualPause(at: pausedAt)
+        original.beginSystemPause(at: quitAt)
+
+        let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(original.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: saved)
+        restored.prepareForLaunch(at: relaunchedAt)
+        restored.endSystemPause(at: relaunchedAt, meetingActive: false)
+
+        #expect(restored.manualPauseStartedAt == pausedAt)
+        #expect(restored.snapshot(at: relaunchedAt).remaining == 35 * 60)
+        #expect(restored.process(at: relaunchedAt).isEmpty)
+
+        restored.endManualPause(at: resumedAt)
+        #expect(restored.snapshot(at: resumedAt).remaining == 35 * 60)
+        #expect(restored.session.endsAt == startDate.addingTimeInterval(115 * 60))
+    }
+
+    @Test
     func restoredMeetingPauseDoesNotShowOverdueBreakOnLaunch() throws {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let meetingStart = startDate.addingTimeInterval(44 * 60)
@@ -579,4 +627,61 @@ struct SessionEngineTests {
         #expect(restored.breaksTakenToday(at: breakStart.addingTimeInterval(24 * 60 * 60)) == 0)
     }
 
+    @Test
+    func longBreakOccursOnEveryConfiguredScheduledBreakAndSurvivesRestore() throws {
+        let configuration = FocusConfiguration(
+            focusDuration: 60,
+            breakDuration: 60,
+            longBreakEnabled: true,
+            longBreakFrequency: 3,
+            longBreakDuration: 10 * 60
+        )
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+
+        for expectedCount in 1...2 {
+            #expect(engine.snapshot(at: startDate).nextBreakKind == .short)
+            let breakStart = engine.session.endsAt
+            #expect(engine.process(at: breakStart) == [.fullBreakDue])
+            #expect(engine.session.endsAt == breakStart.addingTimeInterval(60))
+            #expect(engine.scheduledBreakCount == expectedCount)
+            engine.completeBreak(at: engine.session.endsAt)
+        }
+
+        let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(engine.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: saved)
+        #expect(restored.snapshot(at: startDate).nextBreakKind == .long)
+        let thirdBreakStart = restored.session.endsAt
+        #expect(restored.process(at: thirdBreakStart) == [.fullBreakDue])
+        #expect(restored.session.endsAt == thirdBreakStart.addingTimeInterval(10 * 60))
+        #expect(restored.scheduledBreakCount == 3)
+        restored.completeBreak(at: restored.session.endsAt)
+        #expect(restored.snapshot(at: restored.session.startedAt).nextBreakKind == .short)
+
+        let fourthBreakStart = restored.session.endsAt
+        #expect(restored.process(at: fourthBreakStart) == [.fullBreakDue])
+        #expect(restored.session.endsAt == fourthBreakStart.addingTimeInterval(60))
+    }
+
+    @Test
+    func manualBreakDoesNotAdvanceLongBreakFrequency() {
+        let configuration = FocusConfiguration(
+            focusDuration: 60,
+            breakDuration: 60,
+            longBreakEnabled: true,
+            longBreakFrequency: 2,
+            longBreakDuration: 10 * 60
+        )
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        #expect(engine.snapshot(at: startDate).nextBreakKind == .short)
+        engine.startBreak(at: startDate, scheduled: false)
+        #expect(engine.scheduledBreakCount == 0)
+        #expect(engine.snapshot(at: startDate).nextBreakKind == nil)
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(60))
+        engine.completeBreak(at: engine.session.endsAt)
+        #expect(engine.snapshot(at: engine.session.startedAt).nextBreakKind == .short)
+
+        let firstScheduledBreak = engine.session.endsAt
+        #expect(engine.process(at: firstScheduledBreak) == [.fullBreakDue])
+        #expect(engine.session.endsAt == firstScheduledBreak.addingTimeInterval(60))
+    }
 }
