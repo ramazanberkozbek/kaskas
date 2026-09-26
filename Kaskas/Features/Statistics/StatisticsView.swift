@@ -6,9 +6,14 @@ struct StatisticsView: View {
     let controller: SessionController
 
     @State private var trendPeriod: StatisticsPeriod = .seven
-    @State private var trendOffset = 0
+    @State private var trendEndDate = Calendar.current.startOfDay(for: Date())
     @State private var distributionPeriod: StatisticsPeriod = .seven
-    @State private var distributionOffset = 0
+    @State private var distributionEndDate = Calendar.current.startOfDay(for: Date())
+    @State private var hourlyPeriod: HourlyPeriod = .day
+    @State private var hourlyEndDate = Calendar.current.startOfDay(for: Date())
+    @State private var hoveredTrendDate: Date?
+    @State private var hoveredDistributionDate: Date?
+    @State private var hoveredHour: Int?
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
@@ -35,13 +40,16 @@ struct StatisticsView: View {
                     subtitle: "stats.trend.subtitle",
                     symbol: "chart.xyaxis.line",
                     tint: StatisticsStyle.studying,
-                    period: $trendPeriod,
-                    offset: $trendOffset,
                     legend: [
                         (StatisticsStyle.studying, "stats.kind.studying"),
                         (StatisticsStyle.average, "stats.trend.average")
                     ]
                 ) {
+                    StatisticsRangeControls(
+                        period: $trendPeriod,
+                        endDate: $trendEndDate,
+                        now: now
+                    )
                     trendChart
                 }
 
@@ -50,11 +58,31 @@ struct StatisticsView: View {
                     subtitle: "stats.distribution.subtitle",
                     symbol: "chart.bar.fill",
                     tint: StatisticsStyle.breakTime,
-                    period: $distributionPeriod,
-                    offset: $distributionOffset,
                     legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
                 ) {
+                    StatisticsRangeControls(
+                        period: $distributionPeriod,
+                        endDate: $distributionEndDate,
+                        now: now
+                    )
                     distributionChart
+                }
+
+                chartSection(
+                    title: "stats.hourly.title",
+                    subtitle: "stats.hourly.subtitle",
+                    symbol: "clock.fill",
+                    tint: StatisticsStyle.computerInactive,
+                    legend: hourlyPeriod == .day
+                        ? [(StatisticsStyle.computerInactive, "stats.kind.studying")]
+                        : hourlyDays.map { (hourlyColor(for: $0.date), $0.date.formatted(.dateTime.weekday(.abbreviated).day())) }
+                ) {
+                    HourlyRangeControls(
+                        period: $hourlyPeriod,
+                        endDate: $hourlyEndDate,
+                        now: now
+                    )
+                    hourlyChart
                 }
 
                 YearActivityHeatmap(
@@ -78,12 +106,22 @@ struct StatisticsView: View {
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear(perform: reload)
-        .onChange(of: trendPeriod) { _, _ in trendOffset = 0; reload() }
-        .onChange(of: trendOffset) { _, _ in reload() }
-        .onChange(of: distributionPeriod) { _, _ in distributionOffset = 0; reload() }
-        .onChange(of: distributionOffset) { _, _ in reload() }
+        .onChange(of: trendPeriod) { _, _ in hoveredTrendDate = nil; reload() }
+        .onChange(of: trendEndDate) { _, _ in hoveredTrendDate = nil; reload() }
+        .onChange(of: distributionPeriod) { _, _ in hoveredDistributionDate = nil; reload() }
+        .onChange(of: distributionEndDate) { _, _ in hoveredDistributionDate = nil; reload() }
+        .onChange(of: hourlyPeriod) { _, _ in hoveredHour = nil; reload() }
+        .onChange(of: hourlyEndDate) { _, _ in hoveredHour = nil; reload() }
         .onChange(of: selectedYear) { _, _ in reload() }
-        .onReceive(refreshClock) { date in now = date; reload() }
+        .onReceive(refreshClock) { date in
+            let previousToday = Calendar.current.startOfDay(for: now)
+            now = date
+            let today = Calendar.current.startOfDay(for: date)
+            if trendEndDate == previousToday { trendEndDate = today }
+            if distributionEndDate == previousToday { distributionEndDate = today }
+            if hourlyEndDate == previousToday { hourlyEndDate = today }
+            reload()
+        }
     }
 
     private var today: DailyActivity {
@@ -120,11 +158,15 @@ struct StatisticsView: View {
     }
 
     private var trendWindow: (start: Date, end: Date) {
-        trendPeriod.window(offset: trendOffset, now: now)
+        trendPeriod.window(endingAt: trendEndDate)
     }
 
     private var distributionWindow: (start: Date, end: Date) {
-        distributionPeriod.window(offset: distributionOffset, now: now)
+        distributionPeriod.window(endingAt: distributionEndDate)
+    }
+
+    private var hourlyWindow: (start: Date, end: Date) {
+        hourlyPeriod.window(endingAt: hourlyEndDate)
     }
 
     private var trendDays: [DailyActivity] {
@@ -133,6 +175,10 @@ struct StatisticsView: View {
 
     private var distributionDays: [DailyActivity] {
         ActivityStatistics.days(from: distributionWindow.start, through: distributionWindow.end, intervals: intervals)
+    }
+
+    private var hourlyDays: [DailyActivity] {
+        ActivityStatistics.days(from: hourlyWindow.start, through: hourlyWindow.end, intervals: intervals)
     }
 
     private var yearDays: [DailyActivity] {
@@ -166,7 +212,8 @@ struct StatisticsView: View {
     }
 
     private var trendChart: some View {
-        Chart {
+        let selected = trendPoints.first { $0.date == hoveredTrendDate }
+        return Chart {
             ForEach(trendPoints) { point in
                 LineMark(
                     x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
@@ -191,7 +238,41 @@ struct StatisticsView: View {
         .chartLegend(.hidden)
         .chartYAxis { AxisMarks(position: .trailing) }
         .chartXAxis { AxisMarks(values: .stride(by: .day, count: trendPeriod == .seven ? 1 : 5)) }
-        .frame(height: 190)
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                ZStack(alignment: .topLeading) {
+                    Rectangle().fill(.clear).contentShape(Rectangle())
+                        .onContinuousHover { phase in
+                            hoveredTrendDate = hoveredDate(for: phase, proxy: proxy, geometry: geometry, dates: trendPoints.map(\.date))
+                        }
+                    if let selected, let plotFrame = proxy.plotFrame,
+                       let position = proxy.position(forX: chartDayCenter(selected.date)) {
+                        let plot = geometry[plotFrame]
+                        let x = plot.minX + position
+                        hoverGuide(at: x, in: plot)
+                        if let y = proxy.position(forY: selected.hours) {
+                            Circle()
+                                .fill(StatisticsStyle.studying)
+                                .frame(width: 12, height: 12)
+                                .overlay(Circle().strokeBorder(.white, lineWidth: 2))
+                                .position(x: x, y: plot.minY + y)
+                                .allowsHitTesting(false)
+                        }
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(selected.date.formatted(date: .abbreviated, time: .omitted))
+                                .font(.subheadline.weight(.semibold))
+                            Divider()
+                            tooltipRow("stats.kind.studying", value: StatisticsDuration.label(selected.hours * 3600), color: StatisticsStyle.studying)
+                            tooltipRow("stats.trend.average", value: StatisticsDuration.label(selected.averageHours * 3600), color: StatisticsStyle.average)
+                        }
+                        .statisticsTooltip()
+                        .offset(x: tooltipOriginX(for: x, in: plot), y: plot.minY + 8)
+                        .allowsHitTesting(false)
+                    }
+                }
+            }
+        }
+        .frame(height: 220)
     }
 
     private struct DistributionPoint: Identifiable {
@@ -210,18 +291,266 @@ struct StatisticsView: View {
     }
 
     private var distributionChart: some View {
-        Chart(distributionPoints) { point in
-            BarMark(
-                x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                y: .value(String(localized: "stats.axis.hours"), point.hours)
-            )
-            .foregroundStyle(point.kind.color)
-            .cornerRadius(3)
+        let selected = distributionDays.first { $0.date == hoveredDistributionDate }
+        return Chart {
+            ForEach(distributionPoints) { point in
+                BarMark(
+                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
+                    y: .value(String(localized: "stats.axis.hours"), point.hours)
+                )
+                .foregroundStyle(point.kind.color)
+                .cornerRadius(3)
+            }
         }
         .chartLegend(.hidden)
         .chartYAxis { AxisMarks(position: .trailing) }
         .chartXAxis { AxisMarks(values: .stride(by: .day, count: distributionPeriod == .seven ? 1 : 5)) }
-        .frame(height: 190)
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                ZStack(alignment: .topLeading) {
+                    Rectangle().fill(.clear).contentShape(Rectangle())
+                        .onContinuousHover { phase in
+                            hoveredDistributionDate = hoveredDate(for: phase, proxy: proxy, geometry: geometry, dates: distributionDays.map(\.date))
+                        }
+                    if let selected, let plotFrame = proxy.plotFrame,
+                       let position = proxy.position(forX: chartDayCenter(selected.date)) {
+                        let plot = geometry[plotFrame]
+                        let x = plot.minX + position
+                        let total = ActivityKind.allCases.reduce(0.0) { $0 + selected.duration(for: $1) }
+                        hoverGuide(at: x, in: plot)
+                        if total > 0, let y = proxy.position(forY: total / 3600) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(.white.opacity(0.8), lineWidth: 2)
+                                .frame(
+                                    width: plot.width / CGFloat(distributionDays.count) * 0.64,
+                                    height: max(1, plot.maxY - plot.minY - y)
+                                )
+                                .position(x: x, y: plot.minY + y + (plot.maxY - plot.minY - y) / 2)
+                                .allowsHitTesting(false)
+                        }
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(selected.date.formatted(date: .abbreviated, time: .omitted))
+                                .font(.subheadline.weight(.semibold))
+                            tooltipRow("stats.total", value: StatisticsDuration.label(total), color: .primary)
+                            Divider()
+                            ForEach(ActivityKind.allCases, id: \.self) { kind in
+                                tooltipRow(kind.labelKey, value: StatisticsDuration.label(selected.duration(for: kind)), color: kind.color)
+                            }
+                        }
+                        .statisticsTooltip(width: 250)
+                        .offset(x: tooltipOriginX(for: x, in: plot, width: 250), y: plot.minY + 8)
+                        .allowsHitTesting(false)
+                    }
+                }
+            }
+        }
+        .frame(height: 220)
+    }
+
+    private struct HourlyPoint: Identifiable {
+        let date: Date
+        let hour: Int
+        let minutes: Double
+        var id: String { "\(date.timeIntervalSinceReferenceDate)-\(hour)" }
+    }
+
+    private var hourlyPoints: [HourlyPoint] {
+        hourlyDays.flatMap { day in
+            ActivityStatistics.focusMinutesByHour(on: day.date, intervals: intervals).enumerated().map { hour, minutes in
+                HourlyPoint(date: day.date, hour: hour, minutes: minutes)
+            }
+        }
+    }
+
+    private var hourlyChart: some View {
+        let points = hourlyPoints
+        let selectedHour = hoveredHour
+        let upperBound = max(60, (points.map(\.minutes).max() ?? 0).rounded(.up))
+        return Chart {
+            if hourlyPeriod == .day {
+                ForEach(points) { point in
+                    RectangleMark(
+                        xStart: .value("Hour start", Double(point.hour) + 0.14),
+                        xEnd: .value("Hour end", Double(point.hour) + 0.86),
+                        yStart: .value("Zero minutes", 0.0),
+                        yEnd: .value("Minutes", point.minutes)
+                    )
+                    .foregroundStyle(StatisticsStyle.computerInactive)
+                    .cornerRadius(3)
+                }
+            } else {
+                ForEach(points) { point in
+                    LineMark(
+                        x: .value("Hour", Double(point.hour) + 0.5),
+                        y: .value("Minutes", point.minutes),
+                        series: .value("Day", point.date)
+                    )
+                    .foregroundStyle(hourlyColor(for: point.date))
+                    .lineStyle(StrokeStyle(lineWidth: 1.7))
+                }
+            }
+        }
+        .chartLegend(.hidden)
+        .chartXScale(domain: 0.0...24.0)
+        .chartYScale(domain: 0...upperBound)
+        .chartXAxis {
+            AxisMarks(values: [0.0, 3, 6, 9, 12, 15, 18, 21]) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel {
+                    if let hour = value.as(Double.self) {
+                        Text(String(format: "%02d", Int(hour)))
+                    }
+                }
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .trailing, values: [0, 15, 30, 45, 60]) { value in
+                AxisGridLine()
+                AxisValueLabel {
+                    if let minutes = value.as(Int.self) {
+                        Text("\(minutes) dk")
+                    }
+                }
+            }
+        }
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                ZStack(alignment: .topLeading) {
+                    Rectangle().fill(.clear).contentShape(Rectangle())
+                        .onContinuousHover { phase in
+                            switch phase {
+                            case .active(let location):
+                                guard let plotFrame = proxy.plotFrame else { hoveredHour = nil; return }
+                                let plot = geometry[plotFrame]
+                                guard plot.contains(location),
+                                      let hour = proxy.value(atX: location.x - plot.minX, as: Double.self) else {
+                                    hoveredHour = nil
+                                    return
+                                }
+                                hoveredHour = min(23, max(0, Int(hour.rounded(.down))))
+                            case .ended:
+                                hoveredHour = nil
+                            }
+                        }
+                    if let selectedHour, let plotFrame = proxy.plotFrame,
+                       let position = proxy.position(forX: Double(selectedHour) + 0.5) {
+                        let plot = geometry[plotFrame]
+                        let x = plot.minX + position
+                        let activePoints = points.filter { $0.hour == selectedHour && $0.minutes > 0 }
+                        let totalMinutes = activePoints.reduce(0.0) { $0 + $1.minutes }
+                        hoverGuide(at: x, in: plot)
+                        if hourlyPeriod == .day, let point = activePoints.first,
+                           let y = proxy.position(forY: point.minutes),
+                           let left = proxy.position(forX: Double(selectedHour) + 0.14),
+                           let right = proxy.position(forX: Double(selectedHour) + 0.86) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(.white.opacity(0.8), lineWidth: 2)
+                                .frame(width: right - left, height: max(1, plot.height - y))
+                                .position(x: x, y: plot.minY + y + (plot.height - y) / 2)
+                                .allowsHitTesting(false)
+                        } else if hourlyPeriod == .week {
+                            ForEach(activePoints) { point in
+                                if let y = proxy.position(forY: point.minutes) {
+                                    Circle()
+                                        .fill(hourlyColor(for: point.date))
+                                        .frame(width: 10, height: 10)
+                                        .overlay(Circle().strokeBorder(.white, lineWidth: 1.5))
+                                        .position(x: x, y: plot.minY + y)
+                                        .allowsHitTesting(false)
+                                }
+                            }
+                        }
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(String(format: "%02d:00–%02d:00", selectedHour, selectedHour + 1))
+                                .font(.subheadline.weight(.semibold))
+                            if hourlyPeriod == .week {
+                                tooltipRow("stats.total", value: StatisticsDuration.label(totalMinutes * 60), color: StatisticsStyle.computerInactive)
+                                Divider()
+                            }
+                            if activePoints.isEmpty {
+                                Text("stats.hourly.noFocus")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(activePoints) { point in
+                                    tooltipRow(
+                                        hourlyPeriod == .day ? "stats.kind.studying" : point.date.formatted(.dateTime.weekday(.abbreviated).day()),
+                                        value: StatisticsDuration.label(point.minutes * 60),
+                                        color: hourlyColor(for: point.date),
+                                        localized: hourlyPeriod == .day
+                                    )
+                                }
+                            }
+                        }
+                        .statisticsTooltip()
+                        .offset(x: tooltipOriginX(for: x, in: plot), y: plot.minY + 8)
+                        .allowsHitTesting(false)
+                    }
+                }
+            }
+        }
+        .frame(height: 220)
+    }
+
+    private func hourlyColor(for date: Date) -> Color {
+        guard hourlyPeriod == .week else { return StatisticsStyle.computerInactive }
+        let palette: [Color] = [
+            StatisticsStyle.computerInactive,
+            StatisticsStyle.studying,
+            StatisticsStyle.breakTime,
+            StatisticsStyle.average,
+            .pink, .mint, .orange
+        ]
+        let index = hourlyDays.firstIndex { $0.date == date } ?? 0
+        return palette[index % palette.count]
+    }
+
+    private func hoveredDate(
+        for phase: HoverPhase,
+        proxy: ChartProxy,
+        geometry: GeometryProxy,
+        dates: [Date]
+    ) -> Date? {
+        guard case .active(let location) = phase,
+              let plotFrame = proxy.plotFrame else { return nil }
+        let plot = geometry[plotFrame]
+        guard plot.contains(location),
+              let date = proxy.value(atX: location.x - plot.minX, as: Date.self) else { return nil }
+        let day = Calendar.current.startOfDay(for: date)
+        return dates.first { Calendar.current.isDate($0, inSameDayAs: day) }
+    }
+
+    private func chartDayCenter(_ date: Date) -> Date {
+        guard let day = Calendar.current.dateInterval(of: .day, for: date) else { return date }
+        return day.start.addingTimeInterval(day.duration / 2)
+    }
+
+    private func hoverGuide(at x: CGFloat, in plot: CGRect) -> some View {
+        Path { path in
+            path.move(to: CGPoint(x: x, y: plot.minY))
+            path.addLine(to: CGPoint(x: x, y: plot.maxY))
+        }
+        .stroke(.primary.opacity(0.55), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+        .allowsHitTesting(false)
+    }
+
+    private func tooltipOriginX(for x: CGFloat, in plot: CGRect, width: CGFloat = 230) -> CGFloat {
+        let spacing: CGFloat = 14
+        let preferred = x + spacing + width <= plot.maxX ? x + spacing : x - spacing - width
+        return min(max(plot.minX, preferred), max(plot.minX, plot.maxX - width))
+    }
+
+    private func tooltipRow(_ label: String, value: String, color: Color, localized: Bool = true) -> some View {
+        HStack(spacing: 7) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            if localized {
+                Text(LocalizedStringKey(label))
+            } else {
+                Text(label)
+            }
+            Spacer(minLength: 8)
+            Text(value).fontWeight(.semibold).monospacedDigit()
+        }
     }
 
     private func chartSection<Content: View>(
@@ -229,8 +558,6 @@ struct StatisticsView: View {
         subtitle: String,
         symbol: String,
         tint: Color,
-        period: Binding<StatisticsPeriod>,
-        offset: Binding<Int>,
         legend: [(Color, String)],
         @ViewBuilder content: () -> Content
     ) -> some View {
@@ -251,21 +578,21 @@ struct StatisticsView: View {
             }
 
             VStack(spacing: 14) {
-                StatisticsRangeControls(period: period, offset: offset, now: now)
                 content()
                 Divider()
-                HStack(spacing: 16) {
-                    ForEach(legend.indices, id: \.self) { index in
-                        HStack(spacing: 5) {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(legend[index].0)
-                                .frame(width: 13, height: 5)
-                            Text(LocalizedStringKey(legend[index].1))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(legend.indices, id: \.self) { index in
+                            HStack(spacing: 5) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(legend[index].0)
+                                    .frame(width: 13, height: 5)
+                                Text(LocalizedStringKey(legend[index].1))
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
-                    Spacer(minLength: 0)
                 }
             }
             .padding(16)
@@ -278,38 +605,89 @@ struct StatisticsView: View {
         let calendar = Calendar.current
         let trendStart = calendar.date(byAdding: .day, value: -6, to: trendWindow.start) ?? trendWindow.start
         let yearStart = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)) ?? now
-        let start = min(trendStart, distributionWindow.start, yearStart)
+        let start = min(trendStart, distributionWindow.start, hourlyWindow.start, yearStart)
         let end = calendar.date(byAdding: .day, value: 1, to: now) ?? now
         intervals = controller.activityIntervals(from: start, to: end, now: now)
         loaded = true
     }
 }
 
-private struct StatisticsRangeControls: View {
-    @Binding var period: StatisticsPeriod
-    @Binding var offset: Int
+private extension View {
+    func statisticsTooltip(width: CGFloat = 230) -> some View {
+        self
+            .font(.subheadline)
+            .padding(12)
+            .frame(width: width, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.17)))
+            .shadow(color: .black.opacity(0.22), radius: 12, y: 5)
+    }
+}
+
+private struct StatisticsDateNavigator: View {
+    @Binding var endDate: Date
+    let startDate: Date
+    let stepDays: Int
     let now: Date
+    @State private var showingCalendar = false
 
     var body: some View {
-        let window = period.window(offset: offset, now: now)
-        HStack(spacing: 8) {
-            Button { offset += 1 } label: {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: now)
+        ControlGroup {
+            Button {
+                endDate = calendar.date(byAdding: .day, value: -stepDays, to: endDate) ?? endDate
+            } label: {
                 Image(systemName: "chevron.left")
             }
             .accessibilityLabel("stats.previousPeriod")
 
-            Text("\(window.start.formatted(.dateTime.day().month(.abbreviated)))–\(window.end.formatted(.dateTime.day().month(.abbreviated)))")
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
+            Button {
+                showingCalendar = true
+            } label: {
+                Text(rangeLabel)
+                    .monospacedDigit()
+                    .frame(minWidth: 100)
+            }
+            .accessibilityLabel("stats.chooseDate")
+            .popover(isPresented: $showingCalendar) {
+                DatePicker("stats.chooseDate", selection: $endDate, in: ...today, displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+                    .padding()
+            }
 
-            Button { offset = max(0, offset - 1) } label: {
+            Button {
+                let next = calendar.date(byAdding: .day, value: stepDays, to: endDate) ?? endDate
+                endDate = min(today, next)
+            } label: {
                 Image(systemName: "chevron.right")
             }
-            .disabled(offset == 0)
+            .disabled(endDate >= today)
             .accessibilityLabel("stats.nextPeriod")
+        }
+    }
 
+    private var rangeLabel: String {
+        let start = startDate.formatted(.dateTime.day().month(.abbreviated))
+        let end = endDate.formatted(.dateTime.day().month(.abbreviated))
+        return stepDays == 1 ? end : "\(start)–\(end)"
+    }
+}
+
+private struct StatisticsRangeControls: View {
+    @Binding var period: StatisticsPeriod
+    @Binding var endDate: Date
+    let now: Date
+
+    var body: some View {
+        HStack(spacing: 10) {
+            StatisticsDateNavigator(
+                endDate: $endDate,
+                startDate: period.window(endingAt: endDate).start,
+                stepDays: period.rawValue,
+                now: now
+            )
             Spacer(minLength: 8)
-
             Picker("stats.period", selection: $period) {
                 ForEach(StatisticsPeriod.allCases) { item in
                     Text(LocalizedStringKey(item.labelKey)).tag(item)
@@ -319,7 +697,31 @@ private struct StatisticsRangeControls: View {
             .labelsHidden()
             .frame(width: 112)
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(.primary)
+    }
+}
+
+private struct HourlyRangeControls: View {
+    @Binding var period: HourlyPeriod
+    @Binding var endDate: Date
+    let now: Date
+
+    var body: some View {
+        HStack(spacing: 10) {
+            StatisticsDateNavigator(
+                endDate: $endDate,
+                startDate: period.window(endingAt: endDate).start,
+                stepDays: period.rawValue,
+                now: now
+            )
+            Spacer(minLength: 8)
+            Picker("stats.period", selection: $period) {
+                ForEach(HourlyPeriod.allCases) { item in
+                    Text(LocalizedStringKey(item.labelKey)).tag(item)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 132)
+        }
     }
 }

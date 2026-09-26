@@ -5,7 +5,9 @@ struct YearActivityHeatmap: View {
     let days: [DailyActivity]
     let scheme: ColorScheme
 
-    private let cellSize: CGFloat = 8
+    @State private var hoveredDate: Date?
+
+    private let cellSize: CGFloat = 11
     private let cellSpacing: CGFloat = 3
 
     var body: some View {
@@ -29,22 +31,27 @@ struct YearActivityHeatmap: View {
             }
 
             VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Spacer()
+                ControlGroup {
                     Button { selectedYear -= 1 } label: {
                         Image(systemName: "chevron.left")
                     }
                     .accessibilityLabel("stats.previousYear")
-                    Text(selectedYear.formatted(.number.grouping(.never)))
-                        .font(.subheadline.weight(.semibold))
-                        .monospacedDigit()
+                    Menu {
+                        ForEach((max(2015, Calendar.current.component(.year, from: Date()) - 20)...Calendar.current.component(.year, from: Date())).reversed(), id: \.self) { year in
+                            Button(year.formatted(.number.grouping(.never))) { selectedYear = year }
+                        }
+                    } label: {
+                        Text(selectedYear.formatted(.number.grouping(.never)))
+                            .monospacedDigit()
+                            .frame(minWidth: 55)
+                    }
                     Button { selectedYear += 1 } label: {
                         Image(systemName: "chevron.right")
                     }
                     .disabled(selectedYear >= Calendar.current.component(.year, from: Date()))
                     .accessibilityLabel("stats.nextYear")
                 }
-                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .trailing)
 
                 HStack(alignment: .bottom, spacing: 7) {
                     weekdayLabels
@@ -148,20 +155,45 @@ struct YearActivityHeatmap: View {
         let isInYear = calendar.component(.year, from: date) == selectedYear
         let duration = activityByDate[calendar.startOfDay(for: date)] ?? 0
         let level = intensity(for: duration)
+        let minutes = Int((duration / 60).rounded())
         return RoundedRectangle(cornerRadius: 2)
             .fill(isInYear ? color(for: level) : .clear)
             .frame(width: cellSize, height: cellSize)
+            .contentShape(Rectangle())
             .overlay {
                 if calendar.isDateInToday(date) {
                     RoundedRectangle(cornerRadius: 2)
                         .strokeBorder(StatisticsStyle.kaskasPaused, lineWidth: 1)
                 }
+                if isInYear && minutes > 0 && hoveredDate == date {
+                    RoundedRectangle(cornerRadius: 2)
+                        .strokeBorder(.primary, lineWidth: 1.5)
+                }
             }
-            .help(isInYear
-                ? "\(date.formatted(date: .abbreviated, time: .omitted)) · \(StatisticsDuration.label(duration))"
-                : "")
+            .onHover { isHovered in
+                guard isInYear && minutes > 0 else { return }
+                if isHovered {
+                    hoveredDate = date
+                } else if hoveredDate == date {
+                    hoveredDate = nil
+                }
+            }
+            .popover(isPresented: Binding(
+                get: { isInYear && minutes > 0 && hoveredDate == date },
+                set: { if !$0 && hoveredDate == date { hoveredDate = nil } }
+            ), arrowEdge: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(String(format: String(localized: "stats.year.focusMinutes"), minutes))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(StatisticsStyle.studying)
+                }
+                .padding(10)
+            }
             .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
-            .accessibilityValue(StatisticsDuration.label(duration))
+            .accessibilityValue(String(format: String(localized: "stats.year.focusMinutes"), minutes))
     }
 
     private func intensity(for duration: TimeInterval) -> Int {

@@ -39,4 +39,49 @@ struct ActivityStatisticsTests {
         #expect(days[1].kaskasPaused == 0)
         #expect(days[2].studying == 0)
     }
+
+    @Test
+    func focusMinutesByHourSplitsAtHoursAndMidnightAndIgnoresBreaks() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Europe/Istanbul"))
+        let day = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 25)))
+        let morning = try #require(calendar.date(bySettingHour: 9, minute: 45, second: 0, of: day))
+        let evening = try #require(calendar.date(bySettingHour: 23, minute: 50, second: 0, of: day))
+        let intervals = [
+            ActivityInterval(kind: .studying, startedAt: morning, endedAt: morning.addingTimeInterval(30 * 60)),
+            ActivityInterval(kind: .breakTime, startedAt: morning, endedAt: morning.addingTimeInterval(10 * 60)),
+            ActivityInterval(kind: .studying, startedAt: evening, endedAt: evening.addingTimeInterval(20 * 60))
+        ]
+
+        let firstDay = ActivityStatistics.focusMinutesByHour(on: day, intervals: intervals, calendar: calendar)
+        let nextDay = try #require(calendar.date(byAdding: .day, value: 1, to: day))
+        let secondDay = ActivityStatistics.focusMinutesByHour(on: nextDay, intervals: intervals, calendar: calendar)
+
+        #expect(firstDay.count == 24)
+        #expect(firstDay[9] == 15)
+        #expect(firstDay[10] == 15)
+        #expect(firstDay[23] == 10)
+        #expect(firstDay.reduce(0, +) == 40)
+        #expect(secondDay[0] == 10)
+    }
+
+    @Test
+    func overlappingFocusRecordsCountElapsedMinutesOnlyOnce() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Europe/Istanbul"))
+        let day = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 26)))
+        let hour = try #require(calendar.date(bySettingHour: 19, minute: 0, second: 0, of: day))
+        let intervals = [
+            ActivityInterval(kind: .studying, startedAt: hour, endedAt: hour.addingTimeInterval(45 * 60)),
+            ActivityInterval(kind: .studying, startedAt: hour.addingTimeInterval(15 * 60), endedAt: hour.addingTimeInterval(60 * 60)),
+            ActivityInterval(kind: .studying, startedAt: hour.addingTimeInterval(15 * 60), endedAt: hour.addingTimeInterval(60 * 60))
+        ]
+
+        let minutes = ActivityStatistics.focusMinutesByHour(on: day, intervals: intervals, calendar: calendar)
+        let summary = ActivityStatistics.days(from: day, through: day, intervals: intervals, calendar: calendar)
+
+        #expect(minutes[19] == 60)
+        #expect(minutes.reduce(0, +) == 60)
+        #expect(summary.first?.studying == 3600)
+    }
 }

@@ -51,9 +51,28 @@ enum StatisticsPeriod: Int, CaseIterable, Identifiable {
 
     var labelKey: String { self == .seven ? "stats.period.seven" : "stats.period.thirty" }
 
+    func window(endingAt endDate: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
+        let end = calendar.startOfDay(for: endDate)
+        let start = calendar.date(byAdding: .day, value: 1 - rawValue, to: end) ?? end
+        return (start, end)
+    }
+
     func window(offset: Int, now: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
         let today = calendar.startOfDay(for: now)
         let end = calendar.date(byAdding: .day, value: -offset * rawValue, to: today) ?? today
+        return window(endingAt: end, calendar: calendar)
+    }
+}
+
+enum HourlyPeriod: Int, CaseIterable, Identifiable {
+    case day = 1
+    case week = 7
+
+    var id: Self { self }
+    var labelKey: String { self == .day ? "stats.hourly.day" : "stats.hourly.week" }
+
+    func window(endingAt endDate: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
+        let end = calendar.startOfDay(for: endDate)
         let start = calendar.date(byAdding: .day, value: 1 - rawValue, to: end) ?? end
         return (start, end)
     }

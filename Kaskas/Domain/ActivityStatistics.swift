@@ -29,6 +29,28 @@ struct DailyActivity: Identifiable, Equatable {
 }
 
 enum ActivityStatistics {
+    static func focusMinutesByHour(
+        on date: Date,
+        intervals: [ActivityInterval],
+        calendar: Calendar = .current
+    ) -> [Double] {
+        guard let day = calendar.dateInterval(of: .day, for: date) else {
+            return Array(repeating: 0, count: 24)
+        }
+        var minutes = Array(repeating: 0.0, count: 24)
+        for range in mergedRanges(of: .studying, from: day.start, to: day.end, intervals: intervals) {
+            var cursor = range.start
+            let end = range.end
+            while cursor < end {
+                guard let hour = calendar.dateInterval(of: .hour, for: cursor) else { break }
+                let sliceEnd = min(end, hour.end)
+                minutes[calendar.component(.hour, from: cursor)] += sliceEnd.timeIntervalSince(cursor) / 60
+                cursor = sliceEnd
+            }
+        }
+        return minutes
+    }
+
     static func days(
         from start: Date,
         through end: Date,
@@ -50,17 +72,39 @@ enum ActivityStatistics {
         }
 
         let exclusiveEnd = calendar.date(byAdding: .day, value: 1, to: last) ?? last
-        for interval in intervals where interval.endedAt > interval.startedAt {
-            var cursor = max(interval.startedAt, first)
-            let end = min(interval.endedAt, exclusiveEnd)
-            while cursor < end {
-                guard let dayInterval = calendar.dateInterval(of: .day, for: cursor),
-                      let index = indexByDay[dayInterval.start] else { break }
-                let sliceEnd = min(end, dayInterval.end)
-                days[index].add(sliceEnd.timeIntervalSince(cursor), to: interval.kind)
-                cursor = sliceEnd
+        for kind in ActivityKind.allCases {
+            for range in mergedRanges(of: kind, from: first, to: exclusiveEnd, intervals: intervals) {
+                var cursor = range.start
+                while cursor < range.end {
+                    guard let dayInterval = calendar.dateInterval(of: .day, for: cursor),
+                          let index = indexByDay[dayInterval.start] else { break }
+                    let sliceEnd = min(range.end, dayInterval.end)
+                    days[index].add(sliceEnd.timeIntervalSince(cursor), to: kind)
+                    cursor = sliceEnd
+                }
             }
         }
         return days
+    }
+
+    private static func mergedRanges(
+        of kind: ActivityKind,
+        from start: Date,
+        to end: Date,
+        intervals: [ActivityInterval]
+    ) -> [(start: Date, end: Date)] {
+        let ranges = intervals
+            .filter { $0.kind == kind && $0.endedAt > start && $0.startedAt < end }
+            .map { (start: max(start, $0.startedAt), end: min(end, $0.endedAt)) }
+            .sorted { $0.start < $1.start }
+        var merged: [(start: Date, end: Date)] = []
+        for range in ranges {
+            if let last = merged.indices.last, range.start <= merged[last].end {
+                merged[last].end = max(merged[last].end, range.end)
+            } else {
+                merged.append(range)
+            }
+        }
+        return merged
     }
 }
