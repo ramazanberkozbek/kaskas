@@ -31,13 +31,6 @@ struct SessionStoreTests {
         #expect(configuration.breakSound == .glass)
         #expect(configuration.microReminderMascot == .flame)
         #expect(configuration.microReminderColor == .peach)
-        #expect(configuration.smartPauseEnabled == true)
-        #expect(configuration.smartPauseIdleDuration == 3 * 60)
-        #expect(configuration.pauseDuringCalls == false)
-        #expect(configuration.pauseDuringVideo == false)
-        #expect(configuration.pauseForFocusApps == false)
-        #expect(configuration.notifyDuringCalls == false)
-        #expect(configuration.smartPauseResumeDelay == 0)
     }
 
     @Test
@@ -56,18 +49,7 @@ struct SessionStoreTests {
             breakSoundEnabled: true,
             breakSound: .ping,
             microReminderMascot: .flame,
-            microReminderColor: .blue,
-            smartPauseEnabled: true,
-            smartPauseIdleDuration: 5 * 60,
-            pauseDuringCalls: true,
-            notifyDuringCalls: true,
-            microphoneUID: "test-microphone",
-            pauseDuringVideo: true,
-            notifyDuringVideo: false,
-            pauseForFocusApps: true,
-            notifyForFocusApps: true,
-            focusAppBundleIDs: ["com.apple.dt.Xcode"],
-            smartPauseResumeDelay: 120
+            microReminderColor: .blue
         )
         let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
         var engine = SessionEngine(configuration: configuration, now: startDate)
@@ -84,5 +66,49 @@ struct SessionStoreTests {
         #expect(savedValues["microReminderColor"] as? String == "blue")
         #expect(store.loadSessionState() == engine.state)
         #expect(store.loadSessionState()?.consecutiveSkippedBreaks == 2)
+    }
+
+    @Test
+    func ignoresRemovedSmartPauseDataInSavedSession() throws {
+        let suiteName = "SessionStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SessionStore(defaults: defaults)
+        let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let engine = SessionEngine(now: startDate)
+        store.save(configuration: engine.configuration)
+        store.save(state: engine.state)
+
+        var savedConfiguration = try #require(
+            JSONSerialization.jsonObject(with: defaults.data(forKey: "focusConfiguration")!) as? [String: Any]
+        )
+        savedConfiguration["smartPauseEnabled"] = true
+        savedConfiguration["pauseDuringCalls"] = true
+        defaults.set(try JSONSerialization.data(withJSONObject: savedConfiguration), forKey: "focusConfiguration")
+
+        var savedState = try #require(
+            JSONSerialization.jsonObject(with: defaults.data(forKey: "sessionState")!) as? [String: Any]
+        )
+        savedState["pendingIdleStartedAt"] = startDate.timeIntervalSinceReferenceDate
+        savedState["triggerPauseStartedAt"] = startDate.timeIntervalSinceReferenceDate
+        defaults.set(try JSONSerialization.data(withJSONObject: savedState), forKey: "sessionState")
+
+        #expect(store.loadConfiguration() == engine.configuration)
+        let restored = try #require(store.loadSessionState())
+        var resumed = SessionEngine(configuration: engine.configuration, restoredState: restored)
+        #expect(resumed.process(at: startDate.addingTimeInterval(45 * 60)) == [.fullBreakDue])
+
+        store.save(configuration: resumed.configuration)
+        store.save(state: resumed.state)
+        let cleanConfiguration = try #require(
+            JSONSerialization.jsonObject(with: defaults.data(forKey: "focusConfiguration")!) as? [String: Any]
+        )
+        let cleanState = try #require(
+            JSONSerialization.jsonObject(with: defaults.data(forKey: "sessionState")!) as? [String: Any]
+        )
+        #expect(cleanConfiguration["smartPauseEnabled"] == nil)
+        #expect(cleanState["pendingIdleStartedAt"] == nil)
+        #expect(cleanState["triggerPauseStartedAt"] == nil)
     }
 }

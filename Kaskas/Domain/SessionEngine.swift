@@ -9,9 +9,6 @@ struct SessionEngine: Sendable {
     private(set) var hasShownBreakWarning = false
     private(set) var completedBreaks = 0
     private(set) var completedBreaksDay: Date?
-    private(set) var pendingIdleStartedAt: Date?
-    private(set) var smartPauseRecords: [SmartPauseRecord] = []
-    private(set) var triggerPauseStartedAt: Date?
     private(set) var consecutiveSkippedBreaks = 0
 
     init(
@@ -30,9 +27,6 @@ struct SessionEngine: Sendable {
         hasShownBreakWarning = restoredState.hasShownBreakWarning
         completedBreaks = restoredState.completedBreaks
         completedBreaksDay = restoredState.completedBreaksDay
-        pendingIdleStartedAt = restoredState.pendingIdleStartedAt
-        smartPauseRecords = restoredState.smartPauseRecords
-        triggerPauseStartedAt = restoredState.triggerPauseStartedAt
         consecutiveSkippedBreaks = restoredState.consecutiveSkippedBreaks
     }
 
@@ -43,9 +37,6 @@ struct SessionEngine: Sendable {
             hasShownBreakWarning: hasShownBreakWarning,
             completedBreaks: completedBreaks,
             completedBreaksDay: completedBreaksDay,
-            pendingIdleStartedAt: pendingIdleStartedAt,
-            smartPauseRecords: smartPauseRecords,
-            triggerPauseStartedAt: triggerPauseStartedAt,
             consecutiveSkippedBreaks: consecutiveSkippedBreaks
         )
     }
@@ -80,8 +71,6 @@ struct SessionEngine: Sendable {
     }
 
     func snapshot(at now: Date = Date()) -> SessionSnapshot {
-        let now = [pendingIdleStartedAt, triggerPauseStartedAt]
-            .compactMap { $0 }.reduce(now, min)
         let totalDuration = max(1, session.endsAt.timeIntervalSince(session.startedAt))
         let remaining = max(0, session.endsAt.timeIntervalSince(now))
         let elapsed = totalDuration - remaining
@@ -97,7 +86,6 @@ struct SessionEngine: Sendable {
     }
 
     mutating func prepareForLaunch(at now: Date = Date()) {
-        if pendingIdleStartedAt != nil || triggerPauseStartedAt != nil { return }
         // A break or its warning must not take over the screen as the app opens.
         // Keep a focus session only when there is enough time before its warning.
         if session.phase == .onBreak ||
@@ -130,7 +118,6 @@ struct SessionEngine: Sendable {
     }
 
     mutating func process(at now: Date = Date()) -> [SessionEvent] {
-        if pendingIdleStartedAt != nil || triggerPauseStartedAt != nil { return [] }
         switch session.phase {
         case .focusing:
             if now >= session.endsAt {
@@ -179,7 +166,6 @@ struct SessionEngine: Sendable {
     }
 
     mutating func startBreak(at now: Date = Date()) {
-        triggerPauseStartedAt = nil
         hasShownBreakWarning = false
         session = FocusSession(
             phase: .onBreak,
@@ -187,42 +173,6 @@ struct SessionEngine: Sendable {
             endsAt: now.addingTimeInterval(activeConfiguration.breakDuration),
             nextMicroReminderAt: nil
         )
-    }
-
-    mutating func beginSmartPause(at idleStartedAt: Date) {
-        guard pendingIdleStartedAt == nil,
-              triggerPauseStartedAt == nil,
-              session.phase == .focusing,
-              idleStartedAt >= session.startedAt else { return }
-        pendingIdleStartedAt = idleStartedAt
-    }
-
-    mutating func beginTriggerPause(at now: Date) {
-        guard triggerPauseStartedAt == nil, pendingIdleStartedAt == nil,
-              session.phase == .focusing else { return }
-        triggerPauseStartedAt = now
-    }
-
-    mutating func endTriggerPause(at now: Date, resumeDelay: TimeInterval = 0) {
-        guard let startedAt = triggerPauseStartedAt else { return }
-        triggerPauseStartedAt = nil
-        let shift = max(0, now.timeIntervalSince(startedAt)) + max(0, resumeDelay)
-        session.endsAt = session.endsAt.addingTimeInterval(shift)
-        session.nextMicroReminderAt = session.nextMicroReminderAt?.addingTimeInterval(shift)
-    }
-
-    mutating func resolveSmartPause(countAsBreak: Bool, at returnedAt: Date) {
-        guard let stoppedAt = pendingIdleStartedAt else { return }
-        pendingIdleStartedAt = nil
-        guard countAsBreak else { return }
-        smartPauseRecords.append(SmartPauseRecord(
-            focusStartedAt: session.startedAt,
-            focusStoppedAt: stoppedAt,
-            returnedAt: returnedAt,
-            focusedDuration: max(0, stoppedAt.timeIntervalSince(session.startedAt))
-        ))
-        recordCompletedBreak(at: returnedAt)
-        startFocus(at: returnedAt)
     }
 
     mutating func completeBreak(at now: Date = Date()) {
@@ -271,7 +221,6 @@ struct SessionEngine: Sendable {
     }
 
     private mutating func startFocus(at now: Date) {
-        triggerPauseStartedAt = nil
         hasShownBreakWarning = false
         activeConfiguration = configuration
         session = Self.makeFocusSession(configuration: activeConfiguration, startingAt: now)

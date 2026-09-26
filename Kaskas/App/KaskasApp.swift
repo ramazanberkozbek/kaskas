@@ -31,12 +31,8 @@ private struct MenuBarStatusLabel: View {
                 .scaledToFit()
                 .frame(width: 16, height: 16)
 
-            if controller.isPaused {
-                Text("menu.paused")
-            } else {
-                Text(Self.formattedRemaining(remaining))
-                    .monospacedDigit()
-            }
+            Text(Self.formattedRemaining(remaining))
+                .monospacedDigit()
         }
         .onReceive(clock) { now = $0 }
     }

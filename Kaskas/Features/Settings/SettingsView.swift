@@ -37,8 +37,6 @@ struct SettingsView: View {
             FocusSettingsView(controller: controller)
         case .wellness:
             WellnessSettingsView(controller: controller)
-        case .smartPause:
-            SmartPauseSettingsView(controller: controller)
         case .alerts:
             SettingsPlaceholderView(pane: .alerts)
         case .statistics:
@@ -52,7 +50,6 @@ struct SettingsView: View {
 private enum SettingsPane: String, CaseIterable, Identifiable {
     case focus
     case wellness
-    case smartPause
     case alerts
     case statistics
     case general
@@ -63,7 +60,6 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .focus: "settings.sidebar.focus"
         case .wellness: "settings.sidebar.wellness"
-        case .smartPause: "settings.sidebar.smartPause"
         case .alerts: "settings.sidebar.alerts"
         case .statistics: "settings.sidebar.statistics"
         case .general: "settings.sidebar.general"
@@ -74,7 +70,6 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .focus: "leaf"
         case .wellness: "waveform.path.ecg"
-        case .smartPause: "pause.circle"
         case .alerts: "bell.badge"
         case .statistics: "chart.bar.xaxis"
         case .general: "gearshape"

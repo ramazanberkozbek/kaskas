@@ -81,18 +81,12 @@ struct MenuBarView: View {
 
     private func countdown(for snapshot: SessionSnapshot) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Group {
-                if controller.isPaused {
-                    Text(Duration.seconds(snapshot.remaining).formatted(.time(pattern: .hourMinuteSecond)))
-                } else {
-                    Text(
-                        timerInterval: snapshot.startedAt...snapshot.endsAt,
-                        pauseTime: nil,
-                        countsDown: true,
-                        showsHours: false
-                    )
-                }
-            }
+            Text(
+                timerInterval: snapshot.startedAt...snapshot.endsAt,
+                pauseTime: nil,
+                countsDown: true,
+                showsHours: false
+            )
             .font(.system(size: 30, weight: .bold))
             .monospacedDigit()
             .contentTransition(.numericText())
