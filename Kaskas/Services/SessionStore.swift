@@ -5,6 +5,9 @@ final class SessionStore {
     private enum Key {
         static let configuration = "focusConfiguration"
         static let sessionState = "sessionState"
+        static let pendingHistoryEntries = "pendingHistoryEntries"
+        static let lastActiveAt = "lastActiveAt"
+        static let activityJournal = "activityJournal"
     }
 
     private let defaults: UserDefaults
@@ -47,12 +50,37 @@ final class SessionStore {
         return try decoder.decode(LegacySessionState.self, from: data).smartPauseRecords ?? []
     }
 
-    func save(state: SessionState) {
+    func save(state: SessionState, observedAt: Date = Date()) {
         guard let data = try? encoder.encode(state) else {
             return
         }
 
         defaults.set(data, forKey: Key.sessionState)
+        defaults.set(observedAt, forKey: Key.lastActiveAt)
+    }
+
+    func loadLastActiveAt() -> Date? {
+        defaults.object(forKey: Key.lastActiveAt) as? Date
+    }
+
+    func loadPendingHistoryEntries() -> [BreakHistoryEntry] {
+        guard let data = defaults.data(forKey: Key.pendingHistoryEntries) else { return [] }
+        return (try? decoder.decode([BreakHistoryEntry].self, from: data)) ?? []
+    }
+
+    func save(pendingHistoryEntries: [BreakHistoryEntry]) {
+        guard let data = try? encoder.encode(pendingHistoryEntries) else { return }
+        defaults.set(data, forKey: Key.pendingHistoryEntries)
+    }
+
+    func loadActivityJournal() -> ActivityJournal {
+        guard let data = defaults.data(forKey: Key.activityJournal) else { return .empty }
+        return (try? decoder.decode(ActivityJournal.self, from: data)) ?? .empty
+    }
+
+    func save(activityJournal: ActivityJournal) {
+        guard let data = try? encoder.encode(activityJournal) else { return }
+        defaults.set(data, forKey: Key.activityJournal)
     }
 
     private struct LegacySessionState: Decodable {

@@ -37,7 +37,12 @@ final class BreakRecord {
 }
 
 @MainActor
-final class BreakHistoryStore {
+protocol BreakHistoryRecording {
+    func insert(_ entry: BreakHistoryEntry) throws
+}
+
+@MainActor
+final class BreakHistoryStore: BreakHistoryRecording {
     private let context: ModelContext
 
     init(container: ModelContainer) {
@@ -45,7 +50,7 @@ final class BreakHistoryStore {
     }
 
     convenience init() throws {
-        try self.init(container: ModelContainer(for: BreakRecord.self))
+        try self.init(container: ModelContainer(for: BreakRecord.self, ActivityRecord.self))
     }
 
     func insert(_ entry: BreakHistoryEntry) throws {

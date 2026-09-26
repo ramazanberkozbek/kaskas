@@ -7,23 +7,27 @@ import Observation
 final class SessionController {
     private(set) var configuration: FocusConfiguration
     private(set) var sessionSnapshot: SessionSnapshot
+    private(set) var historySaveFailed = false
+    private(set) var activityStorageFailed = false
 
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
     @ObservationIgnored private let store: SessionStore
-    @ObservationIgnored private let historyStore: BreakHistoryStore?
-    @ObservationIgnored private var pendingHistoryEntries: [BreakHistoryEntry] = []
+    @ObservationIgnored private let persistence: SessionPersistence
+    @ObservationIgnored private let activityTracker: ActivityTracker
     @ObservationIgnored private let microReminderPresenter: MicroReminderPresenter
     @ObservationIgnored private let breakWarningPresenter: BreakWarningPresenter
     @ObservationIgnored private let breakPresenter: BreakPresenter
     @ObservationIgnored private let settingsPresenter: SettingsPresenter
     @ObservationIgnored private let skippedBreakNotifier = SkippedBreakNotifier()
     @ObservationIgnored private let meetingMonitor = MeetingActivityMonitor()
+    @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
 
     init(
         store: SessionStore = SessionStore(),
-        historyStore: BreakHistoryStore? = nil,
+        historyStore: (any BreakHistoryRecording)? = nil,
+        activityStore: (any ActivityRecording)? = nil,
         scheduler: SessionScheduler = SessionScheduler(),
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
         breakWarningPresenter: BreakWarningPresenter = BreakWarningPresenter(),
@@ -34,19 +38,27 @@ final class SessionController {
         let configuration = store.loadConfiguration()
         self.configuration = configuration
         self.store = store
-        self.historyStore = historyStore
+        persistence = SessionPersistence(store: store, historyStore: historyStore)
+        activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
+        historySaveFailed = historyStore == nil
+        activityStorageFailed = activityStore == nil
         self.scheduler = scheduler
         self.microReminderPresenter = microReminderPresenter
         self.breakWarningPresenter = breakWarningPresenter
         self.breakPresenter = breakPresenter
         self.settingsPresenter = settingsPresenter
 
-        let engine: SessionEngine
+        var engine: SessionEngine
         if let restoredState = store.loadSessionState() {
             engine = SessionEngine(
                 configuration: configuration,
                 restoredState: restoredState
             )
+            if restoredState.systemPauseStartedAt == nil,
+               let lastActiveAt = store.loadLastActiveAt(),
+               lastActiveAt <= now {
+                engine.beginSystemPause(at: lastActiveAt)
+            }
         } else {
             engine = SessionEngine(configuration: configuration, now: now)
         }
@@ -66,14 +78,30 @@ final class SessionController {
                 guard let self else { return }
                 if self.handleMeetingActivity(active, at: Date()) { self.reconcile() }
             }
-            _ = handleMeetingActivity(meetingMonitor.sample(), at: Date())
-        } else {
-            engine.endMeetingPause(at: Date())
         }
+        let now = Date()
+        let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
+        if engine.systemPauseStartedAt != nil {
+            engine.endSystemPause(at: now, meetingActive: meetingActive)
+            if engine.session.phase == .onBreak {
+                // Relaunch stays quiet even when the app closed during a break.
+                engine.prepareForLaunch(at: now)
+            }
+        } else {
+            _ = handleMeetingActivity(meetingActive, at: now)
+        }
+        activityTracker.resume(as: currentActivityKind, at: now)
         reconcile()
+        let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.persistSession() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        checkpointTimer = timer
     }
 
     func stop() {
+        checkpointTimer?.invalidate()
+        checkpointTimer = nil
         scheduler.cancel()
         meetingMonitor.stop()
         skippedBreakNotifier.dismiss()
@@ -81,10 +109,33 @@ final class SessionController {
         breakWarningPresenter.dismiss()
         breakPresenter.dismiss()
         settingsPresenter.dismiss()
-        persistSession()
+        let now = Date()
+        engine.beginSystemPause(at: now)
+        let stoppedKind: ActivityKind = activityTracker.journal.cursor?.kind == .computerInactive
+            ? .computerInactive : .kaskasPaused
+        persistSession(at: now, activityKind: stoppedKind)
+    }
+
+    func systemWillSleep(at now: Date = Date()) {
+        engine.beginSystemPause(at: now)
+        scheduler.cancel()
+        microReminderPresenter.dismiss()
+        breakWarningPresenter.dismiss()
+        breakPresenter.dismiss()
+        refreshSnapshot(at: now)
+        persistSession(at: now, activityKind: .computerInactive)
+    }
+
+    func systemDidWake(at now: Date = Date()) {
+        engine.endSystemPause(
+            at: now,
+            meetingActive: configuration.pauseDuringMeetings && meetingMonitor.sample()
+        )
+        reconcile(at: now)
     }
 
     func reconcile(at now: Date = Date()) {
+        guard engine.systemPauseStartedAt == nil else { return }
         _ = handleMeetingActivity(
             configuration.pauseDuringMeetings && meetingMonitor.sample(),
             at: now
@@ -100,7 +151,7 @@ final class SessionController {
                 from: previousSession, at: now, outcome: .completed, source: .scheduled
             )
             : nil
-        persistSession(record: completedBreak)
+        persistSession(record: completedBreak, at: now)
 
         for event in events {
             handle(event)
@@ -125,6 +176,12 @@ final class SessionController {
 
     func breaksTakenToday(at now: Date = Date()) -> Int {
         engine.breaksTakenToday(at: now)
+    }
+
+    func activityIntervals(from start: Date, to end: Date, now: Date = Date()) -> [ActivityInterval] {
+        let intervals = activityTracker.intervals(from: start, to: end, now: now)
+        activityStorageFailed = activityTracker.storageFailed
+        return intervals
     }
 
     func updateConfiguration(_ configuration: FocusConfiguration) {
@@ -154,16 +211,17 @@ final class SessionController {
         breakWarningPresenter.dismiss()
         engine.startBreak(at: now)
         refreshSnapshot(at: now)
-        persistSession()
+        persistSession(at: now)
         presentCurrentBreak()
         scheduleNextEvent()
     }
 
     func snooze() {
+        let now = Date()
         engine.snooze()
         breakWarningPresenter.dismiss()
         refreshSnapshot()
-        persistSession()
+        persistSession(at: now)
         scheduleNextEvent()
     }
 
@@ -172,7 +230,7 @@ final class SessionController {
         engine.snoozeBreak(at: now)
         refreshSnapshot(at: now)
         breakPresenter.dismiss()
-        persistSession()
+        persistSession(at: now)
         scheduleNextEvent()
     }
 
@@ -248,7 +306,7 @@ final class SessionController {
         breakPresenter.dismiss()
         persistSession(record: .transition(
             from: previousSession, at: now, outcome: .skipped, source: .manual
-        ))
+        ), at: now)
         scheduleNextEvent()
         if shouldSuggestBreak { presentSkippedBreakReminder() }
     }
@@ -262,7 +320,7 @@ final class SessionController {
         breakPresenter.dismiss()
         persistSession(record: previousSession.phase == .onBreak ? .transition(
             from: previousSession, at: now, outcome: .completed, source: .manual
-        ) : nil)
+        ) : nil, at: now)
         scheduleNextEvent()
     }
 
@@ -313,7 +371,7 @@ final class SessionController {
         refreshSnapshot(at: now)
         persistSession(record: .transition(
             from: previousSession, at: now, outcome: .skipped, source: .manual
-        ))
+        ), at: now)
         scheduleNextEvent()
         if shouldSuggestBreak { presentSkippedBreakReminder() }
     }
@@ -343,6 +401,10 @@ final class SessionController {
     }
 
     private func scheduleNextEvent() {
+        guard engine.systemPauseStartedAt == nil else {
+            scheduler.cancel()
+            return
+        }
         if configuration.pauseDuringMeetings,
            handleMeetingActivity(meetingMonitor.sample(), at: Date()) {
             persistSession()
@@ -370,20 +432,23 @@ final class SessionController {
         return true
     }
 
-    private func persistSession(record: BreakHistoryEntry? = nil) {
-        if let record { pendingHistoryEntries.append(record) }
-        if let historyStore {
-            do {
-                for entry in pendingHistoryEntries {
-                    try historyStore.insert(entry)
-                }
-                pendingHistoryEntries.removeAll()
-            } catch {
-                NSLog("Kaskas: Failed to save break history: %@", String(describing: error))
-                return
-            }
+    private var currentActivityKind: ActivityKind {
+        if engine.systemPauseStartedAt != nil {
+            return activityTracker.journal.cursor?.kind ?? .computerInactive
         }
-        store.save(state: engine.state)
+        if engine.meetingPauseStartedAt != nil { return .kaskasPaused }
+        return engine.session.phase == .focusing ? .studying : .breakTime
+    }
+
+    private func persistSession(
+        record: BreakHistoryEntry? = nil,
+        at now: Date = Date(),
+        activityKind: ActivityKind? = nil
+    ) {
+        activityTracker.update(to: activityKind ?? currentActivityKind, at: now)
+        activityStorageFailed = activityTracker.storageFailed
+        persistence.save(state: engine.state, record: record)
+        historySaveFailed = persistence.historySaveFailed
     }
 
     private func refreshSnapshot(at now: Date = Date()) {

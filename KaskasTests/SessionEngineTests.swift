@@ -131,6 +131,131 @@ struct SessionEngineTests {
     }
 
     @Test
+    func wakingAfterFocusDeadlineKeepsRemainingTimeAndDoesNotOpenBreak() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let sleepAt = startDate.addingTimeInterval(44 * 60 + 50)
+        let wakeAt = sleepAt.addingTimeInterval(8 * 60 * 60)
+
+        engine.beginSystemPause(at: sleepAt)
+        #expect(engine.nextEventDate == nil)
+        #expect(engine.snapshot(at: wakeAt).remaining == 10)
+        #expect(engine.process(at: wakeAt).isEmpty)
+
+        engine.endSystemPause(at: wakeAt, meetingActive: false)
+        #expect(engine.snapshot(at: wakeAt).remaining == 60)
+        #expect(engine.process(at: wakeAt).isEmpty)
+        #expect(engine.process(at: wakeAt.addingTimeInterval(40)) == [.breakApproaching])
+        #expect(engine.process(at: wakeAt.addingTimeInterval(60)) == [.fullBreakDue])
+    }
+
+    @Test
+    func repeatedSleepAndWakeNotificationsDoNotExtendTheSessionTwice() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let sleepAt = startDate.addingTimeInterval(10 * 60)
+        let wakeAt = sleepAt.addingTimeInterval(60 * 60)
+
+        engine.beginSystemPause(at: sleepAt)
+        engine.beginSystemPause(at: sleepAt.addingTimeInterval(60))
+        engine.endSystemPause(at: wakeAt, meetingActive: false)
+        let deadline = engine.session.endsAt
+        engine.endSystemPause(at: wakeAt.addingTimeInterval(60), meetingActive: false)
+
+        #expect(deadline == startDate.addingTimeInterval(105 * 60))
+        #expect(engine.session.endsAt == deadline)
+        #expect(engine.snapshot(at: wakeAt).remaining == 35 * 60)
+    }
+
+    @Test
+    func reopeningAfterQuitPreservesWorkAlreadyDone() throws {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        let quitAt = startDate.addingTimeInterval(25 * 60)
+        let reopenAt = quitAt.addingTimeInterval(3 * 60 * 60)
+        original.beginSystemPause(at: quitAt)
+
+        let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(original.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: saved)
+        restored.prepareForLaunch(at: reopenAt)
+        restored.endSystemPause(at: reopenAt, meetingActive: false)
+
+        #expect(restored.snapshot(at: reopenAt).remaining == 20 * 60)
+        #expect(restored.process(at: reopenAt).isEmpty)
+        #expect(restored.session.nextMicroReminderAt == reopenAt.addingTimeInterval(15 * 60))
+    }
+
+    @Test
+    func sleepingDuringBreakKeepsBreakTimeForWhenMacWakes() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakAt = startDate.addingTimeInterval(45 * 60)
+        _ = engine.process(at: breakAt)
+        let sleepAt = breakAt.addingTimeInterval(60)
+        let wakeAt = sleepAt.addingTimeInterval(2 * 60 * 60)
+
+        engine.beginSystemPause(at: sleepAt)
+        engine.endSystemPause(at: wakeAt, meetingActive: false)
+
+        #expect(engine.session.phase == .onBreak)
+        #expect(engine.snapshot(at: wakeAt).remaining == 4 * 60)
+        #expect(engine.process(at: wakeAt).isEmpty)
+    }
+
+    @Test
+    func relaunchDuringBreakStartsQuietlyAfterResumingStoredPause() throws {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        let breakAt = startDate.addingTimeInterval(45 * 60)
+        _ = original.process(at: breakAt)
+        let quitAt = breakAt.addingTimeInterval(60)
+        let relaunchAt = quitAt.addingTimeInterval(30 * 60)
+        original.beginSystemPause(at: quitAt)
+
+        let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(original.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: saved)
+        restored.endSystemPause(at: relaunchAt, meetingActive: false)
+        restored.prepareForLaunch(at: relaunchAt)
+
+        #expect(restored.session.phase == .focusing)
+        #expect(restored.session.startedAt == relaunchAt)
+        #expect(restored.process(at: relaunchAt).isEmpty)
+    }
+
+    @Test
+    func reopeningDuringMeetingPreservesFrozenCountdown() throws {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        let meetingAt = startDate.addingTimeInterval(10 * 60)
+        let closeAt = meetingAt.addingTimeInterval(5 * 60)
+        let reopenAt = closeAt.addingTimeInterval(2 * 60 * 60)
+        original.beginMeetingPause(at: meetingAt)
+        original.beginSystemPause(at: closeAt)
+
+        let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(original.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: saved)
+        restored.prepareForLaunch(at: reopenAt)
+        restored.endSystemPause(at: reopenAt, meetingActive: true)
+
+        #expect(restored.snapshot(at: reopenAt).remaining == 35 * 60)
+        #expect(restored.process(at: reopenAt).isEmpty)
+        restored.endMeetingPause(at: reopenAt.addingTimeInterval(10 * 60))
+        #expect(restored.snapshot(at: reopenAt.addingTimeInterval(10 * 60)).remaining == 36 * 60)
+    }
+
+    @Test
+    func reopeningAfterMeetingEndedDoesNotCountTimeWhileClosed() throws {
+        var original = SessionEngine(configuration: configuration, now: startDate)
+        let meetingAt = startDate.addingTimeInterval(10 * 60)
+        let closeAt = meetingAt.addingTimeInterval(5 * 60)
+        let reopenAt = closeAt.addingTimeInterval(2 * 60 * 60)
+        original.beginMeetingPause(at: meetingAt)
+        original.beginSystemPause(at: closeAt)
+
+        let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(original.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: saved)
+        restored.endSystemPause(at: reopenAt, meetingActive: false)
+
+        #expect(restored.meetingPauseStartedAt == nil)
+        #expect(restored.snapshot(at: reopenAt).remaining == 36 * 60)
+        #expect(restored.process(at: reopenAt).isEmpty)
+    }
+
+    @Test
     func postponingBreakSchedulesAnotherWarning() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let warningAt = startDate.addingTimeInterval(44 * 60 + 40)
@@ -410,6 +535,32 @@ struct SessionEngineTests {
         #expect(engine.skipBreak(at: breakStart) == false)
         #expect(engine.breaksTakenToday(at: breakStart) == 0)
         #expect(engine.consecutiveSkippedBreaks == 1)
+    }
+
+    @Test
+    func endingABreakAfterTwoMinutesDoesNotSuggestAnotherBreak() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        _ = engine.skipBreak(at: startDate)
+        _ = engine.skipBreak(at: startDate.addingTimeInterval(1))
+        let breakStart = engine.session.endsAt
+        _ = engine.process(at: breakStart)
+
+        #expect(engine.skipBreak(at: breakStart.addingTimeInterval(2 * 60)) == false)
+        #expect(engine.consecutiveSkippedBreaks == 0)
+        #expect(engine.breaksTakenToday(at: breakStart.addingTimeInterval(2 * 60)) == 0)
+        #expect(engine.skipBreak(at: engine.session.startedAt) == false)
+    }
+
+    @Test
+    func endingABreakImmediatelyStillCountsAsSkippingIt() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        _ = engine.skipBreak(at: startDate)
+        _ = engine.skipBreak(at: startDate.addingTimeInterval(1))
+        let breakStart = engine.session.endsAt
+        _ = engine.process(at: breakStart)
+
+        #expect(engine.skipBreak(at: breakStart.addingTimeInterval(30)) == true)
+        #expect(engine.consecutiveSkippedBreaks == 3)
     }
 
     @Test

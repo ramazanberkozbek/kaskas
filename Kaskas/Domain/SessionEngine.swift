@@ -2,7 +2,9 @@ import Foundation
 
 struct SessionEngine: Sendable {
     static let breakWarningLeadTime: TimeInterval = 20
+    static let meaningfulBreakDuration: TimeInterval = 60
     static let meetingResumeDelay: TimeInterval = 60
+    static let systemResumeGrace: TimeInterval = 60
 
     private(set) var configuration: FocusConfiguration
     private(set) var activeConfiguration: FocusConfiguration
@@ -12,6 +14,7 @@ struct SessionEngine: Sendable {
     private(set) var completedBreaksDay: Date?
     private(set) var consecutiveSkippedBreaks = 0
     private(set) var meetingPauseStartedAt: Date?
+    private(set) var systemPauseStartedAt: Date?
 
     init(
         configuration: FocusConfiguration = FocusConfiguration(),
@@ -31,6 +34,7 @@ struct SessionEngine: Sendable {
         completedBreaksDay = restoredState.completedBreaksDay
         consecutiveSkippedBreaks = restoredState.consecutiveSkippedBreaks
         meetingPauseStartedAt = restoredState.meetingPauseStartedAt
+        systemPauseStartedAt = restoredState.systemPauseStartedAt
     }
 
     var state: SessionState {
@@ -41,7 +45,8 @@ struct SessionEngine: Sendable {
             completedBreaks: completedBreaks,
             completedBreaksDay: completedBreaksDay,
             consecutiveSkippedBreaks: consecutiveSkippedBreaks,
-            meetingPauseStartedAt: meetingPauseStartedAt
+            meetingPauseStartedAt: meetingPauseStartedAt,
+            systemPauseStartedAt: systemPauseStartedAt
         )
     }
 
@@ -54,7 +59,7 @@ struct SessionEngine: Sendable {
     }
 
     var nextEventDate: Date? {
-        if meetingPauseStartedAt != nil { return nil }
+        if meetingPauseStartedAt != nil || systemPauseStartedAt != nil { return nil }
         switch session.phase {
         case .focusing:
             var nextDate = session.endsAt
@@ -77,7 +82,9 @@ struct SessionEngine: Sendable {
 
     func snapshot(at now: Date = Date()) -> SessionSnapshot {
         let totalDuration = max(1, session.endsAt.timeIntervalSince(session.startedAt))
-        let effectiveNow = meetingPauseStartedAt.map { min(now, $0) } ?? now
+        let effectiveNow = [meetingPauseStartedAt, systemPauseStartedAt]
+            .compactMap { $0 }
+            .reduce(now, min)
         let remaining = max(0, session.endsAt.timeIntervalSince(effectiveNow))
         let elapsed = totalDuration - remaining
 
@@ -93,7 +100,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func prepareForLaunch(at now: Date = Date()) {
-        if meetingPauseStartedAt != nil { return }
+        if meetingPauseStartedAt != nil || systemPauseStartedAt != nil { return }
         // A break or its warning must not take over the screen as the app opens.
         // Keep a focus session only when there is enough time before its warning.
         if session.phase == .onBreak ||
@@ -126,7 +133,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func process(at now: Date = Date()) -> [SessionEvent] {
-        if meetingPauseStartedAt != nil { return [] }
+        if meetingPauseStartedAt != nil || systemPauseStartedAt != nil { return [] }
         switch session.phase {
         case .focusing:
             if now >= session.endsAt {
@@ -194,6 +201,12 @@ struct SessionEngine: Sendable {
 
     @discardableResult
     mutating func skipBreak(at now: Date = Date()) -> Bool {
+        if session.phase == .onBreak,
+           now.timeIntervalSince(session.startedAt) >= Self.meaningfulBreakDuration {
+            consecutiveSkippedBreaks = 0
+            startFocus(at: now)
+            return false
+        }
         consecutiveSkippedBreaks += 1
         startFocus(at: now)
         return consecutiveSkippedBreaks % 3 == 0
@@ -239,18 +252,60 @@ struct SessionEngine: Sendable {
     }
 
     mutating func beginMeetingPause(at now: Date) {
-        guard meetingPauseStartedAt == nil, session.phase == .focusing else { return }
+        guard meetingPauseStartedAt == nil, systemPauseStartedAt == nil,
+              session.phase == .focusing else { return }
         meetingPauseStartedAt = now
         hasShownBreakWarning = false
     }
 
     mutating func endMeetingPause(at now: Date) {
+        guard systemPauseStartedAt == nil else { return }
         guard let startedAt = meetingPauseStartedAt else { return }
         meetingPauseStartedAt = nil
         let shift = max(0, now.timeIntervalSince(startedAt)) + Self.meetingResumeDelay
-        session.startedAt = session.startedAt.addingTimeInterval(shift)
-        session.endsAt = session.endsAt.addingTimeInterval(shift)
-        session.nextMicroReminderAt = session.nextMicroReminderAt?.addingTimeInterval(shift)
+        shiftDeadlines(by: shift)
+        skipPastReminders(at: now)
+    }
+
+    mutating func beginSystemPause(at now: Date) {
+        guard systemPauseStartedAt == nil else { return }
+        systemPauseStartedAt = now
+        hasShownBreakWarning = false
+    }
+
+    mutating func endSystemPause(at now: Date, meetingActive: Bool) {
+        guard let startedAt = systemPauseStartedAt else { return }
+        systemPauseStartedAt = nil
+
+        if meetingPauseStartedAt != nil {
+            if !meetingActive { endMeetingPause(at: now) }
+            return
+        }
+
+        let remainingAtPause = session.endsAt.timeIntervalSince(startedAt)
+        var shift = max(0, now.timeIntervalSince(startedAt))
+        if session.phase == .focusing {
+            // Give the user time to settle before a warning or full-screen break.
+            shift += max(0, Self.systemResumeGrace - remainingAtPause)
+        }
+        shiftDeadlines(by: shift)
+        skipPastReminders(at: now)
+        if meetingActive { beginMeetingPause(at: now) }
+    }
+
+    private mutating func shiftDeadlines(by duration: TimeInterval) {
+        session.startedAt = session.startedAt.addingTimeInterval(duration)
+        session.endsAt = session.endsAt.addingTimeInterval(duration)
+        session.nextMicroReminderAt = session.nextMicroReminderAt?.addingTimeInterval(duration)
+    }
+
+    private mutating func skipPastReminders(at now: Date) {
+        guard let reminderAt = session.nextMicroReminderAt, reminderAt <= now else { return }
+        session.nextMicroReminderAt = nextFutureMicroReminder(
+            after: reminderAt,
+            relativeTo: now,
+            focusEndsAt: session.endsAt
+        )
     }
 
     private func nextFutureMicroReminder(

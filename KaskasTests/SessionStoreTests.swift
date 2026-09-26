@@ -31,6 +31,7 @@ struct SessionStoreTests {
         #expect(configuration.breakSound == .glass)
         #expect(configuration.microReminderMascot == .flame)
         #expect(configuration.microReminderColor == .peach)
+        #expect(configuration.menuBarDisplayMode == .iconAndTimer)
     }
 
     @Test
@@ -49,7 +50,8 @@ struct SessionStoreTests {
             breakSoundEnabled: true,
             breakSound: .ping,
             microReminderMascot: .flame,
-            microReminderColor: .blue
+            microReminderColor: .blue,
+            menuBarDisplayMode: .timerOnly
         )
         let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
         var engine = SessionEngine(configuration: configuration, now: startDate)
@@ -64,8 +66,33 @@ struct SessionStoreTests {
         let savedValues = try! JSONSerialization.jsonObject(with: savedData) as! [String: Any]
         #expect(savedValues["microReminderMascot"] as? String == "flame")
         #expect(savedValues["microReminderColor"] as? String == "blue")
+        #expect(savedValues["menuBarDisplayMode"] as? String == "timerOnly")
         #expect(store.loadSessionState() == engine.state)
         #expect(store.loadSessionState()?.consecutiveSkippedBreaks == 2)
+    }
+
+    @Test
+    func lastCheckpointCanFreezeTimeAfterAnUnexpectedExit() throws {
+        let suiteName = "SessionStoreTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SessionStore(defaults: defaults)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let checkpoint = start.addingTimeInterval(25 * 60)
+        let relaunch = checkpoint.addingTimeInterval(3 * 60 * 60)
+        let original = SessionEngine(now: start)
+        store.save(state: original.state, observedAt: checkpoint)
+
+        var restored = SessionEngine(
+            configuration: original.configuration,
+            restoredState: try #require(store.loadSessionState())
+        )
+        restored.beginSystemPause(at: try #require(store.loadLastActiveAt()))
+        restored.endSystemPause(at: relaunch, meetingActive: false)
+
+        #expect(restored.snapshot(at: relaunch).remaining == 20 * 60)
+        #expect(restored.process(at: relaunch).isEmpty)
     }
 
     @Test

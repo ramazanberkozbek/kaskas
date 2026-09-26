@@ -1,12 +1,12 @@
 import Foundation
 
-struct BreakHistoryEntry: Equatable, Sendable {
-    enum Outcome: String, Sendable {
+struct BreakHistoryEntry: Codable, Equatable, Sendable {
+    enum Outcome: String, Codable, Sendable {
         case completed
         case skipped
     }
 
-    enum Source: String, Sendable {
+    enum Source: String, Codable, Sendable {
         case scheduled
         case manual
         case smartPause

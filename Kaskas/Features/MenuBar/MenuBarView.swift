@@ -44,6 +44,13 @@ struct MenuBarView: View {
 
             todayRow
 
+            if controller.historySaveFailed {
+                Label("menu.historySaveFailed", systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .padding(.vertical, 6)
+            }
+
             Divider()
 
             footer
