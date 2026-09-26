@@ -11,6 +11,8 @@ final class SessionController {
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
     @ObservationIgnored private let store: SessionStore
+    @ObservationIgnored private let historyStore: BreakHistoryStore?
+    @ObservationIgnored private var pendingHistoryEntries: [BreakHistoryEntry] = []
     @ObservationIgnored private let microReminderPresenter: MicroReminderPresenter
     @ObservationIgnored private let breakWarningPresenter: BreakWarningPresenter
     @ObservationIgnored private let breakPresenter: BreakPresenter
@@ -20,6 +22,7 @@ final class SessionController {
 
     init(
         store: SessionStore = SessionStore(),
+        historyStore: BreakHistoryStore? = nil,
         scheduler: SessionScheduler = SessionScheduler(),
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
         breakWarningPresenter: BreakWarningPresenter = BreakWarningPresenter(),
@@ -30,6 +33,7 @@ final class SessionController {
         let configuration = store.loadConfiguration()
         self.configuration = configuration
         self.store = store
+        self.historyStore = historyStore
         self.scheduler = scheduler
         self.microReminderPresenter = microReminderPresenter
         self.breakWarningPresenter = breakWarningPresenter
@@ -70,9 +74,15 @@ final class SessionController {
     }
 
     func reconcile(at now: Date = Date()) {
+        let previousSession = engine.session
         let events = engine.process(at: now)
         refreshSnapshot(at: now)
-        persistSession()
+        let completedBreak = events.contains(.breakEnded)
+            ? BreakHistoryEntry.transition(
+                from: previousSession, at: now, outcome: .completed, source: .scheduled
+            )
+            : nil
+        persistSession(record: completedBreak)
 
         for event in events {
             handle(event)
@@ -203,22 +213,28 @@ final class SessionController {
 
     func skipCurrentBreak() {
         let now = Date()
+        let previousSession = engine.session
         breakWarningPresenter.dismiss()
         let shouldSuggestBreak = engine.skipBreak(at: now)
         refreshSnapshot(at: now)
         breakPresenter.dismiss()
-        persistSession()
+        persistSession(record: .transition(
+            from: previousSession, at: now, outcome: .skipped, source: .manual
+        ))
         scheduleNextEvent()
         if shouldSuggestBreak { presentSkippedBreakReminder() }
     }
 
     func completeBreak() {
         let now = Date()
+        let previousSession = engine.session
         breakWarningPresenter.dismiss()
         engine.completeBreak(at: now)
         refreshSnapshot(at: now)
         breakPresenter.dismiss()
-        persistSession()
+        persistSession(record: previousSession.phase == .onBreak ? .transition(
+            from: previousSession, at: now, outcome: .completed, source: .manual
+        ) : nil)
         scheduleNextEvent()
     }
 
@@ -263,10 +279,13 @@ final class SessionController {
 
     private func skipUpcomingBreak() {
         let now = Date()
+        let previousSession = engine.session
         let shouldSuggestBreak = engine.skipBreak(at: now)
         breakWarningPresenter.dismiss()
         refreshSnapshot(at: now)
-        persistSession()
+        persistSession(record: .transition(
+            from: previousSession, at: now, outcome: .skipped, source: .manual
+        ))
         scheduleNextEvent()
         if shouldSuggestBreak { presentSkippedBreakReminder() }
     }
@@ -301,7 +320,19 @@ final class SessionController {
         }
     }
 
-    private func persistSession() {
+    private func persistSession(record: BreakHistoryEntry? = nil) {
+        if let record { pendingHistoryEntries.append(record) }
+        if let historyStore {
+            do {
+                for entry in pendingHistoryEntries {
+                    try historyStore.insert(entry)
+                }
+                pendingHistoryEntries.removeAll()
+            } catch {
+                NSLog("Kaskas: Failed to save break history: %@", String(describing: error))
+                return
+            }
+        }
         store.save(state: engine.state)
     }
 

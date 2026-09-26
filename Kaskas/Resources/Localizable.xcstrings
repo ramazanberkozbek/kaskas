@@ -24,6 +24,28 @@
         }
       }
     },
+    "persistence.error.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola geçmişi açılamadı"
+          }
+        }
+      }
+    },
+    "persistence.error.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verilerinizi korumak için Kaskas başlatılmadı. Lütfen uygulamayı yeniden açın."
+          }
+        }
+      }
+    },
     "break.backgroundHint" : {
       "extractionState" : "manual",
       "localizations" : {

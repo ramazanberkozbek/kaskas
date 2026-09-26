@@ -42,11 +42,20 @@ final class SessionStore {
         return try? decoder.decode(SessionState.self, from: data)
     }
 
+    func loadLegacySmartPauseRecords() throws -> [LegacySmartPauseRecord] {
+        guard let data = defaults.data(forKey: Key.sessionState) else { return [] }
+        return try decoder.decode(LegacySessionState.self, from: data).smartPauseRecords ?? []
+    }
+
     func save(state: SessionState) {
         guard let data = try? encoder.encode(state) else {
             return
         }
 
         defaults.set(data, forKey: Key.sessionState)
+    }
+
+    private struct LegacySessionState: Decodable {
+        let smartPauseRecords: [LegacySmartPauseRecord]?
     }
 }
