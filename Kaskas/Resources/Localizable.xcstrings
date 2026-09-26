@@ -7,6 +7,9 @@
     " " : {
 
     },
+    "%lld dk" : {
+
+    },
     "•" : {
 
     },
@@ -20,28 +23,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaskas"
-          }
-        }
-      }
-    },
-    "persistence.error.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mola geçmişi açılamadı"
-          }
-        }
-      }
-    },
-    "persistence.error.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verilerinizi korumak için Kaskas başlatılmadı. Lütfen uygulamayı yeniden açın."
           }
         }
       }
@@ -155,6 +136,9 @@
           }
         }
       }
+    },
+    "Day" : {
+
     },
     "debug.break" : {
       "extractionState" : "manual",
@@ -291,6 +275,18 @@
     "esc" : {
 
     },
+    "Her %lld. molada" : {
+
+    },
+    "Hour" : {
+
+    },
+    "Hour end" : {
+
+    },
+    "Hour start" : {
+
+    },
     "Kapat" : {
 
     },
@@ -305,9 +301,100 @@
         }
       }
     },
+    "menu.badge.longBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LONG BREAK"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UZUN MOLA"
+          }
+        }
+      }
+    },
+    "menu.badge.manualPause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PAUSED"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DURAKLATILDI"
+          }
+        }
+      }
+    },
+    "menu.badge.meetingPause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN A MEETING"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TOPLANTIDA"
+          }
+        }
+      }
+    },
+    "menu.badge.onBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ON BREAK"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MOLADA"
+          }
+        }
+      }
+    },
+    "menu.badge.shortBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHORT BREAK"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KISA MOLA"
+          }
+        }
+      }
+    },
     "menu.atTime" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "at"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -319,6 +406,12 @@
     "menu.break" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -341,21 +434,16 @@
     "menu.completeBreak" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish Break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Molayı Bitir"
-          }
-        }
-      }
-    },
-    "menu.nextBreak" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sıradaki mola"
           }
         }
       }
@@ -371,6 +459,17 @@
         }
       }
     },
+    "menu.manualPaused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas duraklatıldı"
+          }
+        }
+      }
+    },
     "menu.meetingPaused" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -378,6 +477,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toplantıda ertelendi"
+          }
+        }
+      }
+    },
+    "menu.nextBreak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Break"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıradaki mola"
+          }
+        }
+      }
+    },
+    "menu.pause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause Kaskas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas'ı duraklat"
           }
         }
       }
@@ -415,6 +548,23 @@
         }
       }
     },
+    "menu.resume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume Kaskas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas'ı sürdür"
+          }
+        }
+      }
+    },
     "menu.settings" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -429,6 +579,12 @@
     "menu.snooze" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snooze Break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -440,6 +596,12 @@
     "menu.startBreak" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Break Now"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -455,6 +617,31 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bugün"
+          }
+        }
+      }
+    },
+    "Minutes" : {
+
+    },
+    "persistence.error.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verilerinizi korumak için Kaskas başlatılmadı. Lütfen uygulamayı yeniden açın."
+          }
+        }
+      }
+    },
+    "persistence.error.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola geçmişi açılamadı"
           }
         }
       }
@@ -480,6 +667,9 @@
           }
         }
       }
+    },
+    "Series" : {
+
     },
     "settings.breakAppearance.aurora" : {
       "extractionState" : "manual",
@@ -778,13 +968,57 @@
         }
       }
     },
+    "settings.breakSound.endChoice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş sesi"
+          }
+        }
+      }
+    },
+    "settings.breakSound.endEnabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola bittiğinde ses çal"
+          }
+        }
+      }
+    },
+    "settings.breakSound.endEnabledDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola tamamlandığında seçili sesi bir kez çal"
+          }
+        }
+      }
+    },
+    "settings.breakSound.startChoice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlangıç sesi"
+          }
+        }
+      }
+    },
     "settings.breakSound.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mola başladığında isteğe bağlı bir ses çalınır"
+            "value" : "Mola başlarken ve biterken çalınacak sesleri seçin"
           }
         }
       }
@@ -873,6 +1107,105 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genel"
+          }
+        }
+      }
+    },
+    "settings.longBreak.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha derin dinlenme için ara sıra daha uzun mola ver"
+          }
+        }
+      }
+    },
+    "settings.longBreak.duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Süre"
+          }
+        }
+      }
+    },
+    "settings.longBreak.duration.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uzun molanın ne kadar süreceği"
+          }
+        }
+      }
+    },
+    "settings.longBreak.frequency" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıklık"
+          }
+        }
+      }
+    },
+    "settings.longBreak.frequency.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaç planlı molada bir uzun mola verileceği"
+          }
+        }
+      }
+    },
+    "settings.longBreak.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UZUN MOLALAR"
+          }
+        }
+      }
+    },
+    "settings.meetings.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon veya kamera kullanılırken otomatik molaları sessizce ertele. Ses ve görüntü kaydedilmez."
+          }
+        }
+      }
+    },
+    "settings.meetings.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantılarda molaları ertele"
+          }
+        }
+      }
+    },
+    "settings.meetings.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantı koruması"
           }
         }
       }
@@ -1060,39 +1393,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MENÜ ÇUBUĞU"
-          }
-        }
-      }
-    },
-    "settings.meetings.description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mikrofon veya kamera kullanılırken otomatik molaları sessizce ertele. Ses ve görüntü kaydedilmez."
-          }
-        }
-      }
-    },
-    "settings.meetings.enabled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toplantılarda molaları ertele"
-          }
-        }
-      }
-    },
-    "settings.meetings.section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toplantı koruması"
           }
         }
       }
@@ -1482,50 +1782,6 @@
         }
       }
     },
-    "warning.fiveMinutes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+5 dk"
-          }
-        }
-      }
-    },
-    "warning.oneMinute" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+1 dk"
-          }
-        }
-      }
-    },
-    "warning.skip" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Molayı geç"
-          }
-        }
-      }
-    },
-    "warning.startNow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Şimdi başlat"
-          }
-        }
-      }
-    },
     "stats.axis.day" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1544,6 +1800,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saat"
+          }
+        }
+      }
+    },
+    "stats.chooseDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarih seç"
           }
         }
       }
@@ -1581,6 +1848,61 @@
         }
       }
     },
+    "stats.hourly.day" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlük"
+          }
+        }
+      }
+    },
+    "stats.hourly.noFocus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu saatte odaklanma yok"
+          }
+        }
+      }
+    },
+    "stats.hourly.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günün hangi saatlerinde odaklandın"
+          }
+        }
+      }
+    },
+    "stats.hourly.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SAATLİK ODAKLANMA"
+          }
+        }
+      }
+    },
+    "stats.hourly.week" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 Gün"
+          }
+        }
+      }
+    },
     "stats.kind.breakTime" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1609,7 +1931,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaskas durdu"
+            "value" : "Kaskas duraklatıldı"
           }
         }
       }
@@ -1735,6 +2057,17 @@
         }
       }
     },
+    "stats.total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplam"
+          }
+        }
+      }
+    },
     "stats.trend.average" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1764,6 +2097,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ÇALIŞMA EĞİLİMİ"
+          }
+        }
+      }
+    },
+    "stats.year.focusMinutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d dakika odaklanıldı"
           }
         }
       }
@@ -1812,6 +2156,50 @@
         }
       }
     },
+    "warning.fiveMinutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 dk"
+          }
+        }
+      }
+    },
+    "warning.oneMinute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 dk"
+          }
+        }
+      }
+    },
+    "warning.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molayı geç"
+          }
+        }
+      }
+    },
+    "warning.startNow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi başlat"
+          }
+        }
+      }
+    },
     "warning.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1833,6 +2221,9 @@
           }
         }
       }
+    },
+    "Zero minutes" : {
+
     }
   },
   "version" : "1.0"
