@@ -3,9 +3,30 @@ import SwiftUI
 
 @MainActor
 final class BreakPresenter {
-    private var window: BreakPanel?
-    private var presentedEndDate: Date?
-    private var isShowingPreview = false
+    private struct Presentation {
+        let endsAt: Date
+        let configuration: FocusConfiguration
+        let isPreview: Bool
+        let onSnooze: @MainActor () -> Void
+        let onSkip: @MainActor () -> Void
+        let onLockScreen: @MainActor () -> Void
+        let onOpenSettings: @MainActor () -> Void
+    }
+
+    private struct ScreenLayout: Equatable {
+        let number: Int?
+        let frame: CGRect
+
+        init(_ screen: NSScreen) {
+            number = (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.intValue
+            frame = screen.frame
+        }
+    }
+
+    private var panels: [BreakPanel] = []
+    private var presentation: Presentation?
+    private var screenLayout: [ScreenLayout] = []
+    private var screenChangeObserver: NSObjectProtocol?
 
     func show(
         endsAt: Date,
@@ -16,21 +37,21 @@ final class BreakPresenter {
         onLockScreen: @escaping @MainActor () -> Void,
         onOpenSettings: @escaping @MainActor () -> Void
     ) {
-        if window?.isVisible == true, presentedEndDate == endsAt {
+        let screens = NSScreen.screens
+        if let presentation,
+           presentation.endsAt == endsAt,
+           presentation.configuration == configuration,
+           presentation.isPreview == isPreview {
+            if screenLayout != screens.map(ScreenLayout.init) || !panels.allSatisfy(\.isVisible) {
+                rebuildPanels(on: screens)
+            }
             return
         }
 
         dismiss()
+        guard !screens.isEmpty else { return }
 
-        let mouseLocation = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(mouseLocation) }
-            ?? NSScreen.main
-            ?? NSScreen.screens.first
-        guard let screen else {
-            return
-        }
-
-        let rootView = BreakView(
+        presentation = Presentation(
             endsAt: endsAt,
             configuration: configuration,
             isPreview: isPreview,
@@ -39,28 +60,16 @@ final class BreakPresenter {
             onLockScreen: onLockScreen,
             onOpenSettings: onOpenSettings
         )
-        let hostingController = NSHostingController(rootView: rootView)
-        let window = BreakPanel(
-            contentRect: screen.frame,
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false,
-            screen: screen
-        )
-        window.onEscape = onSkip
-        window.contentViewController = hostingController
-        window.backgroundColor = .black
-        window.level = .screenSaver
-        window.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications]
-        window.hidesOnDeactivate = false
-        window.isReleasedWhenClosed = false
-        window.setFrame(screen.frame, display: true)
-
-        window.orderFrontRegardless()
-        window.makeKey()
-        self.window = window
-        presentedEndDate = endsAt
-        isShowingPreview = isPreview
+        screenChangeObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateForScreenChanges()
+            }
+        }
+        rebuildPanels(on: screens)
 
         if !isPreview, configuration.breakSoundEnabled {
             NSSound(named: NSSound.Name(configuration.breakSound.rawValue))?.play()
@@ -68,14 +77,70 @@ final class BreakPresenter {
     }
 
     func dismiss() {
-        window?.orderOut(nil)
-        window = nil
-        presentedEndDate = nil
-        isShowingPreview = false
+        if let screenChangeObserver {
+            NotificationCenter.default.removeObserver(screenChangeObserver)
+            self.screenChangeObserver = nil
+        }
+        panels.forEach { $0.orderOut(nil) }
+        panels.removeAll()
+        screenLayout.removeAll()
+        presentation = nil
     }
 
     func dismissPreview() {
-        if isShowingPreview { dismiss() }
+        if presentation?.isPreview == true { dismiss() }
+    }
+
+    private func updateForScreenChanges() {
+        guard presentation != nil else { return }
+        let screens = NSScreen.screens
+        guard screenLayout != screens.map(ScreenLayout.init) else { return }
+        rebuildPanels(on: screens)
+    }
+
+    private func rebuildPanels(on screens: [NSScreen]) {
+        guard let presentation else { return }
+
+        panels.forEach { $0.orderOut(nil) }
+        panels.removeAll()
+        screenLayout = screens.map(ScreenLayout.init)
+
+        for (index, screen) in screens.enumerated() {
+            let panel = BreakPanel(
+                contentRect: screen.frame,
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false,
+                screen: screen
+            )
+            panel.onEscape = presentation.onSkip
+            if index == 0 {
+                panel.contentViewController = NSHostingController(rootView: BreakView(
+                    endsAt: presentation.endsAt,
+                    configuration: presentation.configuration,
+                    isPreview: presentation.isPreview,
+                    onSnooze: presentation.onSnooze,
+                    onSkip: presentation.onSkip,
+                    onLockScreen: presentation.onLockScreen,
+                    onOpenSettings: presentation.onOpenSettings
+                ))
+            } else {
+                panel.contentViewController = NSHostingController(rootView: BreakBackgroundView(
+                    background: presentation.configuration.breakBackground,
+                    customWallpaperPath: presentation.configuration.customWallpaperPath
+                ).ignoresSafeArea())
+            }
+            panel.backgroundColor = .black
+            panel.level = .screenSaver
+            panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications]
+            panel.hidesOnDeactivate = false
+            panel.isReleasedWhenClosed = false
+            panel.setFrame(screen.frame, display: true)
+            panel.orderFrontRegardless()
+            panels.append(panel)
+        }
+
+        panels.first?.makeKey()
     }
 }
 
