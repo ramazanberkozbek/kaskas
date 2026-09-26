@@ -24,24 +24,21 @@ private struct MenuBarStatusLabel: View {
 
     var body: some View {
         let remaining = controller.snapshot(at: now).remaining
+        let displayMode = controller.configuration.menuBarDisplayMode
 
         HStack(spacing: 4) {
-            Image("Mascot")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 16, height: 16)
+            if displayMode != .timerOnly {
+                Image("Mascot")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+            }
 
-            Text(Self.formattedRemaining(remaining))
-                .monospacedDigit()
+            if displayMode != .iconOnly {
+                Text(MenuBarDurationFormatter.string(for: remaining))
+                    .monospacedDigit()
+            }
         }
         .onReceive(clock) { now = $0 }
-    }
-
-    private static func formattedRemaining(_ remaining: TimeInterval) -> String {
-        let minutes = max(1, Int(ceil(remaining / 60)))
-        if minutes < 60 { return "\(minutes) dk" }
-        let hours = minutes / 60
-        let extraMinutes = minutes % 60
-        return extraMinutes == 0 ? "\(hours) sa" : "\(hours) sa \(extraMinutes) dk"
     }
 }

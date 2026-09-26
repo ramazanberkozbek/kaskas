@@ -67,6 +67,14 @@ enum MicroReminderColor: String, Codable, CaseIterable, Identifiable, Sendable {
     var titleKey: String { "settings.microReminderColor.\(rawValue)" }
 }
 
+enum MenuBarDisplayMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    case iconAndTimer
+    case iconOnly
+    case timerOnly
+
+    var id: Self { self }
+}
+
 struct FocusConfiguration: Codable, Equatable, Sendable {
     var focusDuration: TimeInterval
     var microReminderInterval: TimeInterval
@@ -80,6 +88,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
     var pauseDuringMeetings: Bool
+    var menuBarDisplayMode: MenuBarDisplayMode
 
     init(
         focusDuration: TimeInterval = 45 * 60,
@@ -93,7 +102,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         microReminderMascot: MicroReminderMascot = .flame,
         microReminderColor: MicroReminderColor = .peach,
         customWallpaperPath: String? = nil,
-        pauseDuringMeetings: Bool = true
+        pauseDuringMeetings: Bool = true,
+        menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer
     ) {
         self.focusDuration = max(1, focusDuration)
         self.microReminderInterval = max(1, microReminderInterval)
@@ -107,6 +117,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
         self.pauseDuringMeetings = pauseDuringMeetings
+        self.menuBarDisplayMode = menuBarDisplayMode
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -122,6 +133,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case microReminderColor
         case customWallpaperPath
         case pauseDuringMeetings
+        case menuBarDisplayMode
     }
 
     init(from decoder: Decoder) throws {
@@ -162,7 +174,11 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             pauseDuringMeetings: try container.decodeIfPresent(
                 Bool.self,
                 forKey: .pauseDuringMeetings
-            ) ?? true
+            ) ?? true,
+            menuBarDisplayMode: try container.decodeIfPresent(
+                MenuBarDisplayMode.self,
+                forKey: .menuBarDisplayMode
+            ) ?? .iconAndTimer
         )
     }
 }
