@@ -19,6 +19,7 @@ struct MenuBarDurationFormatterTests {
         let english = MenuBarDurationFormatter.string(for: 65 * 60, locale: Locale(identifier: "en_US"))
         #expect(turkish.contains("sa"))
         #expect(turkish.contains("dk"))
+        #expect(!turkish.contains("dk."))
         #expect(english.contains("hr"))
         #expect(english.contains("min"))
     }

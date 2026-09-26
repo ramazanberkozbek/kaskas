@@ -9,13 +9,18 @@ enum MenuBarDurationFormatter {
             width: .abbreviated,
             usage: .asProvided
         ).locale(locale)
+        func minuteLabel(_ value: Int) -> String {
+            let label = Measurement(value: Double(value), unit: UnitDuration.minutes).formatted(format)
+            return locale.languageCode == "tr"
+                ? label.replacingOccurrences(of: "dk.", with: "dk")
+                : label
+        }
 
         if hours == 0 {
-            return Measurement(value: Double(minutes), unit: UnitDuration.minutes).formatted(format)
+            return minuteLabel(minutes)
         }
         let hourLabel = Measurement(value: Double(hours), unit: UnitDuration.hours).formatted(format)
         guard extraMinutes > 0 else { return hourLabel }
-        let minuteLabel = Measurement(value: Double(extraMinutes), unit: UnitDuration.minutes).formatted(format)
-        return "\(hourLabel) \(minuteLabel)"
+        return "\(hourLabel) \(minuteLabel(extraMinutes))"
     }
 }

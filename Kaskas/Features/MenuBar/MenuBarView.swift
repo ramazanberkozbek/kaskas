@@ -5,12 +5,53 @@ import SwiftUI
 struct MenuBarView: View {
     let controller: SessionController
 
+    @Environment(\.dismiss) private var dismiss
     @State private var now = Date.now
     @State private var hoveredFooterItem: FooterItem?
 
     private enum FooterItem {
         case settings
         case quit
+    }
+
+    private enum BadgeStatus {
+        case shortBreak
+        case longBreak
+        case manualPause
+        case meetingPause
+        case onBreak
+
+        init(snapshot: SessionSnapshot) {
+            if snapshot.manualPauseStartedAt != nil {
+                self = .manualPause
+            } else if snapshot.meetingPauseStartedAt != nil {
+                self = .meetingPause
+            } else if snapshot.phase == .onBreak {
+                self = .onBreak
+            } else {
+                self = snapshot.nextBreakKind == .long ? .longBreak : .shortBreak
+            }
+        }
+
+        var title: LocalizedStringKey {
+            switch self {
+            case .shortBreak: "menu.badge.shortBreak"
+            case .longBreak: "menu.badge.longBreak"
+            case .manualPause: "menu.badge.manualPause"
+            case .meetingPause: "menu.badge.meetingPause"
+            case .onBreak: "menu.badge.onBreak"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .shortBreak: Color(red: 0.40, green: 0.61, blue: 0.96)
+            case .longBreak: Color(red: 0.98, green: 0.68, blue: 0.35)
+            case .manualPause: Color(red: 0.72, green: 0.72, blue: 0.76)
+            case .meetingPause: Color(red: 0.69, green: 0.56, blue: 0.94)
+            case .onBreak: Color(red: 0.43, green: 0.77, blue: 0.48)
+            }
+        }
     }
 
     private let clock = Timer.publish(
@@ -69,6 +110,7 @@ struct MenuBarView: View {
             // The scheduler owns background transitions. This foreground check
             // also keeps the popover correct after sleep or a large clock jump.
             if controller.sessionSnapshot.meetingPauseStartedAt == nil,
+               controller.sessionSnapshot.manualPauseStartedAt == nil,
                currentDate >= controller.sessionSnapshot.endsAt {
                 controller.reconcile(at: currentDate)
             }
@@ -77,15 +119,29 @@ struct MenuBarView: View {
 
     private func header(for snapshot: SessionSnapshot) -> some View {
         HStack {
-            Text(snapshot.meetingPauseStartedAt != nil
-                ? "menu.meetingPaused"
-                : (snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break"))
+            Text(snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .tracking(1)
 
             Spacer()
+
+            let status = BadgeStatus(snapshot: snapshot)
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(status.color)
+                    .frame(width: 5, height: 5)
+                    .accessibilityHidden(true)
+
+                Text(status.title)
+                    .font(.system(size: 11, weight: .bold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(status.color)
+            .padding(.horizontal, 8)
+            .frame(height: 22)
+            .background(status.color.opacity(0.17), in: RoundedRectangle(cornerRadius: 6))
         }
     }
 
@@ -93,7 +149,7 @@ struct MenuBarView: View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(
                 timerInterval: snapshot.startedAt...snapshot.endsAt,
-                pauseTime: snapshot.meetingPauseStartedAt,
+                pauseTime: snapshot.manualPauseStartedAt ?? snapshot.meetingPauseStartedAt,
                 countsDown: true,
                 showsHours: false
             )
@@ -102,9 +158,12 @@ struct MenuBarView: View {
             .contentTransition(.numericText())
             .accessibilityLabel("menu.remaining")
 
-            (Text("menu.atTime") + Text(" ") + Text(snapshot.endsAt, style: .time))
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
+            if snapshot.manualPauseStartedAt == nil,
+               snapshot.meetingPauseStartedAt == nil {
+                (Text("menu.atTime") + Text(" ") + Text(snapshot.endsAt, style: .time))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
 
             Spacer(minLength: 0)
         }
@@ -112,26 +171,42 @@ struct MenuBarView: View {
 
     @ViewBuilder
     private func actions(for snapshot: SessionSnapshot) -> some View {
-        if snapshot.phase == .focusing {
-            HStack(spacing: 6) {
-                actionButton(
-                    "menu.startBreak",
-                    systemImage: "play.circle",
-                    action: controller.startBreakNow
-                )
+        if snapshot.manualPauseStartedAt != nil {
+            actionButton(
+                "menu.resume",
+                systemImage: "play.fill",
+                action: controller.toggleManualPause
+            )
+        } else {
+            VStack(spacing: 6) {
+                if snapshot.phase == .focusing {
+                    HStack(spacing: 6) {
+                        actionButton(
+                            "menu.startBreak",
+                            systemImage: "play.circle",
+                            action: controller.startBreakNow
+                        )
+
+                        actionButton(
+                            "menu.snooze",
+                            systemImage: "alarm",
+                            action: controller.snooze
+                        )
+                    }
+                } else {
+                    actionButton(
+                        "menu.completeBreak",
+                        systemImage: "checkmark.circle",
+                        action: controller.completeBreak
+                    )
+                }
 
                 actionButton(
-                    "menu.snooze",
-                    systemImage: "alarm",
-                    action: controller.snooze
+                    "menu.pause",
+                    systemImage: "pause.fill",
+                    action: controller.toggleManualPause
                 )
             }
-        } else {
-            actionButton(
-                "menu.completeBreak",
-                systemImage: "checkmark.circle",
-                action: controller.completeBreak
-            )
         }
     }
 
@@ -171,6 +246,9 @@ struct MenuBarView: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 0) {
             footerButton("menu.settings", item: .settings) {
+                let menuWindow = NSApp.keyWindow
+                dismiss()
+                menuWindow?.orderOut(nil)
                 controller.openSettings()
             }
             .keyboardShortcut(",", modifiers: .command)
