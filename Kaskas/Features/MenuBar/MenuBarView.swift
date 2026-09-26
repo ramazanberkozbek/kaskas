@@ -61,7 +61,8 @@ struct MenuBarView: View {
 
             // The scheduler owns background transitions. This foreground check
             // also keeps the popover correct after sleep or a large clock jump.
-            if currentDate >= controller.sessionSnapshot.endsAt {
+            if controller.sessionSnapshot.meetingPauseStartedAt == nil,
+               currentDate >= controller.sessionSnapshot.endsAt {
                 controller.reconcile(at: currentDate)
             }
         }
@@ -69,7 +70,9 @@ struct MenuBarView: View {
 
     private func header(for snapshot: SessionSnapshot) -> some View {
         HStack {
-            Text(snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break")
+            Text(snapshot.meetingPauseStartedAt != nil
+                ? "menu.meetingPaused"
+                : (snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break"))
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
@@ -83,7 +86,7 @@ struct MenuBarView: View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(
                 timerInterval: snapshot.startedAt...snapshot.endsAt,
-                pauseTime: nil,
+                pauseTime: snapshot.meetingPauseStartedAt,
                 countsDown: true,
                 showsHours: false
             )

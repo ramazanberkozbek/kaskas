@@ -1307,6 +1307,16 @@ private struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
+            Section("settings.meetings.section") {
+                Toggle(isOn: pauseDuringMeetings) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("settings.meetings.enabled")
+                        Text("settings.meetings.description")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
             Section("settings.privacy.title") {
                 LabeledContent {
                     Image(systemName: "checkmark.circle.fill")
@@ -1320,6 +1330,16 @@ private struct GeneralSettingsView: View {
 #endif
         }
         .formStyle(.grouped)
+    }
+
+    private var pauseDuringMeetings: Binding<Bool> {
+        Binding {
+            controller.configuration.pauseDuringMeetings
+        } set: { enabled in
+            var configuration = controller.configuration
+            configuration.pauseDuringMeetings = enabled
+            controller.updateConfiguration(configuration)
+        }
     }
 }
 

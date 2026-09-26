@@ -7,6 +7,7 @@ struct SessionState: Codable, Equatable, Sendable {
     let completedBreaks: Int
     let completedBreaksDay: Date?
     let consecutiveSkippedBreaks: Int
+    let meetingPauseStartedAt: Date?
 
     init(
         session: FocusSession,
@@ -14,7 +15,8 @@ struct SessionState: Codable, Equatable, Sendable {
         hasShownBreakWarning: Bool = false,
         completedBreaks: Int = 0,
         completedBreaksDay: Date? = nil,
-        consecutiveSkippedBreaks: Int = 0
+        consecutiveSkippedBreaks: Int = 0,
+        meetingPauseStartedAt: Date? = nil
     ) {
         self.session = session
         self.activeConfiguration = activeConfiguration
@@ -22,11 +24,13 @@ struct SessionState: Codable, Equatable, Sendable {
         self.completedBreaks = completedBreaks
         self.completedBreaksDay = completedBreaksDay
         self.consecutiveSkippedBreaks = consecutiveSkippedBreaks
+        self.meetingPauseStartedAt = meetingPauseStartedAt
     }
 
     private enum CodingKeys: String, CodingKey {
         case session, activeConfiguration, hasShownBreakWarning, completedBreaks, completedBreaksDay
         case consecutiveSkippedBreaks
+        case meetingPauseStartedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -40,5 +44,6 @@ struct SessionState: Codable, Equatable, Sendable {
         completedBreaks = try container.decodeIfPresent(Int.self, forKey: .completedBreaks) ?? 0
         completedBreaksDay = try container.decodeIfPresent(Date.self, forKey: .completedBreaksDay)
         consecutiveSkippedBreaks = try container.decodeIfPresent(Int.self, forKey: .consecutiveSkippedBreaks) ?? 0
+        meetingPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .meetingPauseStartedAt)
     }
 }

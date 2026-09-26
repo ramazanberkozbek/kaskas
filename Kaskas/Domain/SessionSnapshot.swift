@@ -7,4 +7,5 @@ struct SessionSnapshot: Equatable, Sendable {
     let nextMicroReminderAt: Date?
     let remaining: TimeInterval
     let progress: Double
+    let meetingPauseStartedAt: Date?
 }

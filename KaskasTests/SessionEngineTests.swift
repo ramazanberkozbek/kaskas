@@ -73,6 +73,64 @@ struct SessionEngineTests {
     }
 
     @Test
+    func meetingDefersWarningAndBreakUntilAfterCall() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let meetingStart = startDate.addingTimeInterval(44 * 60 + 30)
+        let meetingEnd = meetingStart.addingTimeInterval(10 * 60)
+
+        _ = engine.process(at: startDate.addingTimeInterval(20 * 60))
+        _ = engine.process(at: startDate.addingTimeInterval(40 * 60))
+        engine.beginMeetingPause(at: meetingStart)
+        let remaining = engine.snapshot(at: meetingEnd).remaining
+        #expect(remaining == 30)
+        #expect(engine.nextEventDate == nil)
+        #expect(engine.process(at: meetingEnd).isEmpty)
+        #expect(engine.session.phase == .focusing)
+
+        engine.endMeetingPause(at: meetingEnd)
+        #expect(engine.snapshot(at: meetingEnd).remaining == 90)
+        #expect(engine.process(at: meetingEnd.addingTimeInterval(69)).isEmpty)
+        #expect(engine.process(at: meetingEnd.addingTimeInterval(70)) == [.breakApproaching])
+        #expect(engine.process(at: meetingEnd.addingTimeInterval(90)) == [.fullBreakDue])
+    }
+
+    @Test
+    func repeatedMeetingSamplesDoNotExtendPauseTwice() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let meetingStart = startDate.addingTimeInterval(5 * 60)
+        let meetingEnd = meetingStart.addingTimeInterval(10 * 60)
+
+        engine.beginMeetingPause(at: meetingStart)
+        engine.beginMeetingPause(at: meetingStart.addingTimeInterval(2 * 60))
+        engine.endMeetingPause(at: meetingEnd)
+        let endDate = engine.session.endsAt
+        engine.endMeetingPause(at: meetingEnd.addingTimeInterval(20))
+
+        #expect(endDate == startDate.addingTimeInterval(56 * 60))
+        #expect(engine.session.endsAt == endDate)
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(31 * 60))
+    }
+
+    @Test
+    func restoredMeetingPauseDoesNotShowOverdueBreakOnLaunch() throws {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let meetingStart = startDate.addingTimeInterval(44 * 60)
+        engine.beginMeetingPause(at: meetingStart)
+        let savedState = try JSONDecoder().decode(
+            SessionState.self,
+            from: JSONEncoder().encode(engine.state)
+        )
+        var restored = SessionEngine(configuration: configuration, restoredState: savedState)
+        let launchDate = meetingStart.addingTimeInterval(20 * 60)
+
+        restored.prepareForLaunch(at: launchDate)
+        #expect(restored.process(at: launchDate).isEmpty)
+        restored.endMeetingPause(at: launchDate)
+        #expect(restored.session.phase == .focusing)
+        #expect(restored.snapshot(at: launchDate).remaining == 120)
+    }
+
+    @Test
     func postponingBreakSchedulesAnotherWarning() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let warningAt = startDate.addingTimeInterval(44 * 60 + 40)

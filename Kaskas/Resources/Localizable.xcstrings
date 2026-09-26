@@ -360,6 +360,17 @@
         }
       }
     },
+    "menu.meetingPaused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantıda ertelendi"
+          }
+        }
+      }
+    },
     "menu.quit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -851,6 +862,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genel"
+          }
+        }
+      }
+    },
+    "settings.meetings.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon veya kamera kullanılırken otomatik molaları sessizce ertele. Ses ve görüntü kaydedilmez."
+          }
+        }
+      }
+    },
+    "settings.meetings.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantılarda molaları ertele"
+          }
+        }
+      }
+    },
+    "settings.meetings.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantı koruması"
           }
         }
       }

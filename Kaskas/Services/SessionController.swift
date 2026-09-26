@@ -18,6 +18,7 @@ final class SessionController {
     @ObservationIgnored private let breakPresenter: BreakPresenter
     @ObservationIgnored private let settingsPresenter: SettingsPresenter
     @ObservationIgnored private let skippedBreakNotifier = SkippedBreakNotifier()
+    @ObservationIgnored private let meetingMonitor = MeetingActivityMonitor()
     @ObservationIgnored private var hasStarted = false
 
     init(
@@ -60,11 +61,21 @@ final class SessionController {
 
         hasStarted = true
         engine.prepareForLaunch()
+        if configuration.pauseDuringMeetings {
+            meetingMonitor.start { [weak self] active in
+                guard let self else { return }
+                if self.handleMeetingActivity(active, at: Date()) { self.reconcile() }
+            }
+            _ = handleMeetingActivity(meetingMonitor.sample(), at: Date())
+        } else {
+            engine.endMeetingPause(at: Date())
+        }
         reconcile()
     }
 
     func stop() {
         scheduler.cancel()
+        meetingMonitor.stop()
         skippedBreakNotifier.dismiss()
         microReminderPresenter.dismiss()
         breakWarningPresenter.dismiss()
@@ -74,8 +85,15 @@ final class SessionController {
     }
 
     func reconcile(at now: Date = Date()) {
+        _ = handleMeetingActivity(
+            configuration.pauseDuringMeetings && meetingMonitor.sample(),
+            at: now
+        )
         let previousSession = engine.session
         let events = engine.process(at: now)
+        if events.contains(.breakEnded), configuration.pauseDuringMeetings {
+            _ = handleMeetingActivity(meetingMonitor.sample(), at: now)
+        }
         refreshSnapshot(at: now)
         let completedBreak = events.contains(.breakEnded)
             ? BreakHistoryEntry.transition(
@@ -113,8 +131,18 @@ final class SessionController {
         let now = Date()
         if configuration.focusDuration != self.configuration.focusDuration {
             breakWarningPresenter.dismiss()
+            engine.endMeetingPause(at: now)
         }
         self.configuration = configuration
+        if !configuration.pauseDuringMeetings {
+            meetingMonitor.stop()
+            engine.endMeetingPause(at: now)
+        } else if !self.engine.configuration.pauseDuringMeetings {
+            meetingMonitor.start { [weak self] active in
+                guard let self else { return }
+                if self.handleMeetingActivity(active, at: Date()) { self.reconcile() }
+            }
+        }
         engine.updateConfiguration(configuration, at: now)
         store.save(configuration: configuration)
         reconcile(at: now)
@@ -315,9 +343,31 @@ final class SessionController {
     }
 
     private func scheduleNextEvent() {
+        if configuration.pauseDuringMeetings,
+           handleMeetingActivity(meetingMonitor.sample(), at: Date()) {
+            persistSession()
+        }
         scheduler.schedule(for: engine.nextEventDate) { [weak self] in
             self?.reconcile()
         }
+    }
+
+    @discardableResult
+    private func handleMeetingActivity(_ active: Bool, at now: Date) -> Bool {
+        let wasPaused = engine.meetingPauseStartedAt != nil
+        if active {
+            engine.beginMeetingPause(at: now)
+        } else {
+            engine.endMeetingPause(at: now)
+        }
+        let isPaused = engine.meetingPauseStartedAt != nil
+        guard wasPaused != isPaused else { return false }
+        if isPaused {
+            microReminderPresenter.dismiss()
+            breakWarningPresenter.dismiss()
+        }
+        refreshSnapshot(at: now)
+        return true
     }
 
     private func persistSession(record: BreakHistoryEntry? = nil) {

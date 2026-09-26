@@ -79,6 +79,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var microReminderMascot: MicroReminderMascot
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
+    var pauseDuringMeetings: Bool
 
     init(
         focusDuration: TimeInterval = 45 * 60,
@@ -91,7 +92,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         breakSound: BreakSound = .glass,
         microReminderMascot: MicroReminderMascot = .flame,
         microReminderColor: MicroReminderColor = .peach,
-        customWallpaperPath: String? = nil
+        customWallpaperPath: String? = nil,
+        pauseDuringMeetings: Bool = true
     ) {
         self.focusDuration = max(1, focusDuration)
         self.microReminderInterval = max(1, microReminderInterval)
@@ -104,6 +106,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.microReminderMascot = microReminderMascot
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
+        self.pauseDuringMeetings = pauseDuringMeetings
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -118,6 +121,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case microReminderMascot
         case microReminderColor
         case customWallpaperPath
+        case pauseDuringMeetings
     }
 
     init(from decoder: Decoder) throws {
@@ -154,7 +158,11 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             customWallpaperPath: try container.decodeIfPresent(
                 String.self,
                 forKey: .customWallpaperPath
-            )
+            ),
+            pauseDuringMeetings: try container.decodeIfPresent(
+                Bool.self,
+                forKey: .pauseDuringMeetings
+            ) ?? true
         )
     }
 }
