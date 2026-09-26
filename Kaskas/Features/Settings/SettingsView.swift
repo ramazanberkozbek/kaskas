@@ -38,7 +38,7 @@ struct SettingsView: View {
         case .wellness:
             WellnessSettingsView(controller: controller)
         case .smartPause:
-            SettingsPlaceholderView(pane: .smartPause)
+            SmartPauseSettingsView(controller: controller)
         case .alerts:
             SettingsPlaceholderView(pane: .alerts)
         case .statistics:

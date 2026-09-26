@@ -25,6 +25,10 @@ struct DebugSettingsView: View {
                     controller.previewBreakWarning()
                 }
 
+                Button("debug.skippedBreakReminder") {
+                    controller.previewSkippedBreakReminder()
+                }
+
                 Button("debug.break") {
                     controller.previewBreak()
                 }
