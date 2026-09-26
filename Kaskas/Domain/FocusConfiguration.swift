@@ -79,6 +79,17 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var microReminderMascot: MicroReminderMascot
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
+    var smartPauseEnabled: Bool
+    var smartPauseIdleDuration: TimeInterval
+    var pauseDuringCalls: Bool
+    var notifyDuringCalls: Bool
+    var microphoneUID: String?
+    var pauseDuringVideo: Bool
+    var notifyDuringVideo: Bool
+    var pauseForFocusApps: Bool
+    var notifyForFocusApps: Bool
+    var focusAppBundleIDs: [String]
+    var smartPauseResumeDelay: TimeInterval
 
     init(
         focusDuration: TimeInterval = 45 * 60,
@@ -91,7 +102,18 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         breakSound: BreakSound = .glass,
         microReminderMascot: MicroReminderMascot = .flame,
         microReminderColor: MicroReminderColor = .peach,
-        customWallpaperPath: String? = nil
+        customWallpaperPath: String? = nil,
+        smartPauseEnabled: Bool = true,
+        smartPauseIdleDuration: TimeInterval = 3 * 60,
+        pauseDuringCalls: Bool = false,
+        notifyDuringCalls: Bool = false,
+        microphoneUID: String? = nil,
+        pauseDuringVideo: Bool = false,
+        notifyDuringVideo: Bool = false,
+        pauseForFocusApps: Bool = false,
+        notifyForFocusApps: Bool = false,
+        focusAppBundleIDs: [String] = [],
+        smartPauseResumeDelay: TimeInterval = 0
     ) {
         self.focusDuration = max(1, focusDuration)
         self.microReminderInterval = max(1, microReminderInterval)
@@ -104,6 +126,17 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.microReminderMascot = microReminderMascot
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
+        self.smartPauseEnabled = smartPauseEnabled
+        self.smartPauseIdleDuration = max(1, smartPauseIdleDuration)
+        self.pauseDuringCalls = pauseDuringCalls
+        self.notifyDuringCalls = notifyDuringCalls
+        self.microphoneUID = microphoneUID
+        self.pauseDuringVideo = pauseDuringVideo
+        self.notifyDuringVideo = notifyDuringVideo
+        self.pauseForFocusApps = pauseForFocusApps
+        self.notifyForFocusApps = notifyForFocusApps
+        self.focusAppBundleIDs = focusAppBundleIDs
+        self.smartPauseResumeDelay = max(0, smartPauseResumeDelay)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -118,6 +151,12 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case microReminderMascot
         case microReminderColor
         case customWallpaperPath
+        case smartPauseEnabled
+        case smartPauseIdleDuration
+        case pauseDuringCalls, notifyDuringCalls, microphoneUID
+        case pauseDuringVideo, notifyDuringVideo
+        case pauseForFocusApps, notifyForFocusApps, focusAppBundleIDs
+        case smartPauseResumeDelay
     }
 
     init(from decoder: Decoder) throws {
@@ -154,7 +193,22 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             customWallpaperPath: try container.decodeIfPresent(
                 String.self,
                 forKey: .customWallpaperPath
-            )
+            ),
+            smartPauseEnabled: try container.decodeIfPresent(Bool.self, forKey: .smartPauseEnabled) ?? true,
+            smartPauseIdleDuration: try container.decodeIfPresent(
+                TimeInterval.self, forKey: .smartPauseIdleDuration
+            ) ?? 3 * 60,
+            pauseDuringCalls: try container.decodeIfPresent(Bool.self, forKey: .pauseDuringCalls) ?? false,
+            notifyDuringCalls: try container.decodeIfPresent(Bool.self, forKey: .notifyDuringCalls) ?? false,
+            microphoneUID: try container.decodeIfPresent(String.self, forKey: .microphoneUID),
+            pauseDuringVideo: try container.decodeIfPresent(Bool.self, forKey: .pauseDuringVideo) ?? false,
+            notifyDuringVideo: try container.decodeIfPresent(Bool.self, forKey: .notifyDuringVideo) ?? false,
+            pauseForFocusApps: try container.decodeIfPresent(Bool.self, forKey: .pauseForFocusApps) ?? false,
+            notifyForFocusApps: try container.decodeIfPresent(Bool.self, forKey: .notifyForFocusApps) ?? false,
+            focusAppBundleIDs: try container.decodeIfPresent([String].self, forKey: .focusAppBundleIDs) ?? [],
+            smartPauseResumeDelay: try container.decodeIfPresent(
+                TimeInterval.self, forKey: .smartPauseResumeDelay
+            ) ?? 0
         )
     }
 }

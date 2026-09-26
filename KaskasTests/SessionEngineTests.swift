@@ -325,6 +325,36 @@ struct SessionEngineTests {
     }
 
     @Test
+    func suggestsBreakAfterThreeConsecutiveSkipsAndResetsAfterTakingABreak() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+
+        #expect(engine.skipBreak(at: startDate) == false)
+        #expect(engine.skipBreak(at: startDate.addingTimeInterval(1)) == false)
+        #expect(engine.skipBreak(at: startDate.addingTimeInterval(2)) == true)
+        #expect(engine.consecutiveSkippedBreaks == 3)
+
+        let restored = SessionEngine(configuration: configuration, restoredState: engine.state)
+        #expect(restored.consecutiveSkippedBreaks == 3)
+
+        let breakStart = engine.session.endsAt
+        #expect(engine.process(at: breakStart) == [.fullBreakDue])
+        #expect(engine.process(at: engine.session.endsAt) == [.breakEnded])
+        #expect(engine.consecutiveSkippedBreaks == 0)
+        #expect(engine.skipBreak(at: engine.session.startedAt) == false)
+    }
+
+    @Test
+    func skippingAnActiveBreakDoesNotCountAsTakingIt() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let breakStart = engine.session.endsAt
+        _ = engine.process(at: breakStart)
+
+        #expect(engine.skipBreak(at: breakStart) == false)
+        #expect(engine.breaksTakenToday(at: breakStart) == 0)
+        #expect(engine.consecutiveSkippedBreaks == 1)
+    }
+
+    @Test
     func completedBreakCountPersistsAndResetsOnTheNextDay() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let breakStart = startDate.addingTimeInterval(configuration.focusDuration)
@@ -338,5 +368,67 @@ struct SessionEngineTests {
         let restored = SessionEngine(configuration: configuration, restoredState: engine.state)
         #expect(restored.breaksTakenToday(at: breakStart.addingTimeInterval(60)) == 1)
         #expect(restored.breaksTakenToday(at: breakStart.addingTimeInterval(24 * 60 * 60)) == 0)
+    }
+
+    @Test
+    func smartPauseCountsOnlyFocusBeforeIdleAndStartsFreshSession() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let stoppedAt = startDate.addingTimeInterval(12 * 60)
+        let returnedAt = startDate.addingTimeInterval(30 * 60)
+
+        engine.beginSmartPause(at: stoppedAt)
+        #expect(engine.snapshot(at: returnedAt).remaining == 33 * 60)
+        #expect(engine.process(at: returnedAt).isEmpty)
+
+        let restored = SessionEngine(configuration: configuration, restoredState: engine.state)
+        #expect(restored.pendingIdleStartedAt == stoppedAt)
+
+        engine.resolveSmartPause(countAsBreak: true, at: returnedAt)
+        #expect(engine.smartPauseRecords == [SmartPauseRecord(
+            focusStartedAt: startDate,
+            focusStoppedAt: stoppedAt,
+            returnedAt: returnedAt,
+            focusedDuration: 12 * 60
+        )])
+        #expect(engine.breaksTakenToday(at: returnedAt) == 1)
+        #expect(engine.session.startedAt == returnedAt)
+        #expect(engine.session.endsAt == returnedAt.addingTimeInterval(45 * 60))
+        let restoredAfterBreak = SessionEngine(configuration: configuration, restoredState: engine.state)
+        #expect(restoredAfterBreak.smartPauseRecords == engine.smartPauseRecords)
+    }
+
+    @Test
+    func ignoringSmartPauseCountsWholeIntervalAndKeepsOriginalDeadline() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.beginSmartPause(at: startDate.addingTimeInterval(12 * 60))
+        let returnedAt = startDate.addingTimeInterval(30 * 60)
+
+        engine.resolveSmartPause(countAsBreak: false, at: returnedAt)
+
+        #expect(engine.smartPauseRecords.isEmpty)
+        #expect(engine.breaksTakenToday(at: returnedAt) == 0)
+        #expect(engine.session.startedAt == startDate)
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(45 * 60))
+        #expect(engine.snapshot(at: returnedAt).remaining == 15 * 60)
+    }
+
+    @Test
+    func triggerPauseFreezesReminderAndFocusDeadlinesUntilItEnds() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let pausedAt = startDate.addingTimeInterval(10 * 60)
+        let resumedAt = startDate.addingTimeInterval(25 * 60)
+
+        engine.beginTriggerPause(at: pausedAt)
+        engine.beginTriggerPause(at: pausedAt.addingTimeInterval(60))
+        #expect(engine.process(at: resumedAt).isEmpty)
+        #expect(engine.snapshot(at: resumedAt).remaining == 35 * 60)
+        #expect(SessionEngine(configuration: configuration, restoredState: engine.state)
+            .triggerPauseStartedAt == pausedAt)
+
+        engine.endTriggerPause(at: resumedAt, resumeDelay: 60)
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(61 * 60))
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(36 * 60))
+        engine.endTriggerPause(at: resumedAt.addingTimeInterval(60))
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(61 * 60))
     }
 }
