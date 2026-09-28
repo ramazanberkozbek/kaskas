@@ -5,6 +5,7 @@ enum StatisticsStyle {
     static let breakTime = Color(red: 0.94, green: 0.69, blue: 0.32)
     static let computerInactive = Color(red: 0.40, green: 0.72, blue: 0.84)
     static let kaskasPaused = Color(red: 0.66, green: 0.54, blue: 0.91)
+    static let meeting = Color(red: 0.85, green: 0.48, blue: 0.73)
     static let average = Color(red: 0.58, green: 0.51, blue: 0.94)
 
     static func panelFill(for scheme: ColorScheme) -> Color {
@@ -21,6 +22,7 @@ extension ActivityKind {
         case .breakTime: StatisticsStyle.breakTime
         case .computerInactive: StatisticsStyle.computerInactive
         case .kaskasPaused: StatisticsStyle.kaskasPaused
+        case .meeting: StatisticsStyle.meeting
         }
     }
 
@@ -30,6 +32,7 @@ extension ActivityKind {
         case .breakTime: "stats.kind.breakTime"
         case .computerInactive: "stats.kind.computerInactive"
         case .kaskasPaused: "stats.kind.kaskasPaused"
+        case .meeting: "stats.kind.meeting"
         }
     }
 
@@ -39,6 +42,7 @@ extension ActivityKind {
         case .breakTime: "cup.and.saucer.fill"
         case .computerInactive: "moon.zzz.fill"
         case .kaskasPaused: "pause.circle.fill"
+        case .meeting: "video.fill"
         }
     }
 }

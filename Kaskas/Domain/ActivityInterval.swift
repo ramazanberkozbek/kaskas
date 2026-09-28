@@ -5,6 +5,7 @@ enum ActivityKind: String, Codable, CaseIterable, Sendable {
     case breakTime
     case computerInactive
     case kaskasPaused
+    case meeting
 }
 
 struct ActivityInterval: Codable, Equatable, Identifiable, Sendable {

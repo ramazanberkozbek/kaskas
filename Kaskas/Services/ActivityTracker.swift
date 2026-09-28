@@ -16,7 +16,7 @@ final class ActivityTracker {
 
     func resume(as kind: ActivityKind, at now: Date) {
         if let previous = journal.cursor {
-            if previous.kind == .studying || previous.kind == .breakTime {
+            if previous.kind == .studying || previous.kind == .breakTime || previous.kind == .meeting {
                 append(previous.kind, from: previous.startedAt, to: previous.checkpointAt)
                 append(.kaskasPaused, from: previous.checkpointAt, to: now)
             } else {

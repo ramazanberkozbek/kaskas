@@ -25,13 +25,9 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("stats.title")
-                        .font(.system(size: 27, weight: .bold, design: .rounded))
-                    Text("stats.subtitle")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
+                Text("stats.subtitle")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
 
                 summaryCards
 
@@ -130,31 +126,39 @@ struct StatisticsView: View {
     }
 
     private var summaryCards: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-            ForEach(ActivityKind.allCases, id: \.self) { kind in
-                HStack(spacing: 12) {
-                    Image(systemName: kind.symbol)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(kind.color)
-                        .frame(width: 38, height: 38)
-                        .background(kind.color.opacity(0.13), in: RoundedRectangle(cornerRadius: 11))
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(LocalizedStringKey(kind.labelKey))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text(StatisticsDuration.label(today.duration(for: kind)))
-                            .font(.system(size: 21, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                    }
-                    Spacer(minLength: 0)
+        VStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                ForEach(ActivityKind.allCases.filter { $0 != .meeting }, id: \.self) { kind in
+                    summaryCard(for: kind)
                 }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
             }
+
+            summaryCard(for: .meeting)
         }
+    }
+
+    private func summaryCard(for kind: ActivityKind) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: kind.symbol)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(kind.color)
+                .frame(width: 38, height: 38)
+                .background(kind.color.opacity(0.13), in: RoundedRectangle(cornerRadius: 11))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(LocalizedStringKey(kind.labelKey))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(StatisticsDuration.label(today.duration(for: kind)))
+                    .font(.system(size: 21, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
     }
 
     private var trendWindow: (start: Date, end: Date) {

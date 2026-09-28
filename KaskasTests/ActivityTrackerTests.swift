@@ -63,6 +63,73 @@ struct ActivityTrackerTests {
     }
 
     @Test
+    func meetingIsRecordedSeparatelyFromFocusAndManualPause() throws {
+        let (sessionStore, defaults, suiteName) = try makeSessionStore()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, configurations: configuration)
+        let tracker = ActivityTracker(sessionStore: sessionStore, activityStore: ActivityStore(container: container))
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let meetingStart = start.addingTimeInterval(5 * 60)
+        let meetingEnd = meetingStart.addingTimeInterval(10 * 60)
+        let end = meetingEnd.addingTimeInterval(2 * 60)
+
+        tracker.resume(as: .studying, at: start)
+        tracker.update(to: .meeting, at: meetingStart)
+        tracker.update(to: .studying, at: meetingEnd)
+        tracker.update(to: .studying, at: end)
+
+        let intervals = tracker.intervals(from: start, to: end, now: end)
+        let today = try #require(ActivityStatistics.days(from: start, through: start, intervals: intervals).first)
+        #expect(today.studying == 7 * 60)
+        #expect(today.meeting == 10 * 60)
+        #expect(today.kaskasPaused == 0)
+        #expect(today.breakTime == 0)
+    }
+
+    @Test
+    func crashDuringMeetingDoesNotAssumeMeetingContinuedWhileClosed() throws {
+        let (sessionStore, defaults, suiteName) = try makeSessionStore()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let checkpoint = start.addingTimeInterval(5 * 60)
+        let reopen = checkpoint.addingTimeInterval(30 * 60)
+
+        let original = ActivityTracker(sessionStore: sessionStore, activityStore: nil)
+        original.resume(as: .meeting, at: start)
+        original.update(to: .meeting, at: checkpoint)
+
+        let restored = ActivityTracker(sessionStore: sessionStore, activityStore: nil)
+        restored.resume(as: .studying, at: reopen)
+        let intervals = restored.intervals(from: start, to: reopen, now: reopen)
+
+        #expect(total(.meeting, in: intervals) == 5 * 60)
+        #expect(total(.kaskasPaused, in: intervals) == 30 * 60)
+    }
+
+    @Test
+    func acceptedIdleBreakSplitsStudyBreakAndNewStudyWithoutOverlap() throws {
+        let (sessionStore, defaults, suiteName) = try makeSessionStore()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let tracker = ActivityTracker(sessionStore: sessionStore, activityStore: nil)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let idleAt = start.addingTimeInterval(12 * 60)
+        let returnedAt = idleAt.addingTimeInterval(3 * 60)
+        let end = returnedAt.addingTimeInterval(2 * 60)
+
+        tracker.resume(as: .studying, at: start)
+        tracker.update(to: .computerInactive, at: idleAt)
+        tracker.update(to: .breakTime, at: idleAt)
+        tracker.update(to: .studying, at: returnedAt)
+        tracker.update(to: .studying, at: end)
+
+        let intervals = tracker.intervals(from: start, to: end, now: end)
+        #expect(total(.studying, in: intervals) == 14 * 60)
+        #expect(total(.breakTime, in: intervals) == 3 * 60)
+        #expect(total(.computerInactive, in: intervals) == 0)
+    }
+
+    @Test
     func databaseInsertionIsIdempotent() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, configurations: configuration)

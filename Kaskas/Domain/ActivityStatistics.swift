@@ -6,6 +6,7 @@ struct DailyActivity: Identifiable, Equatable {
     var breakTime: TimeInterval = 0
     var computerInactive: TimeInterval = 0
     var kaskasPaused: TimeInterval = 0
+    var meeting: TimeInterval = 0
 
     var id: Date { date }
 
@@ -15,6 +16,7 @@ struct DailyActivity: Identifiable, Equatable {
         case .breakTime: breakTime
         case .computerInactive: computerInactive
         case .kaskasPaused: kaskasPaused
+        case .meeting: meeting
         }
     }
 
@@ -24,6 +26,7 @@ struct DailyActivity: Identifiable, Equatable {
         case .breakTime: breakTime += duration
         case .computerInactive: computerInactive += duration
         case .kaskasPaused: kaskasPaused += duration
+        case .meeting: meeting += duration
         }
     }
 }
