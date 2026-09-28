@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    "" : {
-
-    },
     " " : {
 
     },
@@ -287,6 +284,50 @@
     "Hour start" : {
 
     },
+    "idle.accept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evet, mola olarak kaydet"
+          }
+        }
+      }
+    },
+    "idle.decline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hayır"
+          }
+        }
+      }
+    },
+    "idle.question" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld dakika yoktunuz. Bu süreyi mola olarak saymak ister misiniz?"
+          }
+        }
+      }
+    },
+    "idle.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar hoş geldiniz"
+          }
+        }
+      }
+    },
     "Kapat" : {
 
     },
@@ -297,6 +338,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktif"
+          }
+        }
+      }
+    },
+    "menu.atTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "at"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bitiş"
+          }
+        }
+      }
+    },
+    "menu.badge.idlePause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HAREKETSİZ"
           }
         }
       }
@@ -382,23 +451,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "KISA MOLA"
-          }
-        }
-      }
-    },
-    "menu.atTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "at"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bitiş"
           }
         }
       }
@@ -670,6 +722,171 @@
     },
     "Series" : {
 
+    },
+    "settings.alerts.breakWarning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola uyarısı"
+          }
+        }
+      }
+    },
+    "settings.alerts.breakWarning.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola başlamadan kısa bir süre önce haber verir"
+          }
+        }
+      }
+    },
+    "settings.alerts.center" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orta"
+          }
+        }
+      }
+    },
+    "settings.alerts.leadTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ön uyarı süresi"
+          }
+        }
+      }
+    },
+    "settings.alerts.leadTime.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola başlamadan ne kadar önce gösterileceği"
+          }
+        }
+      }
+    },
+    "settings.alerts.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sol"
+          }
+        }
+      }
+    },
+    "settings.alerts.notificationSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildirim ayarları"
+          }
+        }
+      }
+    },
+    "settings.alerts.notificationSettings.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola uyarısının ekrandaki konumunu seç"
+          }
+        }
+      }
+    },
+    "settings.alerts.position" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konum"
+          }
+        }
+      }
+    },
+    "settings.alerts.position.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değiştirince üstteki önizleme güncellenir"
+          }
+        }
+      }
+    },
+    "settings.alerts.preview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önizleme"
+          }
+        }
+      }
+    },
+    "settings.alerts.right" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağ"
+          }
+        }
+      }
+    },
+    "settings.alerts.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hatırlatmaları ve nazik uyarıları özelleştir"
+          }
+        }
+      }
+    },
+    "settings.alerts.test" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dene"
+          }
+        }
+      }
+    },
+    "settings.alerts.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uyarılar ve hatırlatmalar"
+          }
+        }
+      }
     },
     "settings.breakAppearance.aurora" : {
       "extractionState" : "manual",
@@ -1001,6 +1218,17 @@
         }
       }
     },
+    "settings.breakSound.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapalı"
+          }
+        }
+      }
+    },
     "settings.breakSound.startChoice" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1111,6 +1339,61 @@
         }
       }
     },
+    "settings.idle.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmleç hareket etmediğinde çalışma sayacını durdur ve döndüğünde bu süreyi mola olarak kaydetmeyi öner."
+          }
+        }
+      }
+    },
+    "settings.idle.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareketsizliği algıla"
+          }
+        }
+      }
+    },
+    "settings.idle.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareketsizlik algılama"
+          }
+        }
+      }
+    },
+    "settings.idle.threshold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareketsizlik süresi"
+          }
+        }
+      }
+    },
+    "settings.idle.threshold.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaç dakika imleç hareket etmezse algılanacağı"
+          }
+        }
+      }
+    },
     "settings.longBreak.description" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1140,6 +1423,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uzun molanın ne kadar süreceği"
+          }
+        }
+      }
+    },
+    "settings.longBreak.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uzun molaları etkinleştir"
           }
         }
       }
@@ -1491,7 +1785,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alev maskotunun rengini seçin ve önizleyin"
+            "value" : "Alev görünüşünü ve rengini seçip önizleyin"
           }
         }
       }
@@ -1558,6 +1852,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alev"
+          }
+        }
+      }
+    },
+    "settings.microReminderMascot.glasses" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gözlüklü Alev"
           }
         }
       }
@@ -1657,6 +1962,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genel"
+          }
+        }
+      }
+    },
+    "settings.sidebar.notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildirimler"
           }
         }
       }
@@ -1936,6 +2252,23 @@
         }
       }
     },
+    "stats.kind.meeting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantı"
+          }
+        }
+      }
+    },
     "stats.kind.studying" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2184,7 +2517,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Molayı geç"
+            "value" : "Atla"
           }
         }
       }
@@ -2195,7 +2528,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şimdi başlat"
+            "value" : "Başlat"
           }
         }
       }
