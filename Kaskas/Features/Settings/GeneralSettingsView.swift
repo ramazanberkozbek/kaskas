@@ -16,6 +16,23 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
+            Section("settings.idle.section") {
+                Toggle(isOn: idleDetectionEnabled) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("settings.idle.enabled")
+                        Text("settings.idle.description")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                SettingsDurationRow(
+                    title: "settings.idle.threshold",
+                    subtitle: "settings.idle.threshold.description",
+                    selection: idleThreshold,
+                    options: [1, 2, 3, 5, 10, 15].map { TimeInterval($0 * 60) }
+                )
+                .disabled(!controller.configuration.idleDetectionEnabled)
+            }
             Section("settings.privacy.title") {
                 LabeledContent {
                     Image(systemName: "checkmark.circle.fill")
@@ -37,6 +54,26 @@ struct GeneralSettingsView: View {
         } set: { enabled in
             var configuration = controller.configuration
             configuration.pauseDuringMeetings = enabled
+            controller.updateConfiguration(configuration)
+        }
+    }
+
+    private var idleDetectionEnabled: Binding<Bool> {
+        Binding {
+            controller.configuration.idleDetectionEnabled
+        } set: { enabled in
+            var configuration = controller.configuration
+            configuration.idleDetectionEnabled = enabled
+            controller.updateConfiguration(configuration)
+        }
+    }
+
+    private var idleThreshold: Binding<TimeInterval> {
+        Binding {
+            controller.configuration.idleThreshold
+        } set: { duration in
+            var configuration = controller.configuration
+            configuration.idleThreshold = duration
             controller.updateConfiguration(configuration)
         }
     }

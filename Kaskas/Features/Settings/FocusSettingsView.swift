@@ -4,6 +4,7 @@ struct FocusSettingsView: View {
     let controller: SessionController
     @State private var showingDesign = false
     @State private var showingMicroReminderDesign = false
+    @Environment(\.colorScheme) private var colorScheme
 
     private let focusDurations: [TimeInterval] = [10, 15, 20, 30, 45, 60, 90].map { $0 * 60 }
     private let breakDurations: [TimeInterval] = [1, 3, 5, 10, 15].map { $0 * 60 }
@@ -20,132 +21,195 @@ struct FocusSettingsView: View {
                 showingMicroReminderDesign = false
             }
         } else {
-            Form {
-                Section {
-                    SettingsDurationRow(
-                        title: "settings.focusDuration",
-                        subtitle: "settings.focusDuration.description",
-                        selection: binding(for: \FocusConfiguration.focusDuration),
-                        options: focusDurations
-                    )
-                    SettingsDurationRow(
-                        title: "settings.breakDuration",
-                        subtitle: "settings.breakDuration.description",
-                        selection: binding(for: \FocusConfiguration.breakDuration),
-                        options: breakDurations
-                    )
-                    SettingsDurationRow(
-                        title: "settings.snoozeDuration",
-                        subtitle: "settings.snoozeDuration.description",
-                        selection: binding(for: \FocusConfiguration.snoozeDuration),
-                        options: snoozeDurations
-                    )
-                } header: {
-                    Text("settings.schedule.title")
-                } footer: {
-                    Text("settings.nextCycle.note")
-                }
-
-                Section {
-                    Toggle(isOn: binding(for: \FocusConfiguration.longBreakEnabled)) {
-                        settingLabel("settings.longBreak.title", "settings.longBreak.description")
-                    }
-                    .toggleStyle(.switch)
-
-                    LabeledContent {
-                        Stepper(
-                            "Her \(controller.configuration.longBreakFrequency). molada",
-                            value: binding(for: \FocusConfiguration.longBreakFrequency),
-                            in: 1...10
-                        )
-                        .fixedSize()
-                    } label: {
-                        settingLabel("settings.longBreak.frequency", "settings.longBreak.frequency.description")
-                    }
-                    .disabled(!controller.configuration.longBreakEnabled)
-
-                    SettingsDurationRow(
-                        title: "settings.longBreak.duration",
-                        subtitle: "settings.longBreak.duration.description",
-                        selection: binding(for: \FocusConfiguration.longBreakDuration),
-                        options: longBreakDurations
-                    )
-                    .disabled(!controller.configuration.longBreakEnabled)
-                } header: {
-                    Text("settings.longBreak.title")
-                }
-
-                Section {
-                    Toggle(isOn: binding(for: \FocusConfiguration.breakSoundEnabled)) {
-                        settingLabel("settings.breakSound.enabled", "settings.breakSound.enabledDescription")
-                    }
-                    .toggleStyle(.switch)
-
-                    soundPickerRow(
-                        title: "settings.breakSound.startChoice",
-                        selection: soundSelection(for: \FocusConfiguration.breakSound),
-                        isEnabled: controller.configuration.breakSoundEnabled
-                    )
-
-                    Toggle(isOn: binding(for: \FocusConfiguration.breakEndSoundEnabled)) {
-                        settingLabel("settings.breakSound.endEnabled", "settings.breakSound.endEnabledDescription")
-                    }
-                    .toggleStyle(.switch)
-
-                    soundPickerRow(
-                        title: "settings.breakSound.endChoice",
-                        selection: soundSelection(for: \FocusConfiguration.breakEndSound),
-                        isEnabled: controller.configuration.breakEndSoundEnabled
-                    )
-                } header: {
-                    Text("settings.breakSound.title")
-                } footer: {
-                    Text("settings.breakSound.subtitle")
-                }
-
-                Section {
-                    settingsDestination(
-                        "settings.focusDesign.title",
-                        subtitle: "settings.focusDesign.description",
-                        symbol: "paintpalette"
-                    ) {
-                        showingDesign = true
-                    }
-                    settingsDestination(
-                        "settings.microReminderDesign.title",
-                        subtitle: "settings.microReminderDesign.description",
-                        symbol: "sparkles"
-                    ) {
-                        showingMicroReminderDesign = true
-                    }
-                }
-            }
-            .formStyle(.grouped)
+            settingsContent
         }
     }
 
-    private func settingLabel(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+    private var settingsContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 30) {
+                settingsSection(title: "settings.schedule.title", note: "settings.nextCycle.note") {
+                    durationRow("settings.focusDuration", symbol: "timer", tint: .orange,
+                                selection: binding(for: \FocusConfiguration.focusDuration), options: focusDurations)
+                        .help("settings.focusDuration.description")
+                    rowDivider
+                    durationRow("settings.breakDuration", symbol: "cup.and.saucer.fill", tint: .orange,
+                                selection: binding(for: \FocusConfiguration.breakDuration), options: breakDurations)
+                        .help("settings.breakDuration.description")
+                    rowDivider
+                    durationRow("settings.snoozeDuration", symbol: "clock.arrow.circlepath", tint: .orange,
+                                selection: binding(for: \FocusConfiguration.snoozeDuration), options: snoozeDurations)
+                        .help("settings.snoozeDuration.description")
+                }
+
+                settingsSection(title: "settings.longBreak.title", note: "settings.longBreak.description") {
+                    settingRow("settings.longBreak.enabled", symbol: "bed.double.fill", tint: .purple) {
+                        Toggle("settings.longBreak.enabled", isOn: binding(for: \FocusConfiguration.longBreakEnabled))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                    }
+                    rowDivider
+                    settingRow("settings.longBreak.frequency", symbol: "repeat", tint: .purple) {
+                        Picker("settings.longBreak.frequency", selection: binding(for: \FocusConfiguration.longBreakFrequency)) {
+                            ForEach(1...10, id: \.self) { frequency in
+                                Text("Her \(frequency). molada").tag(frequency)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 136)
+                    }
+                    .disabled(!controller.configuration.longBreakEnabled)
+                    .help("settings.longBreak.frequency.description")
+                    rowDivider
+                    durationRow("settings.longBreak.duration", symbol: "hourglass", tint: .purple,
+                                selection: binding(for: \FocusConfiguration.longBreakDuration), options: longBreakDurations)
+                        .disabled(!controller.configuration.longBreakEnabled)
+                        .help("settings.longBreak.duration.description")
+                }
+
+                settingsSection(title: "settings.breakSound.title", note: "settings.breakSound.subtitle") {
+                    soundPickerRow(
+                        title: "settings.breakSound.startChoice",
+                        symbol: "speaker.wave.2.fill",
+                        selection: soundSelection(
+                            enabled: \FocusConfiguration.breakSoundEnabled,
+                            sound: \FocusConfiguration.breakSound
+                        )
+                    )
+                    .help("settings.breakSound.enabledDescription")
+                    rowDivider
+                    soundPickerRow(
+                        title: "settings.breakSound.endChoice",
+                        symbol: "speaker.wave.2.fill",
+                        selection: soundSelection(
+                            enabled: \FocusConfiguration.breakEndSoundEnabled,
+                            sound: \FocusConfiguration.breakEndSound
+                        )
+                    )
+                    .help("settings.breakSound.endEnabledDescription")
+                }
+
+                settingsSection(title: "settings.focusDesign.title") {
+                    settingsDestination("settings.focusDesign.title", symbol: "paintpalette.fill", tint: .pink) {
+                        showingDesign = true
+                    }
+                    .help("settings.focusDesign.description")
+                    rowDivider
+                    settingsDestination("settings.microReminderDesign.title", symbol: "sparkles", tint: .pink) {
+                        showingMicroReminderDesign = true
+                    }
+                    .help("settings.microReminderDesign.description")
+                }
+            }
+            .frame(maxWidth: 680, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 28)
+            .padding(.top, 28)
+            .padding(.bottom, 36)
+        }
+        .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
+    }
+
+    private func settingsSection<Content: View>(
+        title: LocalizedStringKey,
+        note: LocalizedStringKey? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
-            Text(subtitle)
-                .font(.callout)
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .padding(.leading, 10)
+
+            VStack(spacing: 0, content: content)
+                .background(
+                    colorScheme == .dark
+                        ? Color(red: 0.115, green: 0.115, blue: 0.115)
+                        : Color(nsColor: .controlBackgroundColor),
+                    in: RoundedRectangle(cornerRadius: 16)
+                )
+
+            if let note {
+                Text(note)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 10)
+            }
+        }
+    }
+
+    private var rowDivider: some View {
+        Divider().padding(.leading, 58).padding(.trailing, 18)
+    }
+
+    private func settingRow<Control: View>(
+        _ title: LocalizedStringKey,
+        symbol: String,
+        tint: Color,
+        @ViewBuilder control: () -> Control
+    ) -> some View {
+        HStack(spacing: 16) {
+            Image(systemName: symbol)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+            Spacer(minLength: 12)
+            control()
+        }
+        .frame(minHeight: 58)
+        .padding(.horizontal, 18)
+    }
+
+    private func durationRow(
+        _ title: LocalizedStringKey,
+        symbol: String,
+        tint: Color,
+        selection: Binding<TimeInterval>,
+        options: [TimeInterval]
+    ) -> some View {
+        settingRow(title, symbol: symbol, tint: tint) {
+            Picker(title, selection: selection) {
+                ForEach(options, id: \.self) { duration in
+                    Text(Self.formattedDuration(duration)).tag(duration)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 136)
+        }
+    }
+
+    private func soundPickerRow(
+        title: LocalizedStringKey,
+        symbol: String,
+        selection: Binding<BreakSound?>
+    ) -> some View {
+        settingRow(title, symbol: symbol, tint: .green) {
+            Picker(title, selection: selection) {
+                Text("settings.breakSound.off").tag(nil as BreakSound?)
+                ForEach(BreakSound.allCases) { sound in
+                    Text(sound.rawValue).tag(Optional(sound))
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 136)
         }
     }
 
     private func settingsDestination(
         _ title: LocalizedStringKey,
-        subtitle: LocalizedStringKey,
         symbol: String,
+        tint: Color,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .foregroundStyle(Color.accentColor)
-                    .frame(width: 22)
-                settingLabel(title, subtitle)
-                Spacer()
+            settingRow(title, symbol: symbol, tint: tint) {
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
@@ -155,24 +219,9 @@ struct FocusSettingsView: View {
         .buttonStyle(.plain)
     }
 
-    private func soundPickerRow(
-        title: LocalizedStringKey,
-        selection: Binding<BreakSound>,
-        isEnabled: Bool
-    ) -> some View {
-        LabeledContent {
-            Picker(title, selection: selection) {
-                ForEach(BreakSound.allCases) { sound in
-                    Text(sound.rawValue).tag(sound)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(width: 150)
-        } label: {
-            Text(title)
-        }
-        .disabled(!isEnabled)
+    private static func formattedDuration(_ seconds: TimeInterval) -> String {
+        Measurement(value: seconds / 60, unit: UnitDuration.minutes)
+            .formatted(.measurement(width: .wide, usage: .asProvided))
     }
 
     private func binding<Value>(
@@ -188,16 +237,26 @@ struct FocusSettingsView: View {
     }
 
     private func soundSelection(
-        for keyPath: WritableKeyPath<FocusConfiguration, BreakSound>
-    ) -> Binding<BreakSound> {
+        enabled enabledKeyPath: WritableKeyPath<FocusConfiguration, Bool>,
+        sound soundKeyPath: WritableKeyPath<FocusConfiguration, BreakSound>
+    ) -> Binding<BreakSound?> {
         Binding {
-            controller.configuration[keyPath: keyPath]
+            let configuration = controller.configuration
+            return configuration[keyPath: enabledKeyPath]
+                ? configuration[keyPath: soundKeyPath] : nil
         } set: { newValue in
-            guard controller.configuration[keyPath: keyPath] != newValue else { return }
             var configuration = controller.configuration
-            configuration[keyPath: keyPath] = newValue
+            let currentValue: BreakSound? = configuration[keyPath: enabledKeyPath]
+                ? configuration[keyPath: soundKeyPath] : nil
+            guard currentValue != newValue else { return }
+            configuration[keyPath: enabledKeyPath] = newValue != nil
+            if let newValue {
+                configuration[keyPath: soundKeyPath] = newValue
+            }
             controller.updateConfiguration(configuration)
-            BreakSoundPlayer.preview(newValue)
+            if let newValue {
+                BreakSoundPlayer.preview(newValue)
+            }
         }
     }
 }

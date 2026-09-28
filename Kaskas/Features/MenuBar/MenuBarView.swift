@@ -7,7 +7,15 @@ struct MenuBarView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var now = Date.now
+    @State private var isBadgeHovered = false
+    @State private var hoveredAction: ActionItem?
     @State private var hoveredFooterItem: FooterItem?
+
+    private enum ActionItem {
+        case startBreak
+        case snooze
+        case completeBreak
+    }
 
     private enum FooterItem {
         case settings
@@ -19,11 +27,14 @@ struct MenuBarView: View {
         case longBreak
         case manualPause
         case meetingPause
+        case idlePause
         case onBreak
 
         init(snapshot: SessionSnapshot) {
             if snapshot.manualPauseStartedAt != nil {
                 self = .manualPause
+            } else if snapshot.idlePauseStartedAt != nil {
+                self = .idlePause
             } else if snapshot.meetingPauseStartedAt != nil {
                 self = .meetingPause
             } else if snapshot.phase == .onBreak {
@@ -39,6 +50,7 @@ struct MenuBarView: View {
             case .longBreak: "menu.badge.longBreak"
             case .manualPause: "menu.badge.manualPause"
             case .meetingPause: "menu.badge.meetingPause"
+            case .idlePause: "menu.badge.idlePause"
             case .onBreak: "menu.badge.onBreak"
             }
         }
@@ -49,6 +61,7 @@ struct MenuBarView: View {
             case .longBreak: Color(red: 0.98, green: 0.68, blue: 0.35)
             case .manualPause: Color(red: 0.72, green: 0.72, blue: 0.76)
             case .meetingPause: Color(red: 0.69, green: 0.56, blue: 0.94)
+            case .idlePause: Color(red: 0.98, green: 0.68, blue: 0.35)
             case .onBreak: Color(red: 0.43, green: 0.77, blue: 0.48)
             }
         }
@@ -78,10 +91,12 @@ struct MenuBarView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 11)
 
-            actions(for: snapshot)
+            if snapshot.manualPauseStartedAt == nil {
+                actions(for: snapshot)
 
-            Divider()
-                .padding(.top, 11)
+                Divider()
+                    .padding(.top, 11)
+            }
 
             todayRow
 
@@ -111,6 +126,7 @@ struct MenuBarView: View {
             // also keeps the popover correct after sleep or a large clock jump.
             if controller.sessionSnapshot.meetingPauseStartedAt == nil,
                controller.sessionSnapshot.manualPauseStartedAt == nil,
+               controller.sessionSnapshot.idlePauseStartedAt == nil,
                currentDate >= controller.sessionSnapshot.endsAt {
                 controller.reconcile(at: currentDate)
             }
@@ -128,38 +144,63 @@ struct MenuBarView: View {
             Spacer()
 
             let status = BadgeStatus(snapshot: snapshot)
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(status.color)
-                    .frame(width: 5, height: 5)
-                    .accessibilityHidden(true)
+            Button(action: controller.toggleManualPause) {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(status.color)
+                        .frame(width: 5, height: 5)
+                        .accessibilityHidden(true)
 
-                Text(status.title)
-                    .font(.system(size: 11, weight: .bold))
-                    .lineLimit(1)
+                    Text(status.title)
+                        .font(.system(size: 11, weight: .bold))
+                        .lineLimit(1)
+                }
+                .foregroundStyle(status.color)
+                .padding(.horizontal, 8)
+                .frame(height: 22)
+                .background(
+                    status.color.opacity(isBadgeHovered ? 0.32 : 0.17),
+                    in: RoundedRectangle(cornerRadius: 6)
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(status.color.opacity(isBadgeHovered ? 0.55 : 0), lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+                .contentShape(RoundedRectangle(cornerRadius: 6))
             }
-            .foregroundStyle(status.color)
-            .padding(.horizontal, 8)
-            .frame(height: 22)
-            .background(status.color.opacity(0.17), in: RoundedRectangle(cornerRadius: 6))
+            .buttonStyle(.plain)
+            .onHover { isBadgeHovered = $0 }
+            .animation(.easeOut(duration: 0.15), value: isBadgeHovered)
+            .accessibilityLabel(snapshot.manualPauseStartedAt == nil ? "menu.pause" : "menu.resume")
+            .help(snapshot.manualPauseStartedAt == nil ? "menu.pause" : "menu.resume")
         }
     }
 
     private func countdown(for snapshot: SessionSnapshot) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(
-                timerInterval: snapshot.startedAt...snapshot.endsAt,
-                pauseTime: snapshot.manualPauseStartedAt ?? snapshot.meetingPauseStartedAt,
-                countsDown: true,
-                showsHours: false
-            )
-            .font(.system(size: 30, weight: .bold))
-            .monospacedDigit()
-            .contentTransition(.numericText())
-            .accessibilityLabel("menu.remaining")
+            if snapshot.manualPauseStartedAt != nil
+                || snapshot.meetingPauseStartedAt != nil
+                || snapshot.idlePauseStartedAt != nil {
+                Text(Self.pausedCountdownString(for: snapshot.remaining))
+                    .font(.system(size: 30, weight: .bold))
+                    .monospacedDigit()
+                    .accessibilityLabel("menu.remaining")
+            } else {
+                Text(
+                    timerInterval: snapshot.startedAt...snapshot.endsAt,
+                    countsDown: true,
+                    showsHours: false
+                )
+                .font(.system(size: 30, weight: .bold))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .accessibilityLabel("menu.remaining")
+            }
 
             if snapshot.manualPauseStartedAt == nil,
-               snapshot.meetingPauseStartedAt == nil {
+               snapshot.meetingPauseStartedAt == nil,
+               snapshot.idlePauseStartedAt == nil {
                 (Text("menu.atTime") + Text(" ") + Text(snapshot.endsAt, style: .time))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
@@ -169,42 +210,36 @@ struct MenuBarView: View {
         }
     }
 
-    @ViewBuilder
-    private func actions(for snapshot: SessionSnapshot) -> some View {
-        if snapshot.manualPauseStartedAt != nil {
-            actionButton(
-                "menu.resume",
-                systemImage: "play.fill",
-                action: controller.toggleManualPause
-            )
-        } else {
-            VStack(spacing: 6) {
-                if snapshot.phase == .focusing {
-                    HStack(spacing: 6) {
-                        actionButton(
-                            "menu.startBreak",
-                            systemImage: "play.circle",
-                            action: controller.startBreakNow
-                        )
+    private static func pausedCountdownString(for remaining: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.minute, .second]
+        formatter.unitsStyle = .positional
+        formatter.zeroFormattingBehavior = .pad
+        return formatter.string(from: ceil(max(0, remaining))) ?? "0:00"
+    }
 
-                        actionButton(
-                            "menu.snooze",
-                            systemImage: "alarm",
-                            action: controller.snooze
-                        )
-                    }
-                } else {
-                    actionButton(
-                        "menu.completeBreak",
-                        systemImage: "checkmark.circle",
-                        action: controller.completeBreak
-                    )
-                }
+    private func actions(for snapshot: SessionSnapshot) -> some View {
+        HStack(spacing: 6) {
+            if snapshot.phase == .focusing {
+                actionButton(
+                    "menu.startBreak",
+                    item: .startBreak,
+                    systemImage: "play.circle",
+                    action: controller.startBreakNow
+                )
 
                 actionButton(
-                    "menu.pause",
-                    systemImage: "pause.fill",
-                    action: controller.toggleManualPause
+                    "menu.snooze",
+                    item: .snooze,
+                    systemImage: "alarm",
+                    action: controller.snooze
+                )
+            } else {
+                actionButton(
+                    "menu.completeBreak",
+                    item: .completeBreak,
+                    systemImage: "checkmark.circle",
+                    action: controller.completeBreak
                 )
             }
         }
@@ -212,6 +247,7 @@ struct MenuBarView: View {
 
     private func actionButton(
         _ titleKey: LocalizedStringKey,
+        item: ActionItem,
         systemImage: String,
         action: @escaping () -> Void
     ) -> some View {
@@ -222,7 +258,23 @@ struct MenuBarView: View {
                 .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
-        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
+        .background(
+            .white.opacity(hoveredAction == item ? 0.17 : 0.07),
+            in: RoundedRectangle(cornerRadius: 8)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(.white.opacity(hoveredAction == item ? 0.25 : 0), lineWidth: 1)
+                .allowsHitTesting(false)
+        }
+        .onHover { isHovering in
+            if isHovering {
+                hoveredAction = item
+            } else if hoveredAction == item {
+                hoveredAction = nil
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: hoveredAction)
     }
 
     private var todayRow: some View {
