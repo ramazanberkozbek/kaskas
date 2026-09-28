@@ -20,6 +20,8 @@ final class SessionController {
     @ObservationIgnored private let breakPresenter: BreakPresenter
     @ObservationIgnored private let settingsPresenter: SettingsPresenter
     @ObservationIgnored private let skippedBreakNotifier = SkippedBreakNotifier()
+    @ObservationIgnored private let idleBreakNotifier = IdleBreakNotifier()
+    @ObservationIgnored private let cursorIdleMonitor = CursorIdleMonitor()
     @ObservationIgnored private let meetingMonitor = MeetingActivityMonitor()
     @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
@@ -54,6 +56,9 @@ final class SessionController {
                 configuration: configuration,
                 restoredState: restoredState
             )
+            if restoredState.idlePauseStartedAt != nil {
+                engine.declineIdleBreak(at: store.loadLastActiveAt() ?? now)
+            }
             if restoredState.systemPauseStartedAt == nil,
                let lastActiveAt = store.loadLastActiveAt(),
                lastActiveAt <= now {
@@ -92,6 +97,7 @@ final class SessionController {
         }
         activityTracker.resume(as: currentActivityKind, at: now)
         reconcile()
+        startIdleMonitoringIfNeeded()
         let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.persistSession() }
         }
@@ -100,11 +106,13 @@ final class SessionController {
     }
 
     func stop() {
+        stopIdleMonitoring(at: Date())
         checkpointTimer?.invalidate()
         checkpointTimer = nil
         scheduler.cancel()
         meetingMonitor.stop()
         skippedBreakNotifier.dismiss()
+        idleBreakNotifier.dismiss()
         microReminderPresenter.dismiss()
         breakWarningPresenter.dismiss()
         breakPresenter.dismiss()
@@ -117,6 +125,7 @@ final class SessionController {
     }
 
     func systemWillSleep(at now: Date = Date()) {
+        stopIdleMonitoring(at: now)
         engine.beginSystemPause(at: now)
         scheduler.cancel()
         microReminderPresenter.dismiss()
@@ -133,9 +142,12 @@ final class SessionController {
         )
         if engine.manualPauseStartedAt != nil { persistSession(at: now) }
         reconcile(at: now)
+        startIdleMonitoringIfNeeded()
     }
 
-    func reconcile(at now: Date = Date()) {
+    func reconcile(at now: Date = Date(), showsBreakWarning: Bool = true) {
+        if configuration.idleDetectionEnabled { cursorIdleMonitor.sample(threshold: configuration.idleThreshold, at: now) }
+        guard engine.idlePauseStartedAt == nil else { return }
         guard engine.systemPauseStartedAt == nil, engine.manualPauseStartedAt == nil else { return }
         _ = handleMeetingActivity(
             configuration.pauseDuringMeetings && meetingMonitor.sample(),
@@ -155,6 +167,7 @@ final class SessionController {
         persistSession(record: completedBreak, at: now)
 
         for event in events {
+            if event == .breakApproaching, !showsBreakWarning { continue }
             handle(event)
         }
 
@@ -162,7 +175,9 @@ final class SessionController {
             presentCurrentBreak()
         }
 
-        if engine.session.phase == .focusing,
+        if showsBreakWarning,
+           engine.session.phase == .focusing,
+           configuration.breakWarningEnabled,
            engine.hasShownBreakWarning,
            now < engine.session.endsAt {
             presentBreakWarning()
@@ -187,6 +202,15 @@ final class SessionController {
 
     func updateConfiguration(_ configuration: FocusConfiguration) {
         let now = Date()
+        let idleSettingsChanged = configuration.idleDetectionEnabled != self.configuration.idleDetectionEnabled
+            || configuration.idleThreshold != self.configuration.idleThreshold
+        let warningSettingsChanged = configuration.breakWarningEnabled != self.configuration.breakWarningEnabled
+            || configuration.breakWarningLeadTime != self.configuration.breakWarningLeadTime
+            || configuration.notificationPosition != self.configuration.notificationPosition
+        if idleSettingsChanged { stopIdleMonitoring(at: now) }
+        if warningSettingsChanged {
+            breakWarningPresenter.dismiss()
+        }
         if configuration.focusDuration != self.configuration.focusDuration {
             breakWarningPresenter.dismiss()
             engine.endMeetingPause(at: now)
@@ -203,16 +227,23 @@ final class SessionController {
         }
         engine.updateConfiguration(configuration, at: now)
         store.save(configuration: configuration)
+        if idleSettingsChanged { startIdleMonitoringIfNeeded() }
         if engine.manualPauseStartedAt != nil {
             refreshSnapshot(at: now)
             persistSession(at: now)
         } else {
-            reconcile(at: now)
+            reconcile(at: now, showsBreakWarning: !warningSettingsChanged)
+        }
+        if warningSettingsChanged,
+           engine.session.phase == .focusing,
+           engine.hasShownBreakWarning {
+            breakWarningPresenter.suppress(endsAt: engine.session.endsAt)
         }
     }
 
     func startBreakNow() {
         let now = Date()
+        if engine.idlePauseStartedAt != nil { resolveIdleBreak(accepted: false, returnedAt: now) }
         skippedBreakNotifier.dismiss()
         breakWarningPresenter.dismiss()
         engine.startBreak(at: now, scheduled: false)
@@ -248,6 +279,7 @@ final class SessionController {
 
     func toggleManualPause() {
         let now = Date()
+        if engine.idlePauseStartedAt != nil { resolveIdleBreak(accepted: false, returnedAt: now) }
         if engine.manualPauseStartedAt == nil {
             engine.beginManualPause(at: now)
             guard engine.manualPauseStartedAt != nil else { return }
@@ -292,10 +324,16 @@ final class SessionController {
         )
     }
 
-#if DEBUG
     func previewBreakWarning() {
+        if engine.session.phase == .focusing,
+           engine.hasShownBreakWarning,
+           Date.now < engine.session.endsAt {
+            return
+        }
         breakWarningPresenter.show(
-            endsAt: Date.now.addingTimeInterval(SessionEngine.breakWarningLeadTime),
+            endsAt: Date.now.addingTimeInterval(configuration.breakWarningLeadTime),
+            leadTime: configuration.breakWarningLeadTime,
+            position: configuration.notificationPosition,
             isPreview: true,
             onStart: { [weak self] in
                 self?.breakWarningPresenter.dismissPreview()
@@ -310,6 +348,7 @@ final class SessionController {
         )
     }
 
+#if DEBUG
     func previewSkippedBreakReminder() {
         skippedBreakNotifier.show(onStart: { [weak self] in self?.previewBreak() })
     }
@@ -385,8 +424,11 @@ final class SessionController {
     }
 
     private func presentBreakWarning() {
+        guard configuration.breakWarningEnabled else { return }
         breakWarningPresenter.show(
             endsAt: engine.session.endsAt,
+            leadTime: configuration.breakWarningLeadTime,
+            position: configuration.notificationPosition,
             onStart: { [weak self] in self?.startBreakNow() },
             onPostpone: { [weak self] duration in self?.postponeBreak(by: duration) },
             onSkip: { [weak self] in self?.skipUpcomingBreak() }
@@ -439,7 +481,8 @@ final class SessionController {
     }
 
     private func scheduleNextEvent() {
-        guard engine.systemPauseStartedAt == nil, engine.manualPauseStartedAt == nil else {
+        guard engine.systemPauseStartedAt == nil, engine.manualPauseStartedAt == nil,
+              engine.idlePauseStartedAt == nil else {
             scheduler.cancel()
             return
         }
@@ -474,8 +517,68 @@ final class SessionController {
         if engine.systemPauseStartedAt != nil {
             return activityTracker.journal.cursor?.kind ?? .computerInactive
         }
-        if engine.meetingPauseStartedAt != nil || engine.manualPauseStartedAt != nil { return .kaskasPaused }
+        if engine.manualPauseStartedAt != nil { return .kaskasPaused }
+        if engine.meetingPauseStartedAt != nil { return .meeting }
+        if engine.idlePauseStartedAt != nil { return .computerInactive }
         return engine.session.phase == .focusing ? .studying : .breakTime
+    }
+
+    private func startIdleMonitoringIfNeeded() {
+        guard configuration.idleDetectionEnabled else { return }
+        cursorIdleMonitor.onIdle = { [weak self] startedAt in self?.beginIdleBreak(at: startedAt) }
+        cursorIdleMonitor.onReturn = { [weak self] _, returnedAt in
+            self?.presentIdleBreak(returnedAt: returnedAt)
+        }
+        cursorIdleMonitor.start(threshold: configuration.idleThreshold)
+    }
+
+    private func stopIdleMonitoring(at now: Date) {
+        cursorIdleMonitor.stop()
+        idleBreakNotifier.dismiss()
+        if engine.idlePauseStartedAt != nil {
+            engine.declineIdleBreak(at: now)
+            refreshSnapshot(at: now)
+            persistSession(at: now)
+        }
+    }
+
+    private func beginIdleBreak(at startedAt: Date) {
+        let idleStart = max(engine.session.startedAt, startedAt)
+        engine.beginIdlePause(at: idleStart)
+        guard engine.idlePauseStartedAt != nil else { return }
+        scheduler.cancel()
+        microReminderPresenter.dismiss()
+        breakWarningPresenter.dismiss()
+        refreshSnapshot(at: idleStart)
+        persistSession(at: idleStart)
+    }
+
+    private func presentIdleBreak(returnedAt: Date) {
+        guard let actualStart = engine.idlePauseStartedAt else { return }
+        idleBreakNotifier.show(
+            duration: returnedAt.timeIntervalSince(actualStart),
+            onAccept: { [weak self] in self?.resolveIdleBreak(accepted: true, returnedAt: returnedAt) },
+            onDecline: { [weak self] in self?.resolveIdleBreak(accepted: false, returnedAt: returnedAt) }
+        )
+    }
+
+    private func resolveIdleBreak(accepted: Bool, returnedAt: Date) {
+        guard let startedAt = engine.idlePauseStartedAt else { return }
+        idleBreakNotifier.dismiss()
+        let previousSession = engine.session
+        if accepted {
+            activityTracker.update(to: .breakTime, at: startedAt)
+            activityTracker.update(to: .studying, at: returnedAt)
+            engine.acceptIdleBreak(at: returnedAt)
+        } else {
+            engine.declineIdleBreak(at: returnedAt)
+        }
+        refreshSnapshot(at: returnedAt)
+        persistSession(
+            record: accepted ? .idleBreak(from: previousSession, startedAt: startedAt, returnedAt: returnedAt) : nil,
+            at: returnedAt
+        )
+        reconcile()
     }
 
     private func persistSession(

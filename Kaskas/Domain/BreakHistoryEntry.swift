@@ -52,6 +52,20 @@ struct BreakHistoryEntry: Codable, Equatable, Sendable {
             source: .smartPause
         )
     }
+
+    static func idleBreak(from session: FocusSession, startedAt: Date, returnedAt: Date) -> Self {
+        let focusBits = String(session.startedAt.timeIntervalSinceReferenceDate.bitPattern, radix: 16)
+        let idleBits = String(startedAt.timeIntervalSinceReferenceDate.bitPattern, radix: 16)
+        return Self(
+            id: "smart-pause-\(focusBits)-\(idleBits)",
+            occurredAt: returnedAt,
+            startedAt: startedAt,
+            focusStartedAt: session.startedAt,
+            focusedDuration: max(0, startedAt.timeIntervalSince(session.startedAt)),
+            outcome: .completed,
+            source: .smartPause
+        )
+    }
 }
 
 struct LegacySmartPauseRecord: Decodable, Sendable {

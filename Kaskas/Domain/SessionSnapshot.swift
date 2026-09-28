@@ -15,4 +15,5 @@ struct SessionSnapshot: Equatable, Sendable {
     let nextBreakKind: ScheduledBreakKind?
     let meetingPauseStartedAt: Date?
     let manualPauseStartedAt: Date?
+    let idlePauseStartedAt: Date?
 }

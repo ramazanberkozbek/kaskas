@@ -42,12 +42,14 @@ enum BreakSound: String, Codable, CaseIterable, Identifiable, Sendable {
 
 enum MicroReminderMascot: String, Codable, CaseIterable, Identifiable, Sendable {
     case flame
+    case glasses
 
     var id: Self { self }
 
     var titleKey: String {
         switch self {
         case .flame: "settings.microReminderMascot.flame"
+        case .glasses: "settings.microReminderMascot.glasses"
         }
     }
 }
@@ -75,6 +77,14 @@ enum MenuBarDisplayMode: String, Codable, CaseIterable, Identifiable, Sendable {
     var id: Self { self }
 }
 
+enum NotificationPosition: String, Codable, CaseIterable, Identifiable, Sendable {
+    case left
+    case center
+    case right
+
+    var id: Self { self }
+}
+
 struct FocusConfiguration: Codable, Equatable, Sendable {
     var focusDuration: TimeInterval
     var microReminderInterval: TimeInterval
@@ -93,7 +103,12 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
     var pauseDuringMeetings: Bool
+    var idleDetectionEnabled: Bool
+    var idleThreshold: TimeInterval
     var menuBarDisplayMode: MenuBarDisplayMode
+    var breakWarningEnabled: Bool
+    var breakWarningLeadTime: TimeInterval
+    var notificationPosition: NotificationPosition
 
     init(
         focusDuration: TimeInterval = 45 * 60,
@@ -113,7 +128,12 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         microReminderColor: MicroReminderColor = .peach,
         customWallpaperPath: String? = nil,
         pauseDuringMeetings: Bool = true,
-        menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer
+        idleDetectionEnabled: Bool = false,
+        idleThreshold: TimeInterval = 3 * 60,
+        menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer,
+        breakWarningEnabled: Bool = true,
+        breakWarningLeadTime: TimeInterval = 20,
+        notificationPosition: NotificationPosition = .center
     ) {
         self.focusDuration = max(1, focusDuration)
         self.microReminderInterval = max(1, microReminderInterval)
@@ -132,7 +152,12 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
         self.pauseDuringMeetings = pauseDuringMeetings
+        self.idleDetectionEnabled = idleDetectionEnabled
+        self.idleThreshold = max(60, idleThreshold)
         self.menuBarDisplayMode = menuBarDisplayMode
+        self.breakWarningEnabled = breakWarningEnabled
+        self.breakWarningLeadTime = min(30, max(5, (breakWarningLeadTime / 5).rounded() * 5))
+        self.notificationPosition = notificationPosition
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -153,7 +178,12 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case microReminderColor
         case customWallpaperPath
         case pauseDuringMeetings
+        case idleDetectionEnabled
+        case idleThreshold
         case menuBarDisplayMode
+        case breakWarningEnabled
+        case breakWarningLeadTime
+        case notificationPosition
     }
 
     init(from decoder: Decoder) throws {
@@ -206,10 +236,21 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
                 Bool.self,
                 forKey: .pauseDuringMeetings
             ) ?? true,
+            idleDetectionEnabled: try container.decodeIfPresent(
+                Bool.self,
+                forKey: .idleDetectionEnabled
+            ) ?? false,
+            idleThreshold: try container.decodeIfPresent(
+                TimeInterval.self,
+                forKey: .idleThreshold
+            ) ?? 3 * 60,
             menuBarDisplayMode: try container.decodeIfPresent(
                 MenuBarDisplayMode.self,
                 forKey: .menuBarDisplayMode
-            ) ?? .iconAndTimer
+            ) ?? .iconAndTimer,
+            breakWarningEnabled: try container.decodeIfPresent(Bool.self, forKey: .breakWarningEnabled) ?? true,
+            breakWarningLeadTime: try container.decodeIfPresent(TimeInterval.self, forKey: .breakWarningLeadTime) ?? 20,
+            notificationPosition: try container.decodeIfPresent(NotificationPosition.self, forKey: .notificationPosition) ?? .center
         )
     }
 }

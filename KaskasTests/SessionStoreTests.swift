@@ -37,6 +37,11 @@ struct SessionStoreTests {
         #expect(configuration.microReminderMascot == .flame)
         #expect(configuration.microReminderColor == .peach)
         #expect(configuration.menuBarDisplayMode == .iconAndTimer)
+        #expect(configuration.idleDetectionEnabled == false)
+        #expect(configuration.idleThreshold == 3 * 60)
+        #expect(configuration.breakWarningEnabled)
+        #expect(configuration.breakWarningLeadTime == 20)
+        #expect(configuration.notificationPosition == .center)
     }
 
     @Test
@@ -59,9 +64,14 @@ struct SessionStoreTests {
             breakSound: .ping,
             breakEndSoundEnabled: true,
             breakEndSound: .tink,
-            microReminderMascot: .flame,
+            microReminderMascot: .glasses,
             microReminderColor: .blue,
-            menuBarDisplayMode: .timerOnly
+            idleDetectionEnabled: true,
+            idleThreshold: 5 * 60,
+            menuBarDisplayMode: .timerOnly,
+            breakWarningEnabled: false,
+            breakWarningLeadTime: 25,
+            notificationPosition: .right
         )
         let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
         var engine = SessionEngine(configuration: configuration, now: startDate)
@@ -74,13 +84,27 @@ struct SessionStoreTests {
         #expect(store.loadConfiguration() == configuration)
         let savedData = defaults.data(forKey: "focusConfiguration")!
         let savedValues = try! JSONSerialization.jsonObject(with: savedData) as! [String: Any]
-        #expect(savedValues["microReminderMascot"] as? String == "flame")
+        #expect(savedValues["microReminderMascot"] as? String == "glasses")
         #expect(savedValues["microReminderColor"] as? String == "blue")
         #expect(savedValues["menuBarDisplayMode"] as? String == "timerOnly")
         #expect(savedValues["breakEndSoundEnabled"] as? Bool == true)
         #expect(savedValues["breakEndSound"] as? String == "Tink")
         #expect(store.loadSessionState() == engine.state)
         #expect(store.loadSessionState()?.consecutiveSkippedBreaks == 2)
+    }
+
+    @Test
+    func restoresFormerSixtySecondWarningAsThirtySeconds() {
+        let suiteName = "SessionStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SessionStore(defaults: defaults)
+        var configuration = FocusConfiguration()
+        configuration.breakWarningLeadTime = 60
+        store.save(configuration: configuration)
+
+        #expect(store.loadConfiguration().breakWarningLeadTime == 30)
     }
 
     @Test

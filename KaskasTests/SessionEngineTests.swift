@@ -73,6 +73,32 @@ struct SessionEngineTests {
     }
 
     @Test
+    func optionalWarningDoesNotInterruptFocusOrDelayBreak() {
+        var configuration = configuration
+        configuration.breakWarningEnabled = false
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        _ = engine.process(at: startDate.addingTimeInterval(20 * 60))
+        _ = engine.process(at: startDate.addingTimeInterval(40 * 60))
+
+        #expect(engine.nextEventDate == startDate.addingTimeInterval(45 * 60))
+        #expect(engine.process(at: startDate.addingTimeInterval(44 * 60 + 50)).isEmpty)
+        #expect(engine.process(at: startDate.addingTimeInterval(45 * 60)) == [.fullBreakDue])
+    }
+
+    @Test
+    func usesConfiguredWarningLeadTime() {
+        var configuration = configuration
+        configuration.breakWarningLeadTime = 15
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        _ = engine.process(at: startDate.addingTimeInterval(20 * 60))
+        _ = engine.process(at: startDate.addingTimeInterval(40 * 60))
+
+        let warningAt = startDate.addingTimeInterval(45 * 60 - 15)
+        #expect(engine.nextEventDate == warningAt)
+        #expect(engine.process(at: warningAt) == [.breakApproaching])
+    }
+
+    @Test
     func meetingDefersWarningAndBreakUntilAfterCall() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let meetingStart = startDate.addingTimeInterval(44 * 60 + 30)
@@ -133,6 +159,56 @@ struct SessionEngineTests {
         #expect(engine.session.endsAt == startDate.addingTimeInterval(75 * 60))
         #expect(engine.nextEventDate == startDate.addingTimeInterval(50 * 60))
         #expect(engine.process(at: resumedAt).isEmpty)
+    }
+
+    @Test
+    func acceptedIdleBreakStartsFreshFocusAndRecordsPriorWork() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let idleAt = startDate.addingTimeInterval(12 * 60)
+        let returnedAt = idleAt.addingTimeInterval(3 * 60)
+        let priorSession = engine.session
+
+        engine.beginIdlePause(at: idleAt)
+        #expect(engine.nextEventDate == nil)
+        #expect(engine.snapshot(at: returnedAt).remaining == 33 * 60)
+        #expect(engine.process(at: returnedAt).isEmpty)
+
+        let record = BreakHistoryEntry.idleBreak(from: priorSession, startedAt: idleAt, returnedAt: returnedAt)
+        engine.acceptIdleBreak(at: returnedAt)
+
+        #expect(record.focusedDuration == 12 * 60.0)
+        #expect(record.startedAt == idleAt)
+        #expect(record.source == .smartPause)
+        #expect(engine.session.startedAt == returnedAt)
+        #expect(engine.session.endsAt == returnedAt.addingTimeInterval(45 * 60))
+        #expect(engine.breaksTakenToday(at: returnedAt) == 1)
+    }
+
+    @Test
+    func declinedIdleBreakPreservesWorkAndExcludesInactiveTime() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let idleAt = startDate.addingTimeInterval(12 * 60)
+        let returnedAt = idleAt.addingTimeInterval(3 * 60)
+
+        engine.beginIdlePause(at: idleAt)
+        engine.declineIdleBreak(at: returnedAt)
+
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(48 * 60))
+        #expect(engine.snapshot(at: returnedAt).remaining == 33 * 60)
+        #expect(engine.breaksTakenToday(at: returnedAt) == 0)
+    }
+
+    @Test
+    func declinedIdleBreakNearDeadlineAllowsTimeBeforeScheduledBreak() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let idleAt = startDate.addingTimeInterval(44 * 60 + 55)
+        let returnedAt = idleAt.addingTimeInterval(3 * 60)
+
+        engine.beginIdlePause(at: idleAt)
+        engine.declineIdleBreak(at: returnedAt)
+
+        #expect(engine.snapshot(at: returnedAt).remaining == 60)
+        #expect(engine.process(at: returnedAt).isEmpty)
     }
 
     @Test

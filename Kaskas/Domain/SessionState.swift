@@ -11,6 +11,7 @@ struct SessionState: Codable, Equatable, Sendable {
     let meetingPauseStartedAt: Date?
     let manualPauseStartedAt: Date?
     let systemPauseStartedAt: Date?
+    let idlePauseStartedAt: Date?
 
     init(
         session: FocusSession,
@@ -22,7 +23,8 @@ struct SessionState: Codable, Equatable, Sendable {
         scheduledBreakCount: Int = 0,
         meetingPauseStartedAt: Date? = nil,
         manualPauseStartedAt: Date? = nil,
-        systemPauseStartedAt: Date? = nil
+        systemPauseStartedAt: Date? = nil,
+        idlePauseStartedAt: Date? = nil
     ) {
         self.session = session
         self.activeConfiguration = activeConfiguration
@@ -34,6 +36,7 @@ struct SessionState: Codable, Equatable, Sendable {
         self.meetingPauseStartedAt = meetingPauseStartedAt
         self.manualPauseStartedAt = manualPauseStartedAt
         self.systemPauseStartedAt = systemPauseStartedAt
+        self.idlePauseStartedAt = idlePauseStartedAt
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -43,6 +46,7 @@ struct SessionState: Codable, Equatable, Sendable {
         case meetingPauseStartedAt
         case manualPauseStartedAt
         case systemPauseStartedAt
+        case idlePauseStartedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -60,5 +64,6 @@ struct SessionState: Codable, Equatable, Sendable {
         meetingPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .meetingPauseStartedAt)
         manualPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .manualPauseStartedAt)
         systemPauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .systemPauseStartedAt)
+        idlePauseStartedAt = try container.decodeIfPresent(Date.self, forKey: .idlePauseStartedAt)
     }
 }
