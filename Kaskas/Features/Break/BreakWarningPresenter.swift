@@ -5,18 +5,22 @@ import SwiftUI
 final class BreakWarningPresenter {
     private var panel: NSPanel?
     private var presentedEndDate: Date?
+    private var dismissedEndDate: Date?
     private var isShowingPreview = false
-    private var previewDismissalTask: Task<Void, Never>?
+    private var dismissalTask: Task<Void, Never>?
     private let cursorCountdown = CursorBreakCountdownPresenter()
 
     func show(
         endsAt: Date,
+        leadTime: TimeInterval,
+        position: NotificationPosition,
         isPreview: Bool = false,
         onStart: @escaping () -> Void,
         onPostpone: @escaping (TimeInterval) -> Void,
         onSkip: @escaping () -> Void
     ) {
-        if panel?.isVisible == true, presentedEndDate == endsAt { return }
+        if !isPreview, dismissedEndDate == endsAt { return }
+        if panel?.isVisible == true, presentedEndDate == endsAt, !isPreview { return }
         dismiss()
 
         let mouseLocation = NSEvent.mouseLocation
@@ -25,8 +29,14 @@ final class BreakWarningPresenter {
             ?? NSScreen.screens.first else { return }
 
         let size = BreakWarningView.panelSize
+        let x: CGFloat
+        switch position {
+        case .left: x = screen.visibleFrame.minX + 24
+        case .center: x = screen.visibleFrame.midX - size.width / 2
+        case .right: x = screen.visibleFrame.maxX - size.width - 24
+        }
         let frame = NSRect(
-            x: screen.visibleFrame.midX - size.width / 2,
+            x: x,
             y: screen.visibleFrame.maxY - size.height - 24,
             width: size.width,
             height: size.height
@@ -39,6 +49,7 @@ final class BreakWarningPresenter {
         )
         let contentView = NSHostingView(rootView: BreakWarningView(
             endsAt: endsAt,
+            leadTime: leadTime,
             onStart: onStart,
             onPostpone: onPostpone,
             onSkip: onSkip
@@ -58,20 +69,20 @@ final class BreakWarningPresenter {
         self.panel = panel
         presentedEndDate = endsAt
         isShowingPreview = isPreview
-        cursorCountdown.show(endsAt: endsAt)
+        cursorCountdown.show(endsAt: endsAt, leadTime: leadTime)
 
-        if isPreview {
-            previewDismissalTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(until: .now + .seconds(max(0, endsAt.timeIntervalSinceNow)))
-                guard !Task.isCancelled else { return }
-                self?.dismissPreview()
-            }
+        dismissalTask = Task { @MainActor [weak self] in
+            let displayTime = max(0, endsAt.timeIntervalSinceNow)
+            do { try await Task.sleep(for: .seconds(displayTime)) } catch { return }
+            guard let self, self.presentedEndDate == endsAt else { return }
+            if !isPreview { self.dismissedEndDate = endsAt }
+            self.dismiss()
         }
     }
 
     func dismiss() {
-        previewDismissalTask?.cancel()
-        previewDismissalTask = nil
+        dismissalTask?.cancel()
+        dismissalTask = nil
         cursorCountdown.dismiss()
         panel?.orderOut(nil)
         panel = nil
@@ -81,6 +92,10 @@ final class BreakWarningPresenter {
 
     func dismissPreview() {
         if isShowingPreview { dismiss() }
+    }
+
+    func suppress(endsAt: Date) {
+        dismissedEndDate = endsAt
     }
 }
 

@@ -35,7 +35,6 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
         window.title = "Kaskas"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.tabbingMode = .disallowed

@@ -6,6 +6,7 @@ struct BreakWarningView: View {
     private let accent = Color(red: 1, green: 0.62, blue: 0.39)
 
     let endsAt: Date
+    let leadTime: TimeInterval
     let onStart: () -> Void
     let onPostpone: (TimeInterval) -> Void
     let onSkip: () -> Void
@@ -15,10 +16,11 @@ struct BreakWarningView: View {
             countdownHeader
 
             HStack(spacing: 7) {
-                action("warning.startNow", prominent: true, action: onStart)
+                action("warning.skip", action: onSkip)
                 action("warning.oneMinute") { onPostpone(60) }
                 action("warning.fiveMinutes") { onPostpone(5 * 60) }
-                action("warning.skip", action: onSkip)
+                Spacer(minLength: 0)
+                action("warning.startNow", prominent: true, action: onStart)
             }
         }
         .frame(width: Self.panelSize.width - 32, alignment: .leading)
@@ -28,7 +30,7 @@ struct BreakWarningView: View {
         .overlay {
             CountdownBorder(
                 endsAt: endsAt,
-                duration: SessionEngine.breakWarningLeadTime,
+                duration: leadTime,
                 cornerRadius: 20,
                 color: accent
             )

@@ -37,7 +37,7 @@ struct SettingsView: View {
         case .wellness:
             WellnessSettingsView(controller: controller)
         case .alerts:
-            SettingsPlaceholderView(pane: .alerts)
+            AlertsSettingsView(controller: controller)
         case .statistics:
             StatisticsView(controller: controller)
         case .general:
@@ -59,7 +59,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .focus: "settings.sidebar.focus"
         case .wellness: "settings.sidebar.wellness"
-        case .alerts: "settings.sidebar.alerts"
+        case .alerts: "settings.sidebar.notifications"
         case .statistics: "settings.sidebar.statistics"
         case .general: "settings.sidebar.general"
         }

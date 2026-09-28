@@ -6,7 +6,7 @@ final class CursorBreakCountdownPresenter {
     private var panel: NSPanel?
     private var trackingTimer: Timer?
 
-    func show(endsAt: Date) {
+    func show(endsAt: Date, leadTime: TimeInterval) {
         dismiss()
         guard endsAt > .now, !NSScreen.screens.isEmpty else { return }
 
@@ -17,7 +17,7 @@ final class CursorBreakCountdownPresenter {
             backing: .buffered,
             defer: false
         )
-        let contentView = NSHostingView(rootView: CursorBreakCountdownView(endsAt: endsAt))
+        let contentView = NSHostingView(rootView: CursorBreakCountdownView(endsAt: endsAt, leadTime: leadTime))
         contentView.frame = NSRect(origin: .zero, size: size)
         panel.contentView = contentView
         panel.isOpaque = false
@@ -77,12 +77,13 @@ private struct CursorBreakCountdownView: View {
     static let panelSize = CGSize(width: 142, height: 42)
 
     let endsAt: Date
+    let leadTime: TimeInterval
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { context in
             let remaining = max(0, endsAt.timeIntervalSince(context.date))
             let seconds = Int(remaining.rounded(.up))
-            let progress = min(1, remaining / SessionEngine.breakWarningLeadTime)
+            let progress = min(1, remaining / leadTime)
 
             HStack(spacing: 7) {
                 Circle()
