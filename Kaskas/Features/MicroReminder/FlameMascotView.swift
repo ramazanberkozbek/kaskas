@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct FlameMascotView: View {
+    let mascot: MicroReminderMascot
     let color: MicroReminderColor
     let size: CGFloat
     let animated: Bool
@@ -65,11 +66,52 @@ struct FlameMascotView: View {
                 ),
                 style: FillStyle(eoFill: true)
             )
+
+            FlameAccessoryView(mascot: mascot)
         }
         .frame(width: size, height: size)
         .scaleEffect(y: CGFloat(pose.breathingScale), anchor: .bottom)
         .scaleEffect(CGFloat(pose.appearanceScale))
         .opacity(pose.opacity)
+    }
+}
+
+private struct FlameAccessoryView: View {
+    let mascot: MicroReminderMascot
+
+    var body: some View {
+        if mascot == .glasses {
+            Canvas { context, size in
+                var drawing = context
+                drawing.scaleBy(x: size.width / 120, y: size.height / 120)
+
+                let frame = Color(red: 0.19, green: 0.23, blue: 0.34)
+                let highlight = Color(red: 1, green: 0.97, blue: 0.89)
+                drawing.stroke(Path(ellipseIn: CGRect(x: 26, y: 68, width: 29, height: 24)),
+                               with: .color(frame), lineWidth: 4)
+                drawing.stroke(Path(ellipseIn: CGRect(x: 65, y: 68, width: 29, height: 24)),
+                               with: .color(frame), lineWidth: 4)
+
+                var bridge = Path()
+                bridge.move(to: CGPoint(x: 54, y: 76))
+                bridge.addQuadCurve(to: CGPoint(x: 66, y: 76), control: CGPoint(x: 60, y: 70))
+                bridge.move(to: CGPoint(x: 27, y: 76))
+                bridge.addLine(to: CGPoint(x: 19, y: 72))
+                bridge.move(to: CGPoint(x: 94, y: 76))
+                bridge.addLine(to: CGPoint(x: 102, y: 72))
+                drawing.stroke(bridge, with: .color(frame),
+                               style: StrokeStyle(lineWidth: 4, lineCap: .round))
+
+                var shine = Path()
+                shine.move(to: CGPoint(x: 31, y: 76))
+                shine.addQuadCurve(to: CGPoint(x: 38, y: 71), control: CGPoint(x: 34, y: 72))
+                shine.move(to: CGPoint(x: 70, y: 76))
+                shine.addQuadCurve(to: CGPoint(x: 77, y: 71), control: CGPoint(x: 73, y: 72))
+                drawing.stroke(shine, with: .color(highlight.opacity(0.85)),
+                               style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            }
+            .accessibilityHidden(true)
+        }
     }
 }
 

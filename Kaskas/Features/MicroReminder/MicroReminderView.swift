@@ -55,15 +55,13 @@ struct MicroReminderMascotView: View {
     }
 
     var body: some View {
-        switch mascot {
-        case .flame:
-            FlameMascotView(
-                color: color,
-                size: size,
-                animated: animated,
-                onFinished: onFinished
-            )
-        }
+        FlameMascotView(
+            mascot: mascot,
+            color: color,
+            size: size,
+            animated: animated,
+            onFinished: onFinished
+        )
     }
 }
 

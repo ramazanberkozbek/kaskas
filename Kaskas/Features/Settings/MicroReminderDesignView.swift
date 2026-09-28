@@ -10,12 +10,6 @@ struct MicroReminderDesignView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Button(action: onBack) {
-                    Label("settings.sidebar.focus", systemImage: "chevron.left")
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.accentColor)
-
                 VStack(alignment: .leading, spacing: 7) {
                     Text("settings.microReminderDesign.title")
                         .font(.system(size: 28, weight: .bold))
@@ -124,6 +118,9 @@ struct MicroReminderDesignView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(24)
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            FocusDesignBackButton(action: onBack)
+        }
         .overlay {
             if showingMascotPicker {
                 GeometryReader { geometry in
@@ -134,6 +131,7 @@ struct MicroReminderDesignView: View {
                         MascotWheelPicker(
                             mascot: controller.configuration.microReminderMascot,
                             color: controller.configuration.microReminderColor,
+                            onSelectMascot: updateMascot,
                             onSelectColor: updateColor,
                             onClose: { showingMascotPicker = false },
                             availableSize: geometry.size
@@ -161,6 +159,12 @@ struct MicroReminderDesignView: View {
     private func updateColor(_ color: MicroReminderColor) {
         var configuration = controller.configuration
         configuration.microReminderColor = color
+        controller.updateConfiguration(configuration)
+    }
+
+    private func updateMascot(_ mascot: MicroReminderMascot) {
+        var configuration = controller.configuration
+        configuration.microReminderMascot = mascot
         controller.updateConfiguration(configuration)
     }
 
@@ -228,6 +232,7 @@ private struct MicroReminderArtwork: View {
 private struct MascotWheelPicker: View {
     let mascot: MicroReminderMascot
     let color: MicroReminderColor
+    let onSelectMascot: (MicroReminderMascot) -> Void
     let onSelectColor: (MicroReminderColor) -> Void
     let onClose: () -> Void
     let availableSize: CGSize
@@ -253,36 +258,49 @@ private struct MascotWheelPicker: View {
             }
 
             ZStack {
-                ForEach(0..<6, id: \.self) { index in
-                    let angle = CGFloat(-120 + index * 60)
-                    let isSelected = index == 4
+                ForEach(MicroReminderMascot.allCases.indices, id: \.self) { index in
+                    let option = MicroReminderMascot.allCases[index]
+                    let angle = CGFloat(180 - index * 180)
+                    let isSelected = option == mascot
 
-                    MascotWheelSegment(
-                        startAngle: angle - 28.5,
-                        endAngle: angle + 28.5
-                    )
-                    .fill(isSelected ? Color.blue.opacity(0.20) : .white.opacity(0.07))
-                    .overlay {
+                    Button {
+                        onSelectMascot(option)
+                    } label: {
                         MascotWheelSegment(
-                            startAngle: angle - 28.5,
-                            endAngle: angle + 28.5
+                            startAngle: angle - 88,
+                            endAngle: angle + 88
                         )
-                        .stroke(isSelected ? Color(red: 0.39, green: 0.62, blue: 1) : .white.opacity(0.16),
-                                lineWidth: isSelected ? 2 : 1)
+                        .fill(isSelected ? Color.blue.opacity(0.20) : .white.opacity(0.07))
+                        .overlay {
+                            MascotWheelSegment(
+                                startAngle: angle - 88,
+                                endAngle: angle + 88
+                            )
+                            .stroke(isSelected ? Color(red: 0.39, green: 0.62, blue: 1) : .white.opacity(0.16),
+                                    lineWidth: isSelected ? 2 : 1)
+                        }
+                        .overlay {
+                            MicroReminderMascotView(
+                                mascot: option,
+                                color: color,
+                                size: wheelSize * 0.19,
+                                animated: false
+                            )
+                            .position(
+                                x: wheelSize * 0.5 + wheelSize * 0.33 * CGFloat(cos(Double(angle) * .pi / 180)),
+                                y: wheelSize * 0.5 + wheelSize * 0.33 * CGFloat(sin(Double(angle) * .pi / 180))
+                            )
+                            .allowsHitTesting(false)
+                        }
+                        .contentShape(MascotWheelSegment(
+                            startAngle: angle - 88,
+                            endAngle: angle + 88
+                        ))
                     }
-
-                    if isSelected {
-                        MicroReminderMascotView(
-                            mascot: .flame,
-                            color: color,
-                            size: wheelSize * 0.17,
-                            animated: false
-                        )
-                        .position(
-                            x: wheelSize * 0.5 + wheelSize * 0.33 * CGFloat(cos(Double(angle) * .pi / 180)),
-                            y: wheelSize * 0.5 + wheelSize * 0.33 * CGFloat(sin(Double(angle) * .pi / 180))
-                        )
-                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(LocalizedStringKey(option.titleKey)))
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                    .help(Text(LocalizedStringKey(option.titleKey)))
                 }
 
                 Circle()
