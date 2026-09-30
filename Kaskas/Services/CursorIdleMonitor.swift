@@ -4,15 +4,14 @@ import CoreGraphics
 @MainActor
 final class CursorIdleMonitor {
     private var timer: Timer?
-    private var idleStartedAt: Date?
-    private var monitoringSince = Date()
+    private var state = IdleInputState(monitoringSince: Date())
 
     var onIdle: ((Date) -> Void)?
     var onReturn: ((Date, Date) -> Void)?
 
     func start(threshold: TimeInterval) {
         stop()
-        monitoringSince = Date()
+        state = IdleInputState(monitoringSince: Date())
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.sample(threshold: threshold) }
         }
@@ -23,26 +22,60 @@ final class CursorIdleMonitor {
     func stop() {
         timer?.invalidate()
         timer = nil
-        idleStartedAt = nil
+        state.reset()
     }
 
     func sample(threshold: TimeInterval, at now: Date = Date()) {
         guard timer != nil else { return }
-        let eventTypes: [CGEventType] = [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
-        let secondsSinceMovement = eventTypes.map {
-            CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: $0)
-        }.filter { $0.isFinite && $0 >= 0 }.min()
-
-        let lastMovement = secondsSinceMovement.map {
-            max(monitoringSince, now.addingTimeInterval(-$0))
-        } ?? monitoringSince
-        if let idleStartedAt {
-            guard lastMovement > idleStartedAt else { return }
-            self.idleStartedAt = nil
-            onReturn?(idleStartedAt, lastMovement)
-        } else if now.timeIntervalSince(lastMovement) >= threshold {
-            idleStartedAt = lastMovement
-            onIdle?(lastMovement)
+        // The Swift overlay does not import kCGAnyInputEventType (defined as ~0 in the SDK).
+        let anyInput = CGEventType(rawValue: UInt32.max)!
+        let eventCount = CGEventSource.counterForEventType(.hidSystemState, eventType: anyInput)
+        let secondsSinceInput = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: anyInput)
+        switch state.sample(at: now, threshold: threshold, secondsSinceInput: secondsSinceInput, eventCount: eventCount) {
+        case .idle(let startedAt): onIdle?(startedAt)
+        case .returned(let startedAt, let returnedAt): onReturn?(startedAt, returnedAt)
+        case nil: break
         }
+    }
+}
+
+struct IdleInputState {
+    enum Transition: Equatable {
+        case idle(Date)
+        case returned(Date, Date)
+    }
+
+    let monitoringSince: Date
+    private(set) var idleStartedAt: Date?
+    private var eventCountAtIdle: UInt32?
+
+    init(monitoringSince: Date) {
+        self.monitoringSince = monitoringSince
+    }
+
+    mutating func reset() {
+        idleStartedAt = nil
+        eventCountAtIdle = nil
+    }
+
+    mutating func sample(
+        at now: Date,
+        threshold: TimeInterval,
+        secondsSinceInput: TimeInterval,
+        eventCount: UInt32
+    ) -> Transition? {
+        if let idleStartedAt {
+            guard eventCount != eventCountAtIdle else { return nil }
+            reset()
+            return .returned(idleStartedAt, now)
+        }
+
+        let lastInput = secondsSinceInput.isFinite && secondsSinceInput >= 0
+            ? max(monitoringSince, now.addingTimeInterval(-secondsSinceInput))
+            : monitoringSince
+        guard now.timeIntervalSince(lastInput) >= threshold else { return nil }
+        idleStartedAt = lastInput
+        eventCountAtIdle = eventCount
+        return .idle(lastInput)
     }
 }

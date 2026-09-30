@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 final class IdleBreakNotifier {
-    private static let displayDuration: TimeInterval = 7
+    private static let displayDuration: TimeInterval = 13
     private var panel: NSPanel?
     private var dismissalTask: Task<Void, Never>?
 
