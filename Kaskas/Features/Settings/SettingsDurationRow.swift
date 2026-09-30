@@ -16,7 +16,7 @@ struct SettingsDurationRow: View {
             }
             .labelsHidden()
             .pickerStyle(.menu)
-            .frame(width: 150)
+            .frame(width: 150, alignment: .trailing)
         } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)

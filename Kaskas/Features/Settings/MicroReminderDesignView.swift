@@ -2,7 +2,6 @@ import SwiftUI
 
 struct MicroReminderDesignView: View {
     let controller: SessionController
-    let onBack: () -> Void
     @State private var showingMascotPicker = false
 
     private let reminderIntervals: [TimeInterval] = [5, 10, 15, 20, 25, 30].map { $0 * 60 }
@@ -118,9 +117,6 @@ struct MicroReminderDesignView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(24)
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            FocusDesignBackButton(action: onBack)
-        }
         .overlay {
             if showingMascotPicker {
                 GeometryReader { geometry in
@@ -230,6 +226,8 @@ private struct MicroReminderArtwork: View {
 }
 
 private struct MascotWheelPicker: View {
+    private let slots: [MicroReminderMascot?] = [.flame, nil, nil, .glasses, nil, nil]
+
     let mascot: MicroReminderMascot
     let color: MicroReminderColor
     let onSelectMascot: (MicroReminderMascot) -> Void
@@ -258,49 +256,23 @@ private struct MascotWheelPicker: View {
             }
 
             ZStack {
-                ForEach(MicroReminderMascot.allCases.indices, id: \.self) { index in
-                    let option = MicroReminderMascot.allCases[index]
-                    let angle = CGFloat(180 - index * 180)
-                    let isSelected = option == mascot
-
-                    Button {
-                        onSelectMascot(option)
-                    } label: {
-                        MascotWheelSegment(
-                            startAngle: angle - 88,
-                            endAngle: angle + 88
-                        )
-                        .fill(isSelected ? Color.blue.opacity(0.20) : .white.opacity(0.07))
-                        .overlay {
-                            MascotWheelSegment(
-                                startAngle: angle - 88,
-                                endAngle: angle + 88
-                            )
-                            .stroke(isSelected ? Color(red: 0.39, green: 0.62, blue: 1) : .white.opacity(0.16),
-                                    lineWidth: isSelected ? 2 : 1)
+                ForEach(slots.indices, id: \.self) { index in
+                    let angle = CGFloat(180 - index * 60)
+                    if let option = slots[index] {
+                        Button {
+                            onSelectMascot(option)
+                        } label: {
+                            wheelSegment(at: angle, option: option, size: wheelSize)
                         }
-                        .overlay {
-                            MicroReminderMascotView(
-                                mascot: option,
-                                color: color,
-                                size: wheelSize * 0.19,
-                                animated: false
-                            )
-                            .position(
-                                x: wheelSize * 0.5 + wheelSize * 0.33 * CGFloat(cos(Double(angle) * .pi / 180)),
-                                y: wheelSize * 0.5 + wheelSize * 0.33 * CGFloat(sin(Double(angle) * .pi / 180))
-                            )
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text(LocalizedStringKey(option.titleKey)))
+                        .accessibilityAddTraits(option == mascot ? .isSelected : [])
+                        .help(Text(LocalizedStringKey(option.titleKey)))
+                    } else {
+                        wheelSegment(at: angle, option: nil, size: wheelSize)
                             .allowsHitTesting(false)
-                        }
-                        .contentShape(MascotWheelSegment(
-                            startAngle: angle - 88,
-                            endAngle: angle + 88
-                        ))
+                            .accessibilityHidden(true)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(LocalizedStringKey(option.titleKey)))
-                    .accessibilityAddTraits(isSelected ? .isSelected : [])
-                    .help(Text(LocalizedStringKey(option.titleKey)))
                 }
 
                 Circle()
@@ -378,6 +350,36 @@ private struct MascotWheelPicker: View {
         }
         .shadow(color: .black.opacity(0.55), radius: 26, y: 14)
         .onExitCommand(perform: onClose)
+    }
+
+    private func wheelSegment(at angle: CGFloat, option: MicroReminderMascot?, size: CGFloat) -> some View {
+        let shape = MascotWheelSegment(startAngle: angle - 28, endAngle: angle + 28)
+        let isSelected = option == mascot
+
+        return shape
+            .fill(isSelected ? Color.blue.opacity(0.20) : .white.opacity(0.07))
+            .overlay {
+                shape.stroke(
+                    isSelected ? Color(red: 0.39, green: 0.62, blue: 1) : .white.opacity(0.16),
+                    lineWidth: isSelected ? 2 : 1
+                )
+            }
+            .overlay {
+                if let option {
+                    MicroReminderMascotView(
+                        mascot: option,
+                        color: color,
+                        size: size * 0.19,
+                        animated: false
+                    )
+                    .position(
+                        x: size * 0.5 + size * 0.33 * CGFloat(cos(Double(angle) * .pi / 180)),
+                        y: size * 0.5 + size * 0.33 * CGFloat(sin(Double(angle) * .pi / 180))
+                    )
+                    .allowsHitTesting(false)
+                }
+            }
+            .contentShape(shape)
     }
 }
 

@@ -4,14 +4,24 @@ import SwiftUI
 struct SettingsView: View {
     let controller: SessionController
 
-    @State private var selection: SettingsPane = .focus
+    @State private var selection: SettingsPane = .dashboard
+    @State private var focusSubpage: FocusSubpage?
+    @State private var navigationTrace = SettingsNavigationTrace()
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationSplitView {
-            List(SettingsPane.allCases, selection: $selection) { pane in
-                Label(pane.title, systemImage: pane.systemImage)
-                    .tag(pane)
+            List(SettingsPane.allCases, selection: paneSelection) { pane in
+                Group {
+                    if pane == .focus, selection == .focus, focusSubpage != nil {
+                        // Reselecting Focus returns from its design subpage.
+                        Button { focusSubpage = nil } label: { sidebarLabel(pane) }
+                            .buttonStyle(.plain)
+                    } else {
+                        sidebarLabel(pane)
+                    }
+                }
+                .tag(pane)
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
@@ -32,23 +42,44 @@ struct SettingsView: View {
     @ViewBuilder
     private var detailContent: some View {
         switch selection {
+        case .dashboard:
+            DashboardView(controller: controller)
         case .focus:
-            FocusSettingsView(controller: controller)
-        case .wellness:
-            WellnessSettingsView(controller: controller)
+            FocusSettingsView(controller: controller, subpage: $focusSubpage)
+                .onAppear { navigationTrace.appeared(SettingsPane.focus.rawValue) }
         case .alerts:
             AlertsSettingsView(controller: controller)
+                .onAppear { navigationTrace.appeared(SettingsPane.alerts.rawValue) }
         case .statistics:
             StatisticsView(controller: controller)
+                .onAppear { navigationTrace.appeared(SettingsPane.statistics.rawValue) }
         case .general:
             GeneralSettingsView(controller: controller)
+                .onAppear { navigationTrace.appeared(SettingsPane.general.rawValue) }
         }
+    }
+
+    private var paneSelection: Binding<SettingsPane> {
+        Binding {
+            selection
+        } set: { pane in
+            if pane == .focus { focusSubpage = nil }
+            guard pane != selection else { return }
+            navigationTrace.selected(pane.rawValue)
+            selection = pane
+        }
+    }
+
+    private func sidebarLabel(_ pane: SettingsPane) -> some View {
+        Label(pane.title, systemImage: pane.systemImage)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
     }
 }
 
 private enum SettingsPane: String, CaseIterable, Identifiable {
+    case dashboard
     case focus
-    case wellness
     case alerts
     case statistics
     case general
@@ -57,8 +88,8 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringKey {
         switch self {
+        case .dashboard: "settings.sidebar.dashboard"
         case .focus: "settings.sidebar.focus"
-        case .wellness: "settings.sidebar.wellness"
         case .alerts: "settings.sidebar.notifications"
         case .statistics: "settings.sidebar.statistics"
         case .general: "settings.sidebar.general"
@@ -67,8 +98,8 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
+        case .dashboard: "square.grid.2x2"
         case .focus: "leaf"
-        case .wellness: "waveform.path.ecg"
         case .alerts: "bell.badge"
         case .statistics: "chart.bar.xaxis"
         case .general: "gearshape"
@@ -110,10 +141,11 @@ private struct SettingsWindowChrome: NSViewRepresentable {
 
     private func configure(window: NSWindow?) {
         guard let window else { return }
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-        window.backgroundColor = colorScheme == .dark
+        if window.titleVisibility != .hidden { window.titleVisibility = .hidden }
+        if !window.titlebarAppearsTransparent { window.titlebarAppearsTransparent = true }
+        let backgroundColor = colorScheme == .dark
             ? NSColor(red: 0.08, green: 0.08, blue: 0.08, alpha: 1.0)
-            : .windowBackgroundColor
+            : NSColor.windowBackgroundColor
+        if window.backgroundColor != backgroundColor { window.backgroundColor = backgroundColor }
     }
 }

@@ -1,26 +1,28 @@
 import SwiftUI
 
+enum FocusSubpage {
+    case focusDesign
+    case microReminderDesign
+}
+
 struct FocusSettingsView: View {
     let controller: SessionController
-    @State private var showingDesign = false
-    @State private var showingMicroReminderDesign = false
+    @Binding var subpage: FocusSubpage?
     @Environment(\.colorScheme) private var colorScheme
 
     private let focusDurations: [TimeInterval] = [10, 15, 20, 30, 45, 60, 90].map { $0 * 60 }
     private let breakDurations: [TimeInterval] = [1, 3, 5, 10, 15].map { $0 * 60 }
     private let longBreakDurations: [TimeInterval] = [3, 5, 10, 15, 20, 30].map { $0 * 60 }
     private let snoozeDurations: [TimeInterval] = [3, 5, 10, 15].map { $0 * 60 }
+    private let reminderIntervals: [TimeInterval] = [5, 10, 15, 20, 25, 30].map { $0 * 60 }
 
     var body: some View {
-        if showingDesign {
-            FocusDesignView(controller: controller) {
-                showingDesign = false
-            }
-        } else if showingMicroReminderDesign {
-            MicroReminderDesignView(controller: controller) {
-                showingMicroReminderDesign = false
-            }
-        } else {
+        switch subpage {
+        case .focusDesign:
+            FocusDesignView(controller: controller)
+        case .microReminderDesign:
+            MicroReminderDesignView(controller: controller)
+        case nil:
             settingsContent
         }
     }
@@ -42,6 +44,11 @@ struct FocusSettingsView: View {
                         .help("settings.snoozeDuration.description")
                 }
 
+                settingsSection(title: "settings.microReminders.title", note: "settings.reminderInterval.description") {
+                    durationRow("settings.reminderInterval", symbol: "sparkles", tint: .orange,
+                                selection: binding(for: \FocusConfiguration.microReminderInterval), options: reminderIntervals)
+                }
+
                 settingsSection(title: "settings.longBreak.title", note: "settings.longBreak.description") {
                     settingRow("settings.longBreak.enabled", symbol: "bed.double.fill", tint: .purple) {
                         Toggle("settings.longBreak.enabled", isOn: binding(for: \FocusConfiguration.longBreakEnabled))
@@ -52,12 +59,16 @@ struct FocusSettingsView: View {
                     settingRow("settings.longBreak.frequency", symbol: "repeat", tint: .purple) {
                         Picker("settings.longBreak.frequency", selection: binding(for: \FocusConfiguration.longBreakFrequency)) {
                             ForEach(1...10, id: \.self) { frequency in
-                                Text("Her \(frequency). molada").tag(frequency)
+                                if frequency == 1 {
+                                    Text("Her molada").tag(frequency)
+                                } else {
+                                    Text("\(frequency) molada bir").tag(frequency)
+                                }
                             }
                         }
                         .labelsHidden()
                         .pickerStyle(.menu)
-                        .frame(width: 136)
+                        .frame(width: 136, alignment: .trailing)
                     }
                     .disabled(!controller.configuration.longBreakEnabled)
                     .help("settings.longBreak.frequency.description")
@@ -92,12 +103,12 @@ struct FocusSettingsView: View {
 
                 settingsSection(title: "settings.focusDesign.title") {
                     settingsDestination("settings.focusDesign.title", symbol: "paintpalette.fill", tint: .pink) {
-                        showingDesign = true
+                        subpage = .focusDesign
                     }
                     .help("settings.focusDesign.description")
                     rowDivider
                     settingsDestination("settings.microReminderDesign.title", symbol: "sparkles", tint: .pink) {
-                        showingMicroReminderDesign = true
+                        subpage = .microReminderDesign
                     }
                     .help("settings.microReminderDesign.description")
                 }
@@ -180,7 +191,7 @@ struct FocusSettingsView: View {
             }
             .labelsHidden()
             .pickerStyle(.menu)
-            .frame(width: 136)
+            .frame(width: 136, alignment: .trailing)
         }
     }
 
@@ -198,7 +209,7 @@ struct FocusSettingsView: View {
             }
             .labelsHidden()
             .pickerStyle(.menu)
-            .frame(width: 136)
+            .frame(width: 136, alignment: .trailing)
         }
     }
 

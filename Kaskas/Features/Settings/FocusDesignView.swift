@@ -2,36 +2,8 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct FocusDesignBackButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        HStack {
-            Button(action: action) {
-                HStack(spacing: 7) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 11, weight: .semibold))
-                    Text("settings.sidebar.focus")
-                        .font(.system(size: 13, weight: .medium))
-                }
-                .frame(minWidth: 84, minHeight: 26)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.bordered)
-            .keyboardShortcut(.cancelAction)
-
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 4)
-        .background(Color(nsColor: .windowBackgroundColor))
-    }
-}
-
 struct FocusDesignView: View {
     let controller: SessionController
-    let onBack: () -> Void
 
     var body: some View {
         ScrollView {
@@ -221,9 +193,6 @@ struct FocusDesignView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            FocusDesignBackButton(action: onBack)
         }
     }
 

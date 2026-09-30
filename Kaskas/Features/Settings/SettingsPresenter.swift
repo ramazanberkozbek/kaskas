@@ -6,6 +6,8 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
     private var window: SettingsWindow?
 
     func show(controller: SessionController) {
+        let trace = PerformanceTrace.begin("Settings window show")
+        defer { PerformanceTrace.end(trace) }
         if let window {
             if window.isMiniaturized {
                 window.deminiaturize(nil)
@@ -18,6 +20,9 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
 
         let rootView = SettingsView(controller: controller)
         let hostingController = NSHostingController(rootView: rootView)
+        // NSWindow owns this fixed-size window's dimensions. Asking SwiftUI
+        // for minimum, ideal and maximum content sizes relays out every pane.
+        hostingController.sizingOptions = []
 
         let window = SettingsWindow(
             contentRect: NSRect(
