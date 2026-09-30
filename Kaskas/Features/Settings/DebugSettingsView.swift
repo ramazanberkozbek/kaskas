@@ -7,12 +7,15 @@ struct DebugSettingsView: View {
     let controller: SessionController
 
     @AppStorage("debugModeEnabled") private var isEnabled = false
+    @AppStorage("debugSessionDetailsEnabled") private var sessionDetailsEnabled = false
 
     var body: some View {
         Section("debug.title") {
             Toggle("debug.enable", isOn: $isEnabled)
 
             if isEnabled {
+                Toggle("debug.sessionDetails", isOn: $sessionDetailsEnabled)
+
                 Text("debug.description")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -52,6 +55,7 @@ struct DebugSettingsView: View {
         }
         .onChange(of: isEnabled) { _, enabled in
             if !enabled {
+                sessionDetailsEnabled = false
                 controller.dismissPreviews()
             }
         }
