@@ -39,7 +39,10 @@ enum StudySessionGrouping {
     static let minimumCountedInterruption: TimeInterval = 30
     static let minimumDefaultDuration: TimeInterval = 5 * 60
 
-    static func group(_ intervals: [ActivityInterval]) -> [StudySession] {
+    static func group(
+        _ intervals: [ActivityInterval],
+        breakEntries: [BreakHistoryEntry] = []
+    ) -> [StudySession] {
         let studying = intervals
             .filter { $0.kind == .studying }
             .sorted {
@@ -50,6 +53,7 @@ enum StudySessionGrouping {
         var result: [StudySession] = []
         var sources: [ActivityInterval] = []
         var segments: [StudySession.Segment] = []
+        let actualBreaks = breakEntries.filter { $0.isSessionBoundary }
 
         func finish() {
             guard !sources.isEmpty else { return }
@@ -60,7 +64,12 @@ enum StudySessionGrouping {
 
         for interval in studying {
             if let last = segments.last,
-               interval.startedAt.timeIntervalSince(last.end) >= maximumInterruption {
+               (interval.startedAt.timeIntervalSince(last.end) >= maximumInterruption
+                || actualBreaks.contains { entry in
+                    guard let breakStart = entry.startedAt else { return false }
+                    return breakStart >= last.end
+                        && entry.occurredAt <= interval.startedAt
+                }) {
                 finish()
             }
 

@@ -20,6 +20,10 @@ struct BreakHistoryEntry: Codable, Equatable, Sendable {
     let outcome: Outcome
     let source: Source
 
+    var isSessionBoundary: Bool {
+        startedAt != nil && source != .smartPause
+    }
+
     static func transition(
         from session: FocusSession,
         at date: Date,

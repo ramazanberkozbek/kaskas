@@ -9,15 +9,14 @@ final class SessionController {
     private(set) var sessionSnapshot: SessionSnapshot
     private(set) var historySaveFailed = false
     private(set) var activityStorageFailed = false
+    private(set) var annotationsRevision = 0
 
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
     @ObservationIgnored private let store: SessionStore
     @ObservationIgnored private let persistence: SessionPersistence
     @ObservationIgnored private let activityTracker: ActivityTracker
-#if DEBUG
-    @ObservationIgnored private let debugHistoryStore: BreakHistoryStore?
-#endif
+    @ObservationIgnored private let breakHistoryStore: BreakHistoryStore?
     @ObservationIgnored private let microReminderPresenter: MicroReminderPresenter
     @ObservationIgnored private let breakWarningPresenter: BreakWarningPresenter
     @ObservationIgnored private let breakPresenter: BreakPresenter
@@ -45,9 +44,7 @@ final class SessionController {
         self.store = store
         persistence = SessionPersistence(store: store, historyStore: historyStore)
         activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
-#if DEBUG
-        debugHistoryStore = historyStore as? BreakHistoryStore
-#endif
+        breakHistoryStore = historyStore as? BreakHistoryStore
         historySaveFailed = historyStore == nil
         activityStorageFailed = activityStore == nil
         self.scheduler = scheduler
@@ -212,6 +209,7 @@ final class SessionController {
 
     func save(annotation: SessionAnnotation, for interval: ActivityInterval) {
         store.save(annotation: annotation, for: interval)
+        annotationsRevision += 1
     }
 
     var activeStudyingStartedAt: Date? {
@@ -225,14 +223,13 @@ final class SessionController {
 
     func save(annotation: SessionAnnotation, for session: StudySession) {
         store.save(annotation: annotation, for: session)
+        annotationsRevision += 1
     }
 
-#if DEBUG
-    func debugBreakEntries(from start: Date, through end: Date) -> [BreakHistoryEntry] {
-        guard let debugHistoryStore else { return [] }
-        return (try? debugHistoryStore.entries(from: start, to: end.addingTimeInterval(0.001))) ?? []
+    func breakEntries(from start: Date, through end: Date) -> [BreakHistoryEntry] {
+        guard let breakHistoryStore else { return [] }
+        return (try? breakHistoryStore.entries(from: start, to: end.addingTimeInterval(0.001))) ?? []
     }
-#endif
 
     func updateConfiguration(_ configuration: FocusConfiguration) {
         let now = Date()

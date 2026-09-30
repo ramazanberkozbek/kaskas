@@ -17,6 +17,63 @@ struct StudySessionGroupingTests {
         )
     }
 
+    private func breakEntry(
+        startedAt: Date?,
+        endedAt: Date,
+        outcome: BreakHistoryEntry.Outcome,
+        source: BreakHistoryEntry.Source
+    ) -> BreakHistoryEntry {
+        BreakHistoryEntry(
+            id: UUID().uuidString,
+            occurredAt: endedAt,
+            startedAt: startedAt,
+            focusStartedAt: nil,
+            focusedDuration: nil,
+            outcome: outcome,
+            source: source
+        )
+    }
+
+    @Test
+    func skippedActualBreakSplitsEvenBeforeFourMinuteThreshold() {
+        let first = focus(10, 0, 10, 20)
+        let second = focus(10, 23, 10, 40)
+        let skip = breakEntry(
+            startedAt: first.endedAt,
+            endedAt: second.startedAt,
+            outcome: .skipped,
+            source: .manual
+        )
+
+        #expect(StudySessionGrouping.group([first, second]).count == 1)
+        let sessions = StudySessionGrouping.group([first, second], breakEntries: [skip])
+        #expect(sessions.count == 2)
+        #expect(sessions[0].endedAt == first.endedAt)
+        #expect(sessions[1].startedAt == second.startedAt)
+    }
+
+    @Test
+    func completedActualBreakSplitsButIdleBreakAndWarningSkipDoNot() {
+        let first = focus(10, 0, 10, 20)
+        let second = focus(10, 23, 10, 40)
+        let completed = breakEntry(
+            startedAt: first.endedAt, endedAt: second.startedAt,
+            outcome: .completed, source: .scheduled
+        )
+        let idle = breakEntry(
+            startedAt: first.endedAt, endedAt: second.startedAt,
+            outcome: .completed, source: .smartPause
+        )
+        let warningSkip = breakEntry(
+            startedAt: nil, endedAt: time(10, 21),
+            outcome: .skipped, source: .manual
+        )
+
+        #expect(StudySessionGrouping.group([first, second], breakEntries: [completed]).count == 2)
+        #expect(StudySessionGrouping.group([first, second], breakEntries: [idle]).count == 1)
+        #expect(StudySessionGrouping.group([first, second], breakEntries: [warningSkip]).count == 1)
+    }
+
     @Test
     func shortGapsMergeAndSixOrNineMinuteGapsSplit() {
         let intervals = [
