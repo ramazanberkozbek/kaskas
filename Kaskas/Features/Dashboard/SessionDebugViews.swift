@@ -41,7 +41,13 @@ struct SessionDebugGap {
         }.sorted { $0.startedAt < $1.startedAt }
     }
 
-    func decisionText() -> String {
+    func decisionText(breakEntries: [BreakHistoryEntry] = []) -> String {
+        if breakEntries.contains(where: { entry in
+            guard entry.isSessionBoundary, let breakStart = entry.startedAt else { return false }
+            return breakStart >= start && entry.occurredAt <= end
+        }) {
+            return "(SessionDebugFormat.rawSeconds(duration)) sn · gerçek mola → böldü"
+        }
         let sign = splitsSession ? "≥" : "<"
         let decision = splitsSession ? "böldü" : "birleşti"
         return "\(SessionDebugFormat.rawSeconds(duration)) sn \(sign) \(Int(StudySessionGrouping.maximumInterruption)) → \(decision)"
@@ -108,8 +114,9 @@ struct DashboardSessionDebugRow: View {
             Text("ham parça \(session.intervals.count) · kesinti \(session.interruptionCount)")
             if let gap = SessionDebugInspection.boundary(after: session, next: nextSession) {
                 let kinds = gap.fillers(in: allIntervals).map { $0.kind.rawValue }
+                let entries = controller.breakEntries(from: gap.start, through: gap.end)
                 Text("bitiş: boşluk \(SessionDebugFormat.rawSeconds(gap.duration)) sn · \(kinds.isEmpty ? "tür: bilgi yok" : kinds.joined(separator: ", "))")
-                Text("karar: \(gap.decisionText()) · mola: \(breakSummary(for: gap))")
+                Text("karar: \(gap.decisionText(breakEntries: entries)) · mola: \(breakSummary(for: gap))")
             } else {
                 let ending = SessionDebugInspection.endingKind(of: session.intervals.last!, in: allIntervals)
                 Text("bitiş: sonraki seans yok · bitiş sonrası kayıt: \(ending)")
@@ -125,7 +132,7 @@ struct DashboardSessionDebugRow: View {
     }
 
     private func breakSummary(for gap: SessionDebugGap) -> String {
-        let entries = controller.debugBreakEntries(from: gap.start, through: gap.end)
+        let entries = controller.breakEntries(from: gap.start, through: gap.end)
         return entries.isEmpty ? "bilgi yok" : entries.map(\.debugDescription).joined(separator: "; ")
     }
 }
@@ -192,7 +199,7 @@ struct SessionDebugDetailView: View {
 
     private func gapBlock(_ gap: SessionDebugGap, title: String) -> some View {
         let fillers = gap.fillers(in: allIntervals)
-        let entries = controller.debugBreakEntries(from: gap.start, through: gap.end)
+        let entries = controller.breakEntries(from: gap.start, through: gap.end)
         return VStack(alignment: .leading, spacing: 3) {
             Text("\(title): \(SessionDebugFormat.clock(gap.start))–\(SessionDebugFormat.clock(gap.end)) · \(SessionDebugFormat.duration(gap.duration))")
                 .fontWeight(.semibold)
@@ -203,7 +210,7 @@ struct SessionDebugDetailView: View {
                     Text("↳ \(interval.kind.rawValue) · \(SessionDebugFormat.duration(interval.endedAt.timeIntervalSince(interval.startedAt))) · \(SessionDebugFormat.clock(interval.startedAt))–\(SessionDebugFormat.clock(interval.endedAt))")
                 }
             }
-            Text("karar: \(gap.decisionText())")
+            Text("karar: \(gap.decisionText(breakEntries: entries))")
             Text(gap.countsAsInterruption ? "kesinti sayıldı (≥ 30 sn)" : "sayılmadı (artefakt, < 30 sn)")
             Text("mola kaydı: \(entries.isEmpty ? "bilgi yok" : entries.map(\.debugDescription).joined(separator: "; "))")
         }

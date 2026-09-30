@@ -167,9 +167,6 @@
         }
       }
     },
-    "Dashboard" : {
-
-    },
     "dashboard.day.previous" : {
       "localizations" : {
         "tr" : {
@@ -395,6 +392,7 @@
       }
     },
     "dashboard.today.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {

@@ -8,9 +8,11 @@ struct DashboardView: View {
     @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
+    @State private var breakEntries: [BreakHistoryEntry] = []
     @State private var selectedSession: StudySession?
     @State private var showingCalendar = false
     @State private var showShortSessions = false
+    @State private var annotationsRevision = 0
 #if DEBUG
     @AppStorage("debugModeEnabled") private var debugModeEnabled = false
     @AppStorage("debugSessionDetailsEnabled") private var debugSessionDetailsEnabled = false
@@ -35,12 +37,14 @@ struct DashboardView: View {
         let todayIntervals = intervals.filter {
             $0.kind == .studying && $0.startedAt >= today && $0.startedAt < end
         }
-        return Array(StudySessionGrouping.group(todayIntervals).reversed())
+        return Array(StudySessionGrouping.group(todayIntervals, breakEntries: breakEntries).reversed())
     }
     private var visibleSessions: [StudySession] {
 #if DEBUG
         if showsSessionDebug { return sessions }
 #endif
+        _ = annotationsRevision
+        _ = controller.annotationsRevision
         return sessions.filter { session in
             let annotation = controller.annotation(for: session)
             let hasAnnotation = !annotation.note.isEmpty || !annotation.category.isEmpty
@@ -54,21 +58,10 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Dashboard").font(.largeTitle.weight(.bold))
-                    Text("dashboard.subtitle").font(.callout).foregroundStyle(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    sectionHeading(
-                        "stats.trend.title",
-                        subtitle: period == .today ? "dashboard.today.subtitle" : "stats.trend.subtitle",
-                        symbol: "chart.xyaxis.line"
-                    )
-                    VStack(spacing: 14) {
-                        rangeControls
-                        if period == .today {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(spacing: 14) {
+                    rangeControls
+                    if period == .today {
                             DashboardTodayChart(date: endDate, intervals: intervals)
                         } else {
                             StudyTrendChart(days: days, intervals: intervals)
@@ -98,7 +91,6 @@ struct DashboardView: View {
                         }
                     }
                     .dashboardPanel(colorScheme)
-                }
 
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .center, spacing: 12) {
@@ -140,8 +132,16 @@ struct DashboardView: View {
                 session: session,
                 controller: controller,
                 allIntervals: intervals,
-                nextSession: nextSession(after: session)
+                nextSession: nextSession(after: session),
+                onSave: {
+                    annotationsRevision += 1
+                    reload()
+                }
             )
+        }
+        .onChange(of: controller.annotationsRevision) { _, _ in
+            annotationsRevision = controller.annotationsRevision
+            reload()
         }
         .onAppear(perform: reload)
         .onChange(of: period) { _, _ in reload() }
@@ -212,10 +212,14 @@ struct DashboardView: View {
             Image(systemName: symbol)
                 .foregroundStyle(StatisticsStyle.studying)
                 .frame(width: 32, height: 32)
-                .background(StatisticsStyle.studying.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+                .background(StatisticsStyle.studying.opacity(0.15), in: RoundedRectangle(cornerRadius: 9))
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.caption.weight(.bold))
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                Text(title)
+                    .font(.caption.weight(.bold))
+                    .tracking(1.1)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -229,25 +233,28 @@ struct DashboardView: View {
 
     private func sessionRow(_ session: StudySession) -> some View {
         let annotation = controller.annotation(for: session)
-        let timeRange = "\(session.startedAt.formatted(date: .omitted, time: .shortened))–\(session.endedAt.formatted(date: .omitted, time: .shortened))"
-        let summary = "\(timeRange) · \(SessionDuration.label(session.focusedDuration)) \(String(localized: "dashboard.session.focused")) · \(session.interruptionCount) \(String(localized: "dashboard.session.interruptions"))"
+        let timeRange = "\(formatTime(session.startedAt))–\(formatTime(session.endedAt))"
+        let durationLabel = SessionDuration.minutesLabel(session.focusedDuration)
         return HStack(spacing: 14) {
             Image(systemName: "timer")
                 .foregroundStyle(StatisticsStyle.studying)
                 .frame(width: 30)
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(session.startedAt.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                HStack(alignment: .center, spacing: 10) {
+                    Text(durationLabel)
                         .font(.subheadline.weight(.semibold))
-                    if session.isOngoing(startedAt: controller.activeStudyingStartedAt) {
-                        Text("dashboard.session.now")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(StatisticsStyle.studying)
+                        .monospacedDigit()
+                        .frame(width: 50, alignment: .leading)
+                    HStack(spacing: 6) {
+                        Text(timeRange)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                        if session.isOngoing(startedAt: controller.activeStudyingStartedAt) {
+                            BlinkingDotView()
+                        }
                     }
                 }
-                Text(summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
 #if DEBUG
                 if showsSessionDebug {
                     DashboardSessionDebugRow(
@@ -288,12 +295,17 @@ struct DashboardView: View {
         let today = Calendar.current.startOfDay(for: now)
         let start = min(averageStart, yesterday, today)
         intervals = controller.activityIntervals(from: start, to: now, now: now)
+        breakEntries = controller.breakEntries(from: today, through: now)
     }
 
     private func nextSession(after session: StudySession) -> StudySession? {
         let ordered = sessions
         guard let index = ordered.firstIndex(where: { $0.id == session.id }), index > 0 else { return nil }
         return ordered[index - 1]
+    }
+
+    private func formatTime(_ date: Date) -> String {
+        date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))
     }
 }
 
@@ -307,6 +319,7 @@ private struct SessionDetailView: View {
     let controller: SessionController
     let allIntervals: [ActivityInterval]
     let nextSession: StudySession?
+    let onSave: (() -> Void)?
 
     @State private var category: String
     @State private var note: String
@@ -316,11 +329,18 @@ private struct SessionDetailView: View {
     @AppStorage("debugSessionDetailsEnabled") private var debugSessionDetailsEnabled = false
 #endif
 
-    init(session: StudySession, controller: SessionController, allIntervals: [ActivityInterval], nextSession: StudySession?) {
+    init(
+        session: StudySession,
+        controller: SessionController,
+        allIntervals: [ActivityInterval],
+        nextSession: StudySession?,
+        onSave: (() -> Void)? = nil
+    ) {
         self.session = session
         self.controller = controller
         self.allIntervals = allIntervals
         self.nextSession = nextSession
+        self.onSave = onSave
         let annotation = controller.annotation(for: session)
         _category = State(initialValue: annotation.category)
         _note = State(initialValue: annotation.note)
@@ -378,6 +398,7 @@ private struct SessionDetailView: View {
                         ),
                         for: session
                     )
+                    onSave?()
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -397,8 +418,34 @@ private struct SessionDetailView: View {
 }
 
 private enum SessionDuration {
+    static func minutesLabel(_ duration: TimeInterval) -> String {
+        let value = max(0, duration)
+        if value < 60 {
+            return "<1 dk."
+        }
+        let minutes = max(1, Int((value / 60).rounded()))
+        return Measurement(value: Double(minutes), unit: UnitDuration.minutes)
+            .formatted(.measurement(width: .abbreviated, numberFormatStyle: .number.precision(.fractionLength(0))))
+    }
+
     static func label(_ duration: TimeInterval) -> String {
-        duration < 60 ? "<1 dk" : StatisticsDuration.label(duration)
+        duration < 60 ? "<1 dk." : StatisticsDuration.label(duration)
+    }
+}
+
+private struct BlinkingDotView: View {
+    @State private var isVisible = true
+
+    var body: some View {
+        Circle()
+            .fill(StatisticsStyle.studying)
+            .frame(width: 7, height: 7)
+            .opacity(isVisible ? 1.0 : 0.2)
+            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isVisible)
+            .onAppear {
+                isVisible = false
+            }
+            .accessibilityLabel(Text("dashboard.session.now"))
     }
 }
 
