@@ -11,6 +11,8 @@ struct YearActivityHeatmap: View {
     private let cellSpacing: CGFloat = 3
 
     var body: some View {
+        let weeks = weeks
+        let activityByDate = activityByDate
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Image(systemName: "square.grid.3x3.fill")
@@ -57,12 +59,12 @@ struct YearActivityHeatmap: View {
                     weekdayLabels
                     ScrollView(.horizontal, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 6) {
-                            monthLabels
+                            monthLabels(for: weeks)
                             HStack(alignment: .top, spacing: cellSpacing) {
                                 ForEach(weeks.indices, id: \.self) { index in
                                     VStack(spacing: cellSpacing) {
                                         ForEach(weeks[index], id: \.self) { date in
-                                            dayCell(for: date)
+                                            dayCell(for: date, activityByDate: activityByDate)
                                         }
                                     }
                                 }
@@ -113,7 +115,7 @@ struct YearActivityHeatmap: View {
         return result
     }
 
-    private var monthLabels: some View {
+    private func monthLabels(for weeks: [[Date]]) -> some View {
         HStack(spacing: cellSpacing) {
             ForEach(weeks.indices, id: \.self) { index in
                 let firstOfMonth = weeks[index].first {
@@ -150,7 +152,7 @@ struct YearActivityHeatmap: View {
         }
     }
 
-    private func dayCell(for date: Date) -> some View {
+    private func dayCell(for date: Date, activityByDate: [Date: TimeInterval]) -> some View {
         let calendar = Calendar.current
         let isInYear = calendar.component(.year, from: date) == selectedYear
         let duration = activityByDate[calendar.startOfDay(for: date)] ?? 0

@@ -4,6 +4,28 @@ import Testing
 
 struct SessionStoreTests {
     @Test
+    func annotationsFollowAnIntervalAsItsEndChanges() {
+        let suiteName = "SessionStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SessionStore(defaults: defaults)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let current = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(600))
+        let completed = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(1800))
+        let other = ActivityInterval(kind: .studying, startedAt: start.addingTimeInterval(2000), endedAt: start.addingTimeInterval(2600))
+        let annotation = SessionAnnotation(category: "Proje", note: "Taslağı bitirdim")
+
+        store.save(annotation: annotation, for: current)
+
+        #expect(SessionStore(defaults: defaults).annotation(for: completed) == annotation)
+        #expect(store.annotation(for: other) == SessionAnnotation())
+
+        store.save(annotation: SessionAnnotation(), for: completed)
+        #expect(store.annotation(for: current) == SessionAnnotation())
+    }
+
+    @Test
     func restoresConfigurationSavedWithRemovedAppearanceOptions() {
         let suiteName = "SessionStoreTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!

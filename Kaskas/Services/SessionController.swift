@@ -200,6 +200,14 @@ final class SessionController {
         return intervals
     }
 
+    func annotation(for interval: ActivityInterval) -> SessionAnnotation {
+        store.annotation(for: interval)
+    }
+
+    func save(annotation: SessionAnnotation, for interval: ActivityInterval) {
+        store.save(annotation: annotation, for: interval)
+    }
+
     func updateConfiguration(_ configuration: FocusConfiguration) {
         let now = Date()
         let idleSettingsChanged = configuration.idleDetectionEnabled != self.configuration.idleDetectionEnabled

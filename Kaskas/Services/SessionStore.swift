@@ -8,6 +8,7 @@ final class SessionStore {
         static let pendingHistoryEntries = "pendingHistoryEntries"
         static let lastActiveAt = "lastActiveAt"
         static let activityJournal = "activityJournal"
+        static let sessionAnnotations = "sessionAnnotations"
     }
 
     private let defaults: UserDefaults
@@ -81,6 +82,26 @@ final class SessionStore {
     func save(activityJournal: ActivityJournal) {
         guard let data = try? encoder.encode(activityJournal) else { return }
         defaults.set(data, forKey: Key.activityJournal)
+    }
+
+    func annotation(for interval: ActivityInterval) -> SessionAnnotation {
+        loadAnnotations()[interval.sessionKey] ?? SessionAnnotation()
+    }
+
+    func save(annotation: SessionAnnotation, for interval: ActivityInterval) {
+        var annotations = loadAnnotations()
+        if annotation.category.isEmpty && annotation.note.isEmpty {
+            annotations.removeValue(forKey: interval.sessionKey)
+        } else {
+            annotations[interval.sessionKey] = annotation
+        }
+        guard let data = try? encoder.encode(annotations) else { return }
+        defaults.set(data, forKey: Key.sessionAnnotations)
+    }
+
+    private func loadAnnotations() -> [String: SessionAnnotation] {
+        guard let data = defaults.data(forKey: Key.sessionAnnotations) else { return [:] }
+        return (try? decoder.decode([String: SessionAnnotation].self, from: data)) ?? [:]
     }
 
     private struct LegacySessionState: Decodable {

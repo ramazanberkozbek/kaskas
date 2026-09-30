@@ -11,20 +11,21 @@ struct StatisticsView: View {
     @State private var distributionEndDate = Calendar.current.startOfDay(for: Date())
     @State private var hourlyPeriod: HourlyPeriod = .day
     @State private var hourlyEndDate = Calendar.current.startOfDay(for: Date())
-    @State private var hoveredTrendDate: Date?
     @State private var hoveredDistributionDate: Date?
     @State private var hoveredHour: Int?
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
     @State private var loaded = false
+    @State private var loadedStart: Date?
+    @State private var loadedEnd: Date?
     @Environment(\.colorScheme) private var colorScheme
 
     private let refreshClock = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24) {
                 Text("stats.subtitle")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -46,7 +47,7 @@ struct StatisticsView: View {
                         endDate: $trendEndDate,
                         now: now
                     )
-                    trendChart
+                    StudyTrendChart(days: trendDays, intervals: intervals)
                 }
 
                 chartSection(
@@ -101,9 +102,9 @@ struct StatisticsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear(perform: reload)
-        .onChange(of: trendPeriod) { _, _ in hoveredTrendDate = nil; reload() }
-        .onChange(of: trendEndDate) { _, _ in hoveredTrendDate = nil; reload() }
+        .onAppear { reload(force: true) }
+        .onChange(of: trendPeriod) { _, _ in reload() }
+        .onChange(of: trendEndDate) { _, _ in reload() }
         .onChange(of: distributionPeriod) { _, _ in hoveredDistributionDate = nil; reload() }
         .onChange(of: distributionEndDate) { _, _ in hoveredDistributionDate = nil; reload() }
         .onChange(of: hourlyPeriod) { _, _ in hoveredHour = nil; reload() }
@@ -116,7 +117,7 @@ struct StatisticsView: View {
             if trendEndDate == previousToday { trendEndDate = today }
             if distributionEndDate == previousToday { distributionEndDate = today }
             if hourlyEndDate == previousToday { hourlyEndDate = today }
-            reload()
+            reload(force: true)
         }
     }
 
@@ -194,91 +195,6 @@ struct StatisticsView: View {
         return ActivityStatistics.days(from: start, through: end, intervals: intervals)
     }
 
-    private struct TrendPoint: Identifiable {
-        let date: Date
-        let hours: Double
-        let averageHours: Double
-        var id: Date { date }
-    }
-
-    private var trendPoints: [TrendPoint] {
-        let calendar = Calendar.current
-        let averageStart = calendar.date(byAdding: .day, value: -6, to: trendWindow.start) ?? trendWindow.start
-        let all = ActivityStatistics.days(from: averageStart, through: trendWindow.end, intervals: intervals)
-        let amounts = Dictionary(uniqueKeysWithValues: all.map { ($0.date, $0.studying) })
-        return trendDays.map { day in
-            let total = (0..<7).reduce(0.0) { result, distance in
-                let date = calendar.date(byAdding: .day, value: -distance, to: day.date) ?? day.date
-                return result + (amounts[date] ?? 0)
-            }
-            return TrendPoint(date: day.date, hours: day.studying / 3600, averageHours: total / 7 / 3600)
-        }
-    }
-
-    private var trendChart: some View {
-        let selected = trendPoints.first { $0.date == hoveredTrendDate }
-        return Chart {
-            ForEach(trendPoints) { point in
-                LineMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.hours),
-                    series: .value("Series", "daily")
-                )
-                .foregroundStyle(StatisticsStyle.studying)
-                PointMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.hours)
-                )
-                .foregroundStyle(StatisticsStyle.studying)
-                LineMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.averageHours),
-                    series: .value("Series", "average")
-                )
-                .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
-                .foregroundStyle(StatisticsStyle.average)
-            }
-        }
-        .chartLegend(.hidden)
-        .chartYAxis { AxisMarks(position: .trailing) }
-        .chartXAxis { AxisMarks(values: .stride(by: .day, count: trendPeriod == .seven ? 1 : 5)) }
-        .chartOverlay { proxy in
-            GeometryReader { geometry in
-                ZStack(alignment: .topLeading) {
-                    Rectangle().fill(.clear).contentShape(Rectangle())
-                        .onContinuousHover { phase in
-                            hoveredTrendDate = hoveredDate(for: phase, proxy: proxy, geometry: geometry, dates: trendPoints.map(\.date))
-                        }
-                    if let selected, let plotFrame = proxy.plotFrame,
-                       let position = proxy.position(forX: chartDayCenter(selected.date)) {
-                        let plot = geometry[plotFrame]
-                        let x = plot.minX + position
-                        hoverGuide(at: x, in: plot)
-                        if let y = proxy.position(forY: selected.hours) {
-                            Circle()
-                                .fill(StatisticsStyle.studying)
-                                .frame(width: 12, height: 12)
-                                .overlay(Circle().strokeBorder(.white, lineWidth: 2))
-                                .position(x: x, y: plot.minY + y)
-                                .allowsHitTesting(false)
-                        }
-                        VStack(alignment: .leading, spacing: 7) {
-                            Text(selected.date.formatted(date: .abbreviated, time: .omitted))
-                                .font(.subheadline.weight(.semibold))
-                            Divider()
-                            tooltipRow("stats.kind.studying", value: StatisticsDuration.label(selected.hours * 3600), color: StatisticsStyle.studying)
-                            tooltipRow("stats.trend.average", value: StatisticsDuration.label(selected.averageHours * 3600), color: StatisticsStyle.average)
-                        }
-                        .statisticsTooltip()
-                        .offset(x: tooltipOriginX(for: x, in: plot), y: plot.minY + 8)
-                        .allowsHitTesting(false)
-                    }
-                }
-            }
-        }
-        .frame(height: 220)
-    }
-
     private struct DistributionPoint: Identifiable {
         let date: Date
         let kind: ActivityKind
@@ -335,8 +251,6 @@ struct StatisticsView: View {
                         VStack(alignment: .leading, spacing: 7) {
                             Text(selected.date.formatted(date: .abbreviated, time: .omitted))
                                 .font(.subheadline.weight(.semibold))
-                            tooltipRow("stats.total", value: StatisticsDuration.label(total), color: .primary)
-                            Divider()
                             ForEach(ActivityKind.allCases, id: \.self) { kind in
                                 tooltipRow(kind.labelKey, value: StatisticsDuration.label(selected.duration(for: kind)), color: kind.color)
                             }
@@ -605,13 +519,21 @@ struct StatisticsView: View {
         }
     }
 
-    private func reload() {
+    private func reload(force: Bool = false) {
+        let trace = PerformanceTrace.begin("Statistics reload")
+        defer { PerformanceTrace.end(trace) }
         let calendar = Calendar.current
         let trendStart = calendar.date(byAdding: .day, value: -6, to: trendWindow.start) ?? trendWindow.start
         let yearStart = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)) ?? now
         let start = min(trendStart, distributionWindow.start, hourlyWindow.start, yearStart)
         let end = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+        if !force, let loadedStart, let loadedEnd,
+           start >= loadedStart, end <= loadedEnd {
+            return
+        }
         intervals = controller.activityIntervals(from: start, to: end, now: now)
+        loadedStart = start
+        loadedEnd = end
         loaded = true
     }
 }
@@ -678,7 +600,7 @@ private struct StatisticsDateNavigator: View {
     }
 }
 
-private struct StatisticsRangeControls: View {
+struct StatisticsRangeControls: View {
     @Binding var period: StatisticsPeriod
     @Binding var endDate: Date
     let now: Date

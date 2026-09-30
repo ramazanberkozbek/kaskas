@@ -32,16 +32,22 @@ struct DailyActivity: Identifiable, Equatable {
 }
 
 enum ActivityStatistics {
+    static func focusRanges(
+        on date: Date,
+        intervals: [ActivityInterval],
+        calendar: Calendar = .current
+    ) -> [(start: Date, end: Date)] {
+        guard let day = calendar.dateInterval(of: .day, for: date) else { return [] }
+        return mergedRanges(of: .studying, from: day.start, to: day.end, intervals: intervals)
+    }
+
     static func focusMinutesByHour(
         on date: Date,
         intervals: [ActivityInterval],
         calendar: Calendar = .current
     ) -> [Double] {
-        guard let day = calendar.dateInterval(of: .day, for: date) else {
-            return Array(repeating: 0, count: 24)
-        }
         var minutes = Array(repeating: 0.0, count: 24)
-        for range in mergedRanges(of: .studying, from: day.start, to: day.end, intervals: intervals) {
+        for range in focusRanges(on: date, intervals: intervals, calendar: calendar) {
             var cursor = range.start
             let end = range.end
             while cursor < end {

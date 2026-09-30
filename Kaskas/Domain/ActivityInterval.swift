@@ -14,12 +14,20 @@ struct ActivityInterval: Codable, Equatable, Identifiable, Sendable {
     let startedAt: Date
     let endedAt: Date
 
+    // The end changes while an active interval is being recorded; the start does not.
+    var sessionKey: String { "\(kind.rawValue)-\(startedAt.timeIntervalSinceReferenceDate.bitPattern)" }
+
     nonisolated init(kind: ActivityKind, startedAt: Date, endedAt: Date) {
         self.kind = kind
         self.startedAt = startedAt
         self.endedAt = max(startedAt, endedAt)
         id = "\(kind.rawValue)-\(startedAt.timeIntervalSinceReferenceDate.bitPattern)-\(self.endedAt.timeIntervalSinceReferenceDate.bitPattern)"
     }
+}
+
+struct SessionAnnotation: Codable, Equatable, Sendable {
+    var category = ""
+    var note = ""
 }
 
 struct ActivityCursor: Codable, Equatable, Sendable {
