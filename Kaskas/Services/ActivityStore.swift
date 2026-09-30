@@ -56,6 +56,8 @@ final class ActivityStore: ActivityRecording {
             predicate: #Predicate { $0.startedAt < end && $0.endedAt > start },
             sortBy: [SortDescriptor(\.startedAt)]
         )
-        return try context.fetch(descriptor).compactMap(\.interval)
+        return try PerformanceTrace.measure("Activity history fetch") {
+            try context.fetch(descriptor).compactMap(\.interval)
+        }
     }
 }

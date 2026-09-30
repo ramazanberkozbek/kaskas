@@ -53,6 +53,9 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
         sessionController.start()
+        if ProcessInfo.processInfo.environment["KASKAS_OPEN_SETTINGS"] == "1" {
+            sessionController.openSettings()
+        }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
