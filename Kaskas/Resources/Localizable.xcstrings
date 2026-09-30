@@ -4,7 +4,20 @@
     " " : {
 
     },
+    "%@ – %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ – %2$@"
+          }
+        }
+      }
+    },
     "%lld dk" : {
+
+    },
+    "%lld molada bir" : {
 
     },
     "•" : {
@@ -130,6 +143,199 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "GEÇMEK İÇİN"
+          }
+        }
+      }
+    },
+    "Dashboard" : {
+
+    },
+    "dashboard.session.cancel" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vazgeç"
+          }
+        }
+      }
+    },
+    "dashboard.session.category" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategori"
+          }
+        }
+      }
+    },
+    "dashboard.session.detail" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma oturumu"
+          }
+        }
+      }
+    },
+    "dashboard.session.note" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not"
+          }
+        }
+      }
+    },
+    "dashboard.session.save" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydet"
+          }
+        }
+      }
+    },
+    "dashboard.sessions.empty" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu aralıkta çalışma oturumu yok."
+          }
+        }
+      }
+    },
+    "dashboard.sessions.subtitle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili dönemdeki kayıtlar"
+          }
+        }
+      }
+    },
+    "dashboard.sessions.title" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ÇALIŞMA OTURUMLARI"
+          }
+        }
+      }
+    },
+    "dashboard.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma ritmine kısa bir bakış"
+          }
+        }
+      }
+    },
+    "dashboard.timeline.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugün ve dün, aynı zaman çizgisinde"
+          }
+        }
+      }
+    },
+    "dashboard.timeline.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma saatleri"
+          }
+        }
+      }
+    },
+    "dashboard.today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugün"
+          }
+        }
+      }
+    },
+    "dashboard.week.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlük çalışma süresi"
+          }
+        }
+      }
+    },
+    "dashboard.week.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu hafta"
+          }
+        }
+      }
+    },
+    "dashboard.week.total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haftalık toplam"
+          }
+        }
+      }
+    },
+    "dashboard.yesterday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dün"
+          }
+        }
+      }
+    },
+    "dashboard.yesterdayAtThisTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dün bu saate kadar"
+          }
+        }
+      }
+    },
+    "dashboard.yesterdayTotal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dün toplam"
           }
         }
       }
@@ -272,7 +478,7 @@
     "esc" : {
 
     },
-    "Her %lld. molada" : {
+    "Her molada" : {
 
     },
     "Hour" : {
@@ -806,7 +1012,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mola uyarısının ekrandaki konumunu seç"
+            "value" : "Mola uyarısının süresini ve konumunu ayarla"
           }
         }
       }
@@ -862,17 +1068,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hatırlatmaları ve nazik uyarıları özelleştir"
-          }
-        }
-      }
-    },
-    "settings.alerts.test" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dene"
           }
         }
       }
@@ -1345,7 +1540,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İmleç hareket etmediğinde çalışma sayacını durdur ve döndüğünde bu süreyi mola olarak kaydetmeyi öner."
+            "value" : "Klavye veya fare kullanılmadığında çalışma sayacını durdur ve tekrar kullandığınızda bu süreyi mola olarak kaydetmeyi öner."
           }
         }
       }
@@ -1400,7 +1595,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daha derin dinlenme için ara sıra daha uzun mola ver"
+            "value" : "Birkaç kısa moladan sonra daha uzun bir mola ver"
           }
         }
       }
@@ -1411,7 +1606,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Süre"
+            "value" : "Uzun mola süresi"
           }
         }
       }
@@ -1444,7 +1639,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sıklık"
+            "value" : "Uzun mola sıklığı"
           }
         }
       }
@@ -1867,6 +2062,17 @@
         }
       }
     },
+    "settings.microReminders.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Küçük Hatırlatmalar"
+          }
+        }
+      }
+    },
     "settings.nextCycle.note" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1917,7 +2123,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kısa sağlık hatırlatmaları arasındaki süre"
+            "value" : "Küçük hatırlatmalar arasındaki süre"
           }
         }
       }
@@ -1940,6 +2146,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uyarılar"
+          }
+        }
+      }
+    },
+    "settings.sidebar.dashboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dashboard"
           }
         }
       }
@@ -1988,17 +2205,6 @@
         }
       }
     },
-    "settings.sidebar.wellness" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sağlık"
-          }
-        }
-      }
-    },
     "settings.snoozeDuration" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2039,17 +2245,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hazır"
-          }
-        }
-      }
-    },
-    "settings.wellness.section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sağlık Hatırlatmaları"
           }
         }
       }
