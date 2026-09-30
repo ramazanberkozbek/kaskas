@@ -88,12 +88,40 @@ final class SessionStore {
         loadAnnotations()[interval.sessionKey] ?? SessionAnnotation()
     }
 
+    func annotation(for session: StudySession) -> SessionAnnotation {
+        let annotations = loadAnnotations()
+        var seen: Set<String> = []
+        var categories: [String] = []
+        var notes: [String] = []
+        for interval in session.intervals where seen.insert(interval.sessionKey).inserted {
+            guard let annotation = annotations[interval.sessionKey] else { continue }
+            if !annotation.category.isEmpty { categories.append(annotation.category) }
+            if !annotation.note.isEmpty { notes.append(annotation.note) }
+        }
+        return SessionAnnotation(
+            category: categories.joined(separator: ", "),
+            note: notes.joined(separator: "\n\n")
+        )
+    }
+
     func save(annotation: SessionAnnotation, for interval: ActivityInterval) {
         var annotations = loadAnnotations()
         if annotation.category.isEmpty && annotation.note.isEmpty {
             annotations.removeValue(forKey: interval.sessionKey)
         } else {
             annotations[interval.sessionKey] = annotation
+        }
+        guard let data = try? encoder.encode(annotations) else { return }
+        defaults.set(data, forKey: Key.sessionAnnotations)
+    }
+
+    func save(annotation: SessionAnnotation, for session: StudySession) {
+        var annotations = loadAnnotations()
+        for interval in session.intervals {
+            annotations.removeValue(forKey: interval.sessionKey)
+        }
+        if !annotation.category.isEmpty || !annotation.note.isEmpty {
+            annotations[session.id] = annotation
         }
         guard let data = try? encoder.encode(annotations) else { return }
         defaults.set(data, forKey: Key.sessionAnnotations)

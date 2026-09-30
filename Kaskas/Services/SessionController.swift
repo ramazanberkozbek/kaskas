@@ -15,6 +15,9 @@ final class SessionController {
     @ObservationIgnored private let store: SessionStore
     @ObservationIgnored private let persistence: SessionPersistence
     @ObservationIgnored private let activityTracker: ActivityTracker
+#if DEBUG
+    @ObservationIgnored private let debugHistoryStore: BreakHistoryStore?
+#endif
     @ObservationIgnored private let microReminderPresenter: MicroReminderPresenter
     @ObservationIgnored private let breakWarningPresenter: BreakWarningPresenter
     @ObservationIgnored private let breakPresenter: BreakPresenter
@@ -42,6 +45,9 @@ final class SessionController {
         self.store = store
         persistence = SessionPersistence(store: store, historyStore: historyStore)
         activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
+#if DEBUG
+        debugHistoryStore = historyStore as? BreakHistoryStore
+#endif
         historySaveFailed = historyStore == nil
         activityStorageFailed = activityStore == nil
         self.scheduler = scheduler
@@ -207,6 +213,26 @@ final class SessionController {
     func save(annotation: SessionAnnotation, for interval: ActivityInterval) {
         store.save(annotation: annotation, for: interval)
     }
+
+    var activeStudyingStartedAt: Date? {
+        guard let cursor = activityTracker.journal.cursor, cursor.kind == .studying else { return nil }
+        return cursor.startedAt
+    }
+
+    func annotation(for session: StudySession) -> SessionAnnotation {
+        store.annotation(for: session)
+    }
+
+    func save(annotation: SessionAnnotation, for session: StudySession) {
+        store.save(annotation: annotation, for: session)
+    }
+
+#if DEBUG
+    func debugBreakEntries(from start: Date, through end: Date) -> [BreakHistoryEntry] {
+        guard let debugHistoryStore else { return [] }
+        return (try? debugHistoryStore.entries(from: start, to: end.addingTimeInterval(0.001))) ?? []
+    }
+#endif
 
     func updateConfiguration(_ configuration: FocusConfiguration) {
         let now = Date()
