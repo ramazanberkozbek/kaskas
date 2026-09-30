@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct AlertsSettingsView: View {
@@ -10,26 +11,38 @@ struct AlertsSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                Text("settings.alerts.subtitle")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-
-                // 1. Mola Ön Uyarısı
+                // Önizleme ve mola uyarısı anahtarı
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .center, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("settings.alerts.breakWarning")
-                                .font(.system(size: 13, weight: .semibold))
-                                .textCase(.uppercase)
-                                .foregroundStyle(.secondary)
-                            Text("settings.alerts.breakWarning.description")
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                        }
+                    HStack {
+                        Text("settings.alerts.preview")
+                            .font(.system(size: 13, weight: .semibold))
+                            .textCase(.uppercase)
+                            .foregroundStyle(.secondary)
                         Spacer()
                         Toggle("settings.alerts.breakWarning", isOn: binding(for: \.breakWarningEnabled))
                             .labelsHidden()
                             .toggleStyle(.switch)
+                            .accessibilityLabel(Text("settings.alerts.breakWarning"))
+                    }
+                    .padding(.horizontal, 4)
+
+                    NotificationDesktopPreview(
+                        leadTime: controller.configuration.breakWarningLeadTime,
+                        position: controller.configuration.notificationPosition,
+                        isEnabled: controller.configuration.breakWarningEnabled
+                    )
+                }
+
+                // Bildirim ayarları
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("settings.alerts.notificationSettings")
+                            .font(.system(size: 13, weight: .semibold))
+                            .textCase(.uppercase)
+                            .foregroundStyle(.secondary)
+                        Text("settings.alerts.notificationSettings.description")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.horizontal, 4)
 
@@ -45,27 +58,13 @@ struct AlertsSettingsView: View {
                             }
                             .labelsHidden()
                             .pickerStyle(.menu)
-                            .frame(width: 140)
+                            .frame(width: 140, alignment: .trailing)
                         }
                         .disabled(!controller.configuration.breakWarningEnabled)
-                    }
-                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
-                }
 
-                // 2. Bildirim Ayarları
-                VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("settings.alerts.notificationSettings")
-                            .font(.system(size: 13, weight: .semibold))
-                            .textCase(.uppercase)
-                            .foregroundStyle(.secondary)
-                        Text("settings.alerts.notificationSettings.description")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 4)
+                        Divider()
+                            .padding(.leading, 16)
 
-                    VStack(spacing: 0) {
                         settingRow(
                             title: "settings.alerts.position",
                             subtitle: "settings.alerts.position.description"
@@ -77,42 +76,11 @@ struct AlertsSettingsView: View {
                             }
                             .labelsHidden()
                             .pickerStyle(.menu)
-                            .frame(width: 140)
+                            .frame(width: 140, alignment: .trailing)
                         }
                         .disabled(!controller.configuration.breakWarningEnabled)
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
-                }
-
-                // 3. Önizleme (Ayrı Bölüm)
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("settings.alerts.preview")
-                            .font(.system(size: 13, weight: .semibold))
-                            .textCase(.uppercase)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button {
-                            controller.previewBreakWarning()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: 9))
-                                Text("settings.alerts.test")
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
-                        .disabled(!controller.configuration.breakWarningEnabled)
-                    }
-                    .padding(.horizontal, 4)
-
-                    NotificationDesktopPreview(
-                        leadTime: controller.configuration.breakWarningLeadTime,
-                        position: controller.configuration.notificationPosition,
-                        isEnabled: controller.configuration.breakWarningEnabled
-                    )
                 }
             }
             .frame(maxWidth: 600, alignment: .leading)
@@ -174,21 +142,31 @@ private struct NotificationDesktopPreview: View {
     let position: NotificationPosition
     let isEnabled: Bool
 
+    @State private var wallpaper = DesktopWallpaperPreview.shared
+
     var body: some View {
         ZStack(alignment: .top) {
-            Image("BreakMountainLake")
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 200)
-                .clipped()
+            if let defaultDesktopImage = wallpaper.image {
+                Image(nsImage: defaultDesktopImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .clipped()
+            } else {
+                Color(nsColor: .windowBackgroundColor)
+            }
 
             HStack {
                 Image(systemName: "apple.logo")
                 Spacer()
+                Image("Mascot")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 13, height: 13)
                 Image(systemName: "wifi")
                 Image(systemName: "speaker.wave.2.fill")
-                Image(systemName: "control")
+                Image(systemName: "switch.2")
             }
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.white)
@@ -222,6 +200,7 @@ private struct NotificationDesktopPreview: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .task { await wallpaper.load() }
     }
 
     private var alignment: Alignment {
