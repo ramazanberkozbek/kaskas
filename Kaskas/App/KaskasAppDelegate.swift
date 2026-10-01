@@ -34,6 +34,7 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        sessionController.launchAtLogin.configureDefaultIfNeeded()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(systemClockDidChange(_:)),
@@ -59,6 +60,7 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
+        sessionController.launchAtLogin.refresh()
         sessionController.reconcile()
     }
 

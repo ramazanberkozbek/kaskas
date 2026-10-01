@@ -11,6 +11,7 @@ final class SessionController {
     private(set) var activityStorageFailed = false
     private(set) var annotationsRevision = 0
     let categoryRegistry: CategoryRegistry
+    let launchAtLogin = LaunchAtLoginController()
 
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
