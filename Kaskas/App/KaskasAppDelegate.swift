@@ -34,7 +34,11 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard enforceSingleInstance() else { return }
+
+        #if !DEBUG
         sessionController.launchAtLogin.configureDefaultIfNeeded()
+        #endif
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(systemClockDidChange(_:)),
@@ -78,5 +82,28 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func workspaceDidWake(_ notification: Notification) {
         sessionController.systemDidWake()
+    }
+
+    @discardableResult
+    private func enforceSingleInstance() -> Bool {
+        guard let bundleID = Bundle.main.bundleIdentifier else { return true }
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+        let otherInstances = runningApps.filter { $0.processIdentifier != currentPID }
+
+        guard !otherInstances.isEmpty else { return true }
+
+        #if DEBUG
+        for instance in otherInstances {
+            if !instance.terminate() {
+                instance.forceTerminate()
+            }
+        }
+        return true
+        #else
+        otherInstances.first?.activate()
+        NSApp.terminate(nil)
+        return false
+        #endif
     }
 }
