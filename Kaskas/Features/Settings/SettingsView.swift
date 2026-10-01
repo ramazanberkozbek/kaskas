@@ -53,6 +53,9 @@ struct SettingsView: View {
         case .statistics:
             StatisticsView(controller: controller)
                 .onAppear { navigationTrace.appeared(SettingsPane.statistics.rawValue) }
+        case .categories:
+            CategorySettingsView(controller: controller)
+                .onAppear { navigationTrace.appeared(SettingsPane.categories.rawValue) }
         case .general:
             GeneralSettingsView(controller: controller)
                 .onAppear { navigationTrace.appeared(SettingsPane.general.rawValue) }
@@ -82,6 +85,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
     case focus
     case alerts
     case statistics
+    case categories
     case general
 
     var id: Self { self }
@@ -92,6 +96,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         case .focus: "settings.sidebar.focus"
         case .alerts: "settings.sidebar.notifications"
         case .statistics: "settings.sidebar.statistics"
+        case .categories: "settings.sidebar.categories"
         case .general: "settings.sidebar.general"
         }
     }
@@ -102,6 +107,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         case .focus: "leaf"
         case .alerts: "bell.badge"
         case .statistics: "chart.bar.xaxis"
+        case .categories: "square.grid.3x3.fill"
         case .general: "gearshape"
         }
     }

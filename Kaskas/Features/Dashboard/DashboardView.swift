@@ -379,8 +379,58 @@ private struct SessionDetailView: View {
                 )
             }
 #endif
-            Divider()
-            TextField("dashboard.session.category", text: $category)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    TextField("dashboard.session.category", text: $category)
+                    Menu {
+                        ForEach(controller.categoryRegistry.categories) { cat in
+                            Button {
+                                category = cat.name
+                            } label: {
+                                Label(cat.name, systemImage: cat.iconName)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "tag")
+                            .font(.caption)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .help("Kayıtlı kategorilerden seç")
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(controller.categoryRegistry.categories) { cat in
+                            Button {
+                                category = cat.name
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: cat.iconName)
+                                        .font(.system(size: 8))
+                                    Text(cat.name)
+                                        .font(.system(size: 10))
+                                }
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(
+                                    category == cat.name
+                                        ? cat.color.opacity(0.18)
+                                        : Color.primary.opacity(0.04),
+                                    in: Capsule()
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(
+                                            category == cat.name ? cat.color.opacity(0.6) : Color.clear,
+                                            lineWidth: 1
+                                        )
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
             VStack(alignment: .leading, spacing: 6) {
                 Text("dashboard.session.note").font(.subheadline.weight(.medium))
                 TextEditor(text: $note)
