@@ -1,52 +1,13 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    "settings.startup.section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Başlangıç" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Startup" } }
-      }
-    },
-    "settings.startup.enabled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Bilgisayar açıldığında başlat" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Launch at login" } }
-      }
-    },
-    "settings.startup.description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Mac’inde oturum açtığında Kaskas otomatik olarak başlar." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kaskas starts automatically when you log in to your Mac." } }
-      }
-    },
-    "settings.startup.approval" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Otomatik başlatma için Sistem Ayarları’ndaki Giriş Öğeleri bölümünde Kaskas’a izin ver." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Kaskas in System Settings → Login Items to enable automatic startup." } }
-      }
-    },
-    "settings.startup.openSystemSettings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Giriş Öğeleri’ni Aç" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Login Items" } }
-      }
-    },
-    "settings.startup.error" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Otomatik başlatma ayarı değiştirilemedi. Lütfen tekrar dene." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn’t change automatic startup. Please try again." } }
-      }
-    },
     " " : {
 
     },
     "· %lld uygulama" : {
+
+    },
+    "\"%@\" kategorisini silmek istiyor musunuz?" : {
 
     },
     "%@ – %@" : {
@@ -224,7 +185,13 @@
     "Bu kategoride tanımlı uygulama bulunmuyor." : {
 
     },
-    "Bundle ID" : {
+    "Bu kategoriye ait tüm uygulamalar 'Diğer' kategorisine aktarılacaktır." : {
+
+    },
+    "Bu kategoriyi düzenle" : {
+
+    },
+    "Bu kategoriyi sil" : {
 
     },
     "dashboard.day.previous" : {
@@ -680,7 +647,13 @@
     "esc" : {
 
     },
+    "Eşleşen uygulama bulunamadı" : {
+
+    },
     "Her molada" : {
+
+    },
+    "Hiçbir uygulama bulunamadı" : {
 
     },
     "Hour" : {
@@ -739,16 +712,49 @@
         }
       }
     },
+    "İkon" : {
+
+    },
+    "İkon ara..." : {
+
+    },
+    "İkonu değiştir" : {
+
+    },
     "İptal" : {
 
     },
     "Kapat" : {
 
     },
+    "Kategori Adı" : {
+
+    },
+    "Kategori adı yazın (örn: Yazılım, Ders, Borsa)..." : {
+
+    },
+    "Kategori adı..." : {
+
+    },
+    "Kategori Ekle" : {
+
+    },
+    "Kategoriyi Kaydet" : {
+
+    },
+    "Kategoriyi Sil" : {
+
+    },
+    "Kaydet (Enter)" : {
+
+    },
     "Kayıtlı kategorilerden seç" : {
 
     },
     "Kural Ekle" : {
+
+    },
+    "Kuralı kaldır" : {
 
     },
     "Kuralı Kaydet" : {
@@ -1102,10 +1108,13 @@
     "Minutes" : {
 
     },
-    "Özel" : {
+    "Önizleme" : {
 
     },
-    "Özel kuralı kaldır" : {
+    "Örn: Ders, Borsa, 3D Modelleme..." : {
+
+    },
+    "Özel bir çalışma kategorisi oluşturun." : {
 
     },
     "persistence.error.message" : {
@@ -2475,6 +2484,108 @@
         }
       }
     },
+    "settings.startup.approval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Kaskas in System Settings → Login Items to enable automatic startup."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik başlatma için Sistem Ayarları’ndaki Giriş Öğeleri bölümünde Kaskas’a izin ver."
+          }
+        }
+      }
+    },
+    "settings.startup.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas starts automatically when you log in to your Mac."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac’inde oturum açtığında Kaskas otomatik olarak başlar."
+          }
+        }
+      }
+    },
+    "settings.startup.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launch at login"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilgisayar açıldığında başlat"
+          }
+        }
+      }
+    },
+    "settings.startup.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t change automatic startup. Please try again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik başlatma ayarı değiştirilemedi. Lütfen tekrar dene."
+          }
+        }
+      }
+    },
+    "settings.startup.openSystemSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Login Items"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giriş Öğeleri’ni Aç"
+          }
+        }
+      }
+    },
+    "settings.startup.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startup"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlangıç"
+          }
+        }
+      }
+    },
     "settings.status.label" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2877,6 +2988,28 @@
         }
       }
     },
+    "stats.year.focusHours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d saat odaklanıldı"
+          }
+        }
+      }
+    },
+    "stats.year.focusHoursAndMinutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d saat %2$d dakika odaklanıldı"
+          }
+        }
+      }
+    },
     "stats.year.focusMinutes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2941,9 +3074,6 @@
     "Tümünü Genişlet" : {
 
     },
-    "Uygulama Adı" : {
-
-    },
     "Uygulama veya Bundle ID ara..." : {
 
     },
@@ -2954,6 +3084,9 @@
 
     },
     "Vazgeç" : {
+
+    },
+    "Vazgeç (Esc)" : {
 
     },
     "warning.fiveMinutes" : {
@@ -3022,13 +3155,16 @@
         }
       }
     },
-    "Yalnızca Bu Mac'te Olanlar" : {
+    "Yeni Kategori Ekle" : {
 
     },
     "Yeni Kural Ekle" : {
 
     },
     "Yüklü uygulama ara (örn: Cursor, Xcode, Arc)..." : {
+
+    },
+    "Yüklü uygulamalar taranıyor..." : {
 
     },
     "Yüklü Uygulamayı Seçin" : {
