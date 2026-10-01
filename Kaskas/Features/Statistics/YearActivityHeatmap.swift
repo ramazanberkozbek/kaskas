@@ -158,6 +158,7 @@ struct YearActivityHeatmap: View {
         let duration = activityByDate[calendar.startOfDay(for: date)] ?? 0
         let level = intensity(for: duration)
         let minutes = Int((duration / 60).rounded())
+        let focusText = focusDurationText(for: minutes)
         return RoundedRectangle(cornerRadius: 2)
             .fill(isInYear ? color(for: level) : .clear)
             .frame(width: cellSize, height: cellSize)
@@ -188,14 +189,26 @@ struct YearActivityHeatmap: View {
                     Text(date.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(String(format: String(localized: "stats.year.focusMinutes"), minutes))
+                    Text(focusText)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(StatisticsStyle.studying)
                 }
                 .padding(10)
             }
             .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
-            .accessibilityValue(String(format: String(localized: "stats.year.focusMinutes"), minutes))
+            .accessibilityValue(focusText)
+    }
+
+    private func focusDurationText(for totalMinutes: Int) -> String {
+        let hours = totalMinutes / 60
+        let remainingMinutes = totalMinutes % 60
+        if hours > 0 && remainingMinutes > 0 {
+            return String(format: String(localized: "stats.year.focusHoursAndMinutes"), hours, remainingMinutes)
+        } else if hours > 0 {
+            return String(format: String(localized: "stats.year.focusHours"), hours)
+        } else {
+            return String(format: String(localized: "stats.year.focusMinutes"), totalMinutes)
+        }
     }
 
     private func intensity(for duration: TimeInterval) -> Int {

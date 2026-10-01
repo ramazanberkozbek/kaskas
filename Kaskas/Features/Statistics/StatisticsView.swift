@@ -223,7 +223,10 @@ struct StatisticsView: View {
             }
         }
         .chartLegend(.hidden)
-        .chartYAxis { AxisMarks(position: .trailing) }
+        .chartYScale(domain: 0...24)
+        .chartYAxis {
+            AxisMarks(position: .trailing, values: [0, 6, 12, 18, 24])
+        }
         .chartXAxis { AxisMarks(values: .stride(by: .day, count: distributionPeriod == .seven ? 1 : 5)) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
