@@ -1,6 +1,48 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
+    "settings.startup.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Başlangıç" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Startup" } }
+      }
+    },
+    "settings.startup.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Bilgisayar açıldığında başlat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Launch at login" } }
+      }
+    },
+    "settings.startup.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Mac’inde oturum açtığında Kaskas otomatik olarak başlar." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kaskas starts automatically when you log in to your Mac." } }
+      }
+    },
+    "settings.startup.approval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Otomatik başlatma için Sistem Ayarları’ndaki Giriş Öğeleri bölümünde Kaskas’a izin ver." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Kaskas in System Settings → Login Items to enable automatic startup." } }
+      }
+    },
+    "settings.startup.openSystemSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Giriş Öğeleri’ni Aç" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Login Items" } }
+      }
+    },
+    "settings.startup.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Otomatik başlatma ayarı değiştirilemedi. Lütfen tekrar dene." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn’t change automatic startup. Please try again." } }
+      }
+    },
     " " : {
 
     },
@@ -2297,28 +2339,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odak süresi değişince sayaç yeni süreyle baştan başlar. Diğer değişiklikler sonraki odak döngüsünde uygulanır."
-          }
-        }
-      }
-    },
-    "settings.privacy.local" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ayarlar ve oturum bilgileri yalnızca bu Mac’te saklanır."
-          }
-        }
-      }
-    },
-    "settings.privacy.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gizlilik"
           }
         }
       }
