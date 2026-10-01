@@ -5,6 +5,29 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
+            Section("settings.startup.section") {
+                Toggle(isOn: launchAtLogin) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("settings.startup.enabled")
+                        Text("settings.startup.description")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if controller.launchAtLogin.requiresApproval {
+                    Text("settings.startup.approval")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Button("settings.startup.openSystemSettings") {
+                        controller.launchAtLogin.openSystemSettings()
+                    }
+                }
+                if controller.launchAtLogin.updateFailed {
+                    Text("settings.startup.error")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                }
+            }
             MenuBarAppearanceSettingsView(controller: controller)
             Section("settings.meetings.section") {
                 Toggle(isOn: pauseDuringMeetings) {
@@ -33,19 +56,20 @@ struct GeneralSettingsView: View {
                 )
                 .disabled(!controller.configuration.idleDetectionEnabled)
             }
-            Section("settings.privacy.title") {
-                LabeledContent {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                } label: {
-                    Label("settings.privacy.local", systemImage: "lock.shield")
-                }
-            }
 #if DEBUG
             DebugSettingsView(controller: controller)
 #endif
         }
         .formStyle(.grouped)
+        .onAppear { controller.launchAtLogin.refresh() }
+    }
+
+    private var launchAtLogin: Binding<Bool> {
+        Binding {
+            controller.launchAtLogin.isEnabled
+        } set: { enabled in
+            controller.launchAtLogin.setEnabled(enabled)
+        }
     }
 
     private var pauseDuringMeetings: Binding<Bool> {
