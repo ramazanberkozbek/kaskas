@@ -5,6 +5,10 @@ import SwiftUI
 struct KaskasApp: App {
     @NSApplicationDelegateAdaptor(KaskasAppDelegate.self) private var appDelegate
 
+    init() {
+        SingleInstanceCoordinator.shared.enforceSingleInstance()
+    }
+
     var body: some Scene {
         MenuBarExtra {
             MenuBarView(controller: appDelegate.sessionController)
