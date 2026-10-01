@@ -52,9 +52,6 @@
     "•" : {
 
     },
-    "+ Uygulama Ekle" : {
-
-    },
     "00:20" : {
 
     },
@@ -193,6 +190,166 @@
     },
     "Bu kategoriyi sil" : {
 
+    },
+    "categories.detection.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categorizes your active app while you work. Data stays on this Mac."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma sırasında aktif uygulamanı kategorilere ayırır. Veriler bu Mac’te tutulur."
+          }
+        }
+      }
+    },
+    "categories.detection.enabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically detect categories"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategorileri otomatik algıla"
+          }
+        }
+      }
+    },
+    "categories.rules.block" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block automatic assignment"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik atamayı engelle"
+          }
+        }
+      }
+    },
+    "categories.rules.removeOverride" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove custom assignment"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel atamayı kaldır"
+          }
+        }
+      }
+    },
+    "categories.usage.deleted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived category"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arşivlenmiş kategori"
+          }
+        }
+      }
+    },
+    "categories.usage.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No study time in this period."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu dönemde çalışma kaydı yok."
+          }
+        }
+      }
+    },
+    "categories.usage.storageWarning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category history could not be saved. Study tracking continues."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategori geçmişi kaydedilemedi. Çalışma sayacı devam ediyor."
+          }
+        }
+      }
+    },
+    "categories.usage.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study time by active application"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktif uygulamaya göre çalışma süresi"
+          }
+        }
+      }
+    },
+    "categories.usage.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category breakdown"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategori dağılımı"
+          }
+        }
+      }
+    },
+    "categories.usage.undetected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undetected"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algılanmadı"
+          }
+        }
+      }
     },
     "dashboard.day.previous" : {
       "localizations" : {
@@ -752,9 +909,6 @@
 
     },
     "Kural Ekle" : {
-
-    },
-    "Kuralı kaldır" : {
 
     },
     "Kuralı Kaydet" : {
@@ -3072,6 +3226,9 @@
 
     },
     "Tümünü Genişlet" : {
+
+    },
+    "Uygulama Ekle" : {
 
     },
     "Uygulama veya Bundle ID ara..." : {
