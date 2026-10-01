@@ -10,6 +10,7 @@ final class SessionController {
     private(set) var historySaveFailed = false
     private(set) var activityStorageFailed = false
     private(set) var annotationsRevision = 0
+    let categoryRegistry: CategoryRegistry
 
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
@@ -32,6 +33,7 @@ final class SessionController {
         store: SessionStore = SessionStore(),
         historyStore: (any BreakHistoryRecording)? = nil,
         activityStore: (any ActivityRecording)? = nil,
+        categoryRegistry: CategoryRegistry = CategoryRegistry(),
         scheduler: SessionScheduler = SessionScheduler(),
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
         breakWarningPresenter: BreakWarningPresenter = BreakWarningPresenter(),
@@ -42,6 +44,7 @@ final class SessionController {
         let configuration = store.loadConfiguration()
         self.configuration = configuration
         self.store = store
+        self.categoryRegistry = categoryRegistry
         persistence = SessionPersistence(store: store, historyStore: historyStore)
         activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
         breakHistoryStore = historyStore as? BreakHistoryStore
