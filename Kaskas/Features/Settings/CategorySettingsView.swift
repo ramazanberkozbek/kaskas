@@ -57,6 +57,17 @@ struct CategorySettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Toggle("categories.detection.enabled", isOn: Binding(
+                        get: { controller.appUsage.isEnabled },
+                        set: { controller.appUsage.setEnabled($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    Text("categories.detection.description")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 // Top Action Toolbar (No large title header)
                 HStack(spacing: 12) {
                     // Search bar
@@ -166,6 +177,7 @@ struct CategorySettingsView: View {
             .padding(.bottom, 36)
         }
         .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
+        .task { _ = await CategoryRegistry.discoverInstalledApplicationsAsync() }
         .sheet(isPresented: $showingAddSheet) {
             AddCategoryRuleSheet(registry: registry) {
                 // Sheet dismissed and saved
@@ -529,6 +541,19 @@ struct CategorySettingsView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
 
+            Menu {
+                Button("categories.rules.block") {
+                    registry.suppressAutomaticAssignment(appIdentifier: rule.appIdentifier)
+                }
+                if !rule.isDefault {
+                    Button("categories.rules.removeOverride") { registry.removeRule(id: rule.id) }
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+
             // Delete Rule Button (all rules are deletable)
             Button {
                 registry.removeRule(id: rule.id)
@@ -540,7 +565,7 @@ struct CategorySettingsView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("Kuralı kaldır")
+            .help(rule.isDefault ? String(localized: "categories.rules.block") : String(localized: "categories.rules.removeOverride"))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)

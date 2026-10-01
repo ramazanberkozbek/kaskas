@@ -16,6 +16,7 @@ struct StatisticsView: View {
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
+    @State private var appUsage: [AppUsageSegment] = []
     @State private var loaded = false
     @State private var loadedStart: Date?
     @State private var loadedEnd: Date?
@@ -49,6 +50,10 @@ struct StatisticsView: View {
                     )
                     StudyTrendChart(days: trendDays, intervals: intervals)
                 }
+
+                CategoryUsageView(summary: .make(intervals: intervals, usage: appUsage,
+                    from: trendWindow.start, to: Calendar.current.date(byAdding: .day, value: 1, to: trendWindow.end) ?? now),
+                    registry: controller.categoryRegistry, storageFailed: controller.appUsage.storageFailed)
 
                 chartSection(
                     title: "stats.distribution.title",
@@ -530,6 +535,8 @@ struct StatisticsView: View {
         let yearStart = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)) ?? now
         let start = min(trendStart, distributionWindow.start, hourlyWindow.start, yearStart)
         let end = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+        let categoryEnd = calendar.date(byAdding: .day, value: 1, to: trendWindow.end) ?? now
+        appUsage = controller.appUsage.segments(from: trendWindow.start, to: categoryEnd, now: now)
         if !force, let loadedStart, let loadedEnd,
            start >= loadedStart, end <= loadedEnd {
             return

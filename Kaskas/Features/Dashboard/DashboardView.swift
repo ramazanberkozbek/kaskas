@@ -8,6 +8,7 @@ struct DashboardView: View {
     @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
+    @State private var appUsage: [AppUsageSegment] = []
     @State private var breakEntries: [BreakHistoryEntry] = []
     @State private var selectedSession: StudySession?
     @State private var showingCalendar = false
@@ -56,6 +57,12 @@ struct DashboardView: View {
         }
     }
 
+    private var categorySummary: CategoryUsageSummary {
+        let start = period == .today ? Calendar.current.startOfDay(for: endDate) : window.start
+        let end = Calendar.current.date(byAdding: .day, value: 1, to: window.end) ?? now
+        return .make(intervals: intervals, usage: appUsage, from: start, to: end)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -91,6 +98,9 @@ struct DashboardView: View {
                         }
                     }
                     .dashboardPanel(colorScheme)
+
+                CategoryUsageView(summary: categorySummary, registry: controller.categoryRegistry,
+                    storageFailed: controller.appUsage.storageFailed)
 
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .center, spacing: 12) {
@@ -295,6 +305,7 @@ struct DashboardView: View {
         let today = Calendar.current.startOfDay(for: now)
         let start = min(averageStart, yesterday, today)
         intervals = controller.activityIntervals(from: start, to: now, now: now)
+        appUsage = controller.appUsage.segments(from: start, to: now, now: now)
         breakEntries = controller.breakEntries(from: today, through: now)
     }
 
