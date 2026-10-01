@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CategoryRule: Codable, Hashable, Identifiable, Sendable {
+nonisolated public struct CategoryRule: Codable, Hashable, Identifiable, Sendable {
     public let id: UUID
     public var appIdentifier: String  // Bundle ID (e.g. com.apple.dt.Xcode) or process name (e.g. Xcode)
     public var displayName: String    // Human readable name (e.g. Xcode)
@@ -27,9 +27,7 @@ public struct CategoryRule: Codable, Hashable, Identifiable, Sendable {
         let namePattern = displayName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
         if let bundleId = bundleId?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), !bundleId.isEmpty {
-            if bundleId == idPattern || bundleId.hasSuffix("." + idPattern) || (!namePattern.isEmpty && bundleId.hasSuffix("." + namePattern)) {
-                return true
-            }
+            return bundleId == idPattern
         }
 
         if let appName = appName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), !appName.isEmpty {

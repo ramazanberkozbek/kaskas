@@ -8,6 +8,8 @@ final class SessionStore {
         static let pendingHistoryEntries = "pendingHistoryEntries"
         static let lastActiveAt = "lastActiveAt"
         static let activityJournal = "activityJournal"
+        static let appUsageJournal = "appUsageJournal"
+        static let automaticCategories = "automaticCategoryDetectionEnabled"
         static let sessionAnnotations = "sessionAnnotations"
     }
 
@@ -17,6 +19,21 @@ final class SessionStore {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+    }
+
+    var automaticCategoryDetectionEnabled: Bool {
+        get { defaults.object(forKey: Key.automaticCategories) == nil ? true : defaults.bool(forKey: Key.automaticCategories) }
+        set { defaults.set(newValue, forKey: Key.automaticCategories) }
+    }
+
+    func loadAppUsageJournal() -> AppUsageJournal {
+        guard let data = defaults.data(forKey: Key.appUsageJournal) else { return AppUsageJournal() }
+        return (try? decoder.decode(AppUsageJournal.self, from: data)) ?? AppUsageJournal()
+    }
+
+    func save(appUsageJournal: AppUsageJournal) {
+        guard let data = try? encoder.encode(appUsageJournal) else { return }
+        defaults.set(data, forKey: Key.appUsageJournal)
     }
 
     func loadConfiguration() -> FocusConfiguration {

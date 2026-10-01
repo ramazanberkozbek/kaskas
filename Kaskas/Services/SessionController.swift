@@ -10,6 +10,7 @@ final class SessionController {
     private(set) var historySaveFailed = false
     private(set) var activityStorageFailed = false
     private(set) var annotationsRevision = 0
+    let appUsage: AppUsageController
     let categoryRegistry: CategoryRegistry
     let launchAtLogin = LaunchAtLoginController()
 
@@ -34,6 +35,7 @@ final class SessionController {
         store: SessionStore = SessionStore(),
         historyStore: (any BreakHistoryRecording)? = nil,
         activityStore: (any ActivityRecording)? = nil,
+        appUsageStore: (any AppUsageRecording)? = nil,
         categoryRegistry: CategoryRegistry = CategoryRegistry(),
         scheduler: SessionScheduler = SessionScheduler(),
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
@@ -46,6 +48,7 @@ final class SessionController {
         self.configuration = configuration
         self.store = store
         self.categoryRegistry = categoryRegistry
+        appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore)
         persistence = SessionPersistence(store: store, historyStore: historyStore)
         activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
         breakHistoryStore = historyStore as? BreakHistoryStore
@@ -103,6 +106,7 @@ final class SessionController {
             _ = handleMeetingActivity(meetingActive, at: now)
         }
         activityTracker.resume(as: currentActivityKind, at: now)
+        appUsage.setWorking(currentActivityKind == .studying, at: now)
         reconcile()
         startIdleMonitoringIfNeeded()
         let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
@@ -125,6 +129,8 @@ final class SessionController {
         breakPresenter.dismiss()
         settingsPresenter.dismiss()
         let now = Date()
+        appUsage.setWorking(false, at: now)
+        hasStarted = false
         engine.beginSystemPause(at: now)
         let stoppedKind: ActivityKind = activityTracker.journal.cursor?.kind == .computerInactive
             ? .computerInactive : .kaskasPaused
@@ -621,7 +627,9 @@ final class SessionController {
         at now: Date = Date(),
         activityKind: ActivityKind? = nil
     ) {
-        activityTracker.update(to: activityKind ?? currentActivityKind, at: now)
+        let kind = activityKind ?? currentActivityKind
+        activityTracker.update(to: kind, at: now)
+        appUsage.setWorking(hasStarted && kind == .studying, at: now)
         activityStorageFailed = activityTracker.storageFailed
         persistence.save(state: engine.state, record: record)
         historySaveFailed = persistence.historySaveFailed

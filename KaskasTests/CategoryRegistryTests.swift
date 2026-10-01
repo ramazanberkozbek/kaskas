@@ -123,7 +123,10 @@ struct CategoryRegistryTests {
 
     @Test
     func defaultCategoryNamesAreSimplifiedWithoutAmpersands() {
-        let registry = CategoryRegistry()
+        let suiteName = "test_category_names_\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let registry = CategoryRegistry(defaults: defaults)
         let names = registry.categories.map(\.name)
 
         for name in names {

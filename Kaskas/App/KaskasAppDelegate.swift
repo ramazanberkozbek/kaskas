@@ -9,14 +9,17 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
         let sessionStore = SessionStore()
         let historyStore: BreakHistoryStore?
         let activityStore: ActivityStore?
+        let appUsageStore: AppUsageStore?
         do {
-            let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self)
+            let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, AppUsageRecord.self)
             historyStore = BreakHistoryStore(container: container)
             activityStore = ActivityStore(container: container)
+            appUsageStore = AppUsageStore(container: container)
         } catch {
             NSLog("Kaskas: Failed to open local history: %@", String(describing: error))
             historyStore = nil
             activityStore = nil
+            appUsageStore = nil
         }
         if let historyStore {
             do {
@@ -28,13 +31,14 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
         sessionController = SessionController(
             store: sessionStore,
             historyStore: historyStore,
-            activityStore: activityStore
+            activityStore: activityStore,
+            appUsageStore: appUsageStore
         )
         super.init()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        guard enforceSingleInstance() else { return }
+        SingleInstanceCoordinator.shared.enforceSingleInstance()
 
         #if !DEBUG
         sessionController.launchAtLogin.configureDefaultIfNeeded()
@@ -73,6 +77,7 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func systemClockDidChange(_ notification: Notification) {
+        sessionController.appUsage.clockDidChange(at: Date())
         sessionController.reconcile()
     }
 
@@ -82,28 +87,5 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func workspaceDidWake(_ notification: Notification) {
         sessionController.systemDidWake()
-    }
-
-    @discardableResult
-    private func enforceSingleInstance() -> Bool {
-        guard let bundleID = Bundle.main.bundleIdentifier else { return true }
-        let currentPID = ProcessInfo.processInfo.processIdentifier
-        let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-        let otherInstances = runningApps.filter { $0.processIdentifier != currentPID }
-
-        guard !otherInstances.isEmpty else { return true }
-
-        #if DEBUG
-        for instance in otherInstances {
-            if !instance.terminate() {
-                instance.forceTerminate()
-            }
-        }
-        return true
-        #else
-        otherInstances.first?.activate()
-        NSApp.terminate(nil)
-        return false
-        #endif
     }
 }

@@ -1,5 +1,4 @@
 import AppKit
-import CoreServices
 import Foundation
 import Observation
 
@@ -9,6 +8,7 @@ public final class CategoryRegistry {
     private enum StorageKey {
         static let customRules = "kaskas_category_custom_rules"
         static let customCategories = "kaskas_category_custom_categories"
+        static let archivedCategories = "kaskas_category_archived_categories"
     }
 
     private let defaults: UserDefaults
@@ -17,6 +17,33 @@ public final class CategoryRegistry {
 
     public private(set) var customRules: [CategoryRule] = []
     public private(set) var customCategories: [AppCategory] = []
+
+    @ObservationIgnored var onChange: (() -> Void)?
+    @ObservationIgnored private var cachedResolver: CategoryResolver?
+    public private(set) var archivedCategories: [AppCategory] = []
+
+    private func didChange() {
+        cachedResolver = nil
+        onChange?()
+    }
+
+    func resolution(bundleID: String?, appName: String?) -> CategoryResolution {
+        if let cachedResolver { return cachedResolver.resolve(bundleID: bundleID, appName: appName) }
+        let resolver = CategoryResolver(customRules: customRules, defaultRules: Self.defaultRules,
+            suppressed: suppressedDefaultRuleIdentifiers, categoryIDs: Set(categories.map(\.id)))
+        cachedResolver = resolver
+        return resolver.resolve(bundleID: bundleID, appName: appName)
+    }
+
+    func historicalCategory(for id: String) -> AppCategory? {
+        category(for: id) ?? archivedCategories.first { $0.id == id } ?? AppCategory.defaultCategories.first { $0.id == id }
+    }
+
+    private func archive(_ category: AppCategory) {
+        archivedCategories.removeAll { $0.id == category.id }
+        archivedCategories.append(category)
+        if let data = try? encoder.encode(archivedCategories) { defaults.set(data, forKey: StorageKey.archivedCategories) }
+    }
 
     private static var cachedApps: [DiscoveredApp]?
     private static let iconCache = NSCache<NSString, NSImage>()
@@ -64,6 +91,7 @@ public final class CategoryRegistry {
             customCategories.append(category)
         }
         saveCustomCategories()
+        didChange()
         return category
     }
 
@@ -80,6 +108,7 @@ public final class CategoryRegistry {
     public func removeCategory(id: String) {
         // Never allow deleting the "other" fallback category
         guard id != AppCategory.other.id else { return }
+        if let category = category(for: id) { archive(category) }
 
         // If it's a built-in category, mark it as hidden instead of deleting
         if AppCategory.defaultCategories.contains(where: { $0.id == id }) {
@@ -99,6 +128,7 @@ public final class CategoryRegistry {
         if rulesModified {
             saveCustomRules()
         }
+        didChange()
     }
 
     private func saveHiddenCategories() {
@@ -155,12 +185,13 @@ public final class CategoryRegistry {
         let lowName = appName.lowercased()
 
         if let cache = installedIdentifiersCache {
-            return (!lowBundle.isEmpty && cache.contains(lowBundle)) || (!lowName.isEmpty && cache.contains(lowName))
+            if (!lowBundle.isEmpty && cache.contains(lowBundle)) || (!lowName.isEmpty && cache.contains(lowName)) { return true }
+            return !bundleId.isEmpty && NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) != nil
         }
 
         // Build set cache for all subsequent lookups
         var identifiers = Set<String>()
-        let apps = discoverInstalledApplications()
+        let apps = cachedApps ?? []
         for app in apps {
             if !app.bundleId.isEmpty { identifiers.insert(app.bundleId.lowercased()) }
             if !app.name.isEmpty { identifiers.insert(app.name.lowercased()) }
@@ -284,14 +315,7 @@ public final class CategoryRegistry {
     }
 
     public func resolveCategory(bundleId: String?, appName: String?) -> AppCategory {
-        for rule in allRules {
-            if rule.matches(bundleId: bundleId, appName: appName) {
-                if let cat = category(for: rule.categoryId) {
-                    return cat
-                }
-            }
-        }
-        return .other
+        category(for: resolution(bundleID: bundleId, appName: appName).categoryID) ?? .other
     }
 
     public func addOrUpdateRule(appIdentifier: String, displayName: String, categoryId: String) {
@@ -310,6 +334,7 @@ public final class CategoryRegistry {
         )
         customRules.append(newRule)
         saveCustomRules()
+        didChange()
     }
 
     public func removeRule(id: UUID) {
@@ -317,6 +342,7 @@ public final class CategoryRegistry {
         if customRules.contains(where: { $0.id == id }) {
             customRules.removeAll { $0.id == id }
             saveCustomRules()
+            didChange()
             return
         }
 
@@ -324,7 +350,18 @@ public final class CategoryRegistry {
         if let rule = Self.defaultRules.first(where: { $0.id == id }) {
             suppressedDefaultRuleIdentifiers.insert(rule.appIdentifier.lowercased())
             saveSuppressedRules()
+            didChange()
         }
+    }
+
+    public func suppressAutomaticAssignment(appIdentifier: String) {
+        let key = CategoryResolver.normalize(appIdentifier)
+        guard !key.isEmpty else { return }
+        customRules.removeAll { CategoryResolver.normalize($0.appIdentifier) == key }
+        suppressedDefaultRuleIdentifiers.insert(key)
+        saveCustomRules()
+        saveSuppressedRules()
+        didChange()
     }
 
     private func saveSuppressedRules() {
@@ -338,6 +375,7 @@ public final class CategoryRegistry {
     }
 
     public func resetToDefaults() {
+        for category in customCategories { archive(category) }
         customRules.removeAll()
         customCategories.removeAll()
         hiddenBuiltInCategoryIds.removeAll()
@@ -346,6 +384,7 @@ public final class CategoryRegistry {
         defaults.removeObject(forKey: StorageKey.customCategories)
         defaults.removeObject(forKey: Self.hiddenCategoriesKey)
         defaults.removeObject(forKey: Self.suppressedRulesKey)
+        didChange()
     }
 
     // MARK: - Persistence
@@ -361,6 +400,8 @@ public final class CategoryRegistry {
             customCategories = cats
         }
 
+        if let data = defaults.data(forKey: StorageKey.archivedCategories),
+           let categories = try? decoder.decode([AppCategory].self, from: data) { archivedCategories = categories }
         loadHiddenCategories()
         loadSuppressedRules()
     }
@@ -427,150 +468,4 @@ public final class CategoryRegistry {
         CategoryRule(appIdentifier: "com.apple.Music", displayName: "Müzik", categoryId: "entertainment", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.TV", displayName: "TV", categoryId: "entertainment", isDefault: true)
     ]
-}
-
-// MARK: - Industry Standard Application Discovery Service
-
-private enum AppDiscoveryService: Sendable {
-    nonisolated static func performDiskDiscovery() -> [CategoryRegistry.DiscoveredApp] {
-        var map: [String: CategoryRegistry.DiscoveredApp] = [:]
-
-        func mergeApp(_ app: CategoryRegistry.DiscoveredApp) {
-            let key = app.bundleId.lowercased()
-            if let existing = map[key] {
-                if pathPriority(app.path) > pathPriority(existing.path) {
-                    map[key] = app
-                }
-            } else {
-                map[key] = app
-            }
-        }
-
-        // 1. Layer 1: Spotlight metadata query (Instant system-wide index)
-        let queryString = "kMDItemContentTypeTree == \"com.apple.application\"" as CFString
-        if let query = MDQueryCreate(kCFAllocatorDefault, queryString, nil, nil) {
-            MDQueryExecute(query, CFOptionFlags(kMDQuerySynchronous.rawValue))
-            let count = MDQueryGetResultCount(query)
-            for i in 0..<count {
-                guard let rawResult = MDQueryGetResultAtIndex(query, i) else { continue }
-                let mdItem = unsafeBitCast(rawResult, to: MDItem.self)
-                guard let path = MDItemCopyAttribute(mdItem, kMDItemPath) as? String else { continue }
-                if let app = parseDiscoveredApp(at: path) {
-                    mergeApp(app)
-                }
-            }
-        }
-
-        // 2. Layer 2: Controlled Directory Scanning (Fallback & nested folders)
-        let fm = FileManager.default
-        let scanRoots = [
-            "/Applications",
-            "/System/Applications",
-            "/System/Applications/Utilities",
-            NSHomeDirectory() + "/Applications",
-            "/Users/Shared",
-            "/System/Library/CoreServices/Applications"
-        ]
-
-        for root in scanRoots {
-            guard let items = try? fm.contentsOfDirectory(atPath: root) else { continue }
-            for item in items {
-                guard !item.hasPrefix(".") else { continue }
-                let fullPath = (root as NSString).appendingPathComponent(item)
-                if item.hasSuffix(".app") {
-                    if let app = parseDiscoveredApp(at: fullPath) {
-                        mergeApp(app)
-                    }
-                } else {
-                    // Check subfolders 1 level deep (e.g. Python 3.13, Glaze, Setapp, Adobe)
-                    var isDir: ObjCBool = false
-                    if fm.fileExists(atPath: fullPath, isDirectory: &isDir), isDir.boolValue {
-                        if let subItems = try? fm.contentsOfDirectory(atPath: fullPath) {
-                            for subItem in subItems where subItem.hasSuffix(".app") {
-                                let subPath = (fullPath as NSString).appendingPathComponent(subItem)
-                                if let app = parseDiscoveredApp(at: subPath) {
-                                    mergeApp(app)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if let finderApp = parseDiscoveredApp(at: "/System/Library/CoreServices/Finder.app") {
-            mergeApp(finderApp)
-        }
-
-        return Array(map.values)
-    }
-
-    nonisolated static func isAllowedAppPath(_ path: String) -> Bool {
-        let home = NSHomeDirectory()
-        // Ignore hidden paths, trash
-        if path.contains("/.") || path.contains("/.Trash/") { return false }
-
-        // Ignore internal libraries and frameworks
-        if path.hasPrefix("\(home)/Library/") ||
-            path.hasPrefix("/Library/Apple/") ||
-            path.hasPrefix("/Library/Frameworks/") ||
-            path.hasPrefix("/Library/PrivateFrameworks/") ||
-            path.hasPrefix("/Library/Image Capture/") ||
-            path.hasPrefix("/Library/Application Support/") {
-            return false
-        }
-
-        // System Library: Only Finder and CoreServices/Applications
-        if path.hasPrefix("/System/Library/") {
-            if path == "/System/Library/CoreServices/Finder.app" ||
-                path.hasPrefix("/System/Library/CoreServices/Applications/") {
-                return true
-            }
-            return false
-        }
-
-        // Build & Package manager artifacts
-        if path.contains("/DerivedData/") ||
-            path.contains("/Debug-") ||
-            path.contains("/Release-") ||
-            path.contains("/build/") ||
-            path.contains("/node_modules/") ||
-            path.contains("/venv/") ||
-            path.contains("/.venv/") ||
-            path.contains("/site-packages/") {
-            return false
-        }
-
-        // Embedded app bundles (allow Xcode internal dev tools like Simulator)
-        if path.contains(".app/Contents/") {
-            if !path.hasPrefix("/Applications/Xcode.app/Contents/Developer/Applications") &&
-                !path.hasPrefix("/Applications/Xcode.app/Contents/Applications") {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    nonisolated private static func parseDiscoveredApp(at path: String) -> CategoryRegistry.DiscoveredApp? {
-        guard isAllowedAppPath(path) else { return nil }
-        guard let bundle = Bundle(path: path) else { return nil }
-        let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
-            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
-            ?? (path as NSString).lastPathComponent.replacingOccurrences(of: ".app", with: "")
-        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanName.isEmpty else { return nil }
-        let bundleId = bundle.bundleIdentifier ?? cleanName
-        return CategoryRegistry.DiscoveredApp(id: bundleId, name: cleanName, bundleId: bundleId, path: path)
-    }
-
-    nonisolated private static func pathPriority(_ path: String) -> Int {
-        if path.hasPrefix("/Applications") { return 100 }
-        if path.hasPrefix("/System/Applications") { return 90 }
-        let homeApps = NSHomeDirectory() + "/Applications"
-        if path.hasPrefix(homeApps) { return 80 }
-        if path.hasPrefix("/System/Library") { return 70 }
-        if path.hasPrefix("/Users/Shared") { return 60 }
-        return 10
-    }
 }
