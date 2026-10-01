@@ -4,6 +4,9 @@
     " " : {
 
     },
+    "· %lld uygulama" : {
+
+    },
     "%@ – %@" : {
       "localizations" : {
         "tr" : {
@@ -34,6 +37,9 @@
         }
       }
     },
+    "%lld" : {
+
+    },
     "%lld dk" : {
 
     },
@@ -41,6 +47,9 @@
 
     },
     "•" : {
+
+    },
+    "+ Uygulama Ekle" : {
 
     },
     "00:20" : {
@@ -56,6 +65,9 @@
           }
         }
       }
+    },
+    "Atanacak Kategori" : {
+
     },
     "break.backgroundHint" : {
       "extractionState" : "manual",
@@ -166,6 +178,12 @@
           }
         }
       }
+    },
+    "Bu kategoride tanımlı uygulama bulunmuyor." : {
+
+    },
+    "Bundle ID" : {
+
     },
     "dashboard.day.previous" : {
       "localizations" : {
@@ -614,6 +632,9 @@
         }
       }
     },
+    "Eklediğiniz tüm özel uygulama kuralları kaldırılacak ve sistem varsayılanlarına dönülecektir." : {
+
+    },
     "esc" : {
 
     },
@@ -676,7 +697,22 @@
         }
       }
     },
+    "İptal" : {
+
+    },
     "Kapat" : {
+
+    },
+    "Kayıtlı kategorilerden seç" : {
+
+    },
+    "Kural Ekle" : {
+
+    },
+    "Kuralı Kaydet" : {
+
+    },
+    "Mac'inizdeki bir uygulamayı seçin ve çalışma kategorisini belirleyin." : {
 
     },
     "menu.active" : {
@@ -1022,6 +1058,12 @@
       }
     },
     "Minutes" : {
+
+    },
+    "Özel" : {
+
+    },
+    "Özel kuralı kaldır" : {
 
     },
     "persistence.error.message" : {
@@ -1595,6 +1637,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MOLA SESİ"
+          }
+        }
+      }
+    },
+    "settings.categories.destination" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama Kategorileri"
+          }
+        }
+      }
+    },
+    "settings.categories.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hangi uygulamanın hangi odak kategorisine ait olduğunu belirleyin"
+          }
+        }
+      }
+    },
+    "settings.categories.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KATEGORİLER"
           }
         }
       }
@@ -2292,6 +2367,17 @@
         }
       }
     },
+    "settings.sidebar.categories" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategoriler"
+          }
+        }
+      }
+    },
     "settings.sidebar.dashboard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2826,6 +2912,30 @@
         }
       }
     },
+    "Tüm Özel Kuralları Sıfırla" : {
+
+    },
+    "Tümünü Daralt" : {
+
+    },
+    "Tümünü Genişlet" : {
+
+    },
+    "Uygulama Adı" : {
+
+    },
+    "Uygulama veya Bundle ID ara..." : {
+
+    },
+    "Varsayılan Kurallara Sıfırla" : {
+
+    },
+    "Varsayılanlara dönmek istediğinize emin misiniz?" : {
+
+    },
+    "Vazgeç" : {
+
+    },
     "warning.fiveMinutes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2891,6 +3001,18 @@
           }
         }
       }
+    },
+    "Yalnızca Bu Mac'te Olanlar" : {
+
+    },
+    "Yeni Kural Ekle" : {
+
+    },
+    "Yüklü uygulama ara (örn: Cursor, Xcode, Arc)..." : {
+
+    },
+    "Yüklü Uygulamayı Seçin" : {
+
     },
     "Zero minutes" : {
 
