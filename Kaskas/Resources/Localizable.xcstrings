@@ -20,26 +20,6 @@
         }
       }
     },
-    "%@ %@ · %lld %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@ · %3$lld %4$@"
-          }
-        }
-      }
-    },
-    "%@–%@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@–%2$@"
-          }
-        }
-      }
-    },
     "%lld" : {
 
     },
@@ -255,6 +235,22 @@
         }
       }
     },
+    "categories.usage.appUnknown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Application information unavailable"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama bilgisi yok"
+          }
+        }
+      }
+    },
     "categories.usage.deleted" : {
       "localizations" : {
         "en" : {
@@ -411,6 +407,210 @@
         }
       }
     },
+    "dashboard.session.category.automatic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik"
+          }
+        }
+      }
+    },
+    "dashboard.session.category.collecting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collecting activity. There is not enough time to determine a category yet."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veri toplanıyor. Kategori için henüz yeterli süre yok."
+          }
+        }
+      }
+    },
+    "dashboard.session.category.custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom label"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel etiket"
+          }
+        }
+      }
+    },
+    "dashboard.session.category.distribution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session category breakdown"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oturumun kategori dağılımı"
+          }
+        }
+      }
+    },
+    "dashboard.session.category.distributionExplanation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Measured focused time. The session label does not change this breakdown."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ölçülen çalışma süreleri. Oturum etiketi bu dağılımı değiştirmez."
+          }
+        }
+      }
+    },
+    "dashboard.session.category.lowCoverage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is not enough categorized activity to determine a category."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategori belirlemek için yeterli çözümlenmiş kullanım verisi yok."
+          }
+        }
+      }
+    },
+    "dashboard.session.category.manual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manually selected"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle seçildi"
+          }
+        }
+      }
+    },
+    "dashboard.session.category.mixed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karma"
+          }
+        }
+      }
+    },
+    "dashboard.session.category.mixedExplanation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic · No category clearly dominates this session."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik · Bu oturumda belirgin biçimde baskın bir kategori yok."
+          }
+        }
+      }
+    },
+    "dashboard.session.category.provisional" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This session is ongoing; its automatic category may change as you work."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oturum sürüyor; otomatik kategori kullanımına göre değişebilir."
+          }
+        }
+      }
+    },
+    "dashboard.session.category.share" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic · %@ of focused time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik · çalışma süresinin %@"
+          }
+        }
+      }
+    },
+    "dashboard.session.category.undetermined" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undetermined"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belirlenemedi"
+          }
+        }
+      }
+    },
     "dashboard.session.detail" : {
       "localizations" : {
         "tr" : {
@@ -422,6 +622,7 @@
       }
     },
     "dashboard.session.focused" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -432,6 +633,7 @@
       }
     },
     "dashboard.session.interruptions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -462,6 +664,7 @@
       }
     },
     "dashboard.session.parts" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -502,6 +705,7 @@
       }
     },
     "dashboard.sessions.showShort" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -903,9 +1107,6 @@
 
     },
     "Kaydet (Enter)" : {
-
-    },
-    "Kayıtlı kategorilerden seç" : {
 
     },
     "Kural Ekle" : {
