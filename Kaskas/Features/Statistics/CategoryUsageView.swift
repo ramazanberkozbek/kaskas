@@ -4,13 +4,16 @@ struct CategoryUsageView: View {
     let summary: CategoryUsageSummary
     let registry: CategoryRegistry
     let storageFailed: Bool
+    var title: LocalizedStringKey = "categories.usage.title"
+    var subtitle: LocalizedStringKey = "categories.usage.subtitle"
+    var showsAppSegments = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("categories.usage.title", systemImage: "tag.fill")
+            Label(title, systemImage: "tag.fill")
                 .font(.headline)
-            Text("categories.usage.subtitle")
+            Text(subtitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             if summary.total == 0 {
@@ -22,11 +25,13 @@ struct CategoryUsageView: View {
                     let category = registry.historicalCategory(for: entry.categoryID)
                     row(name: category?.name ?? String(localized: "categories.usage.deleted"),
                         symbol: category?.iconName ?? "tag", color: category?.color ?? .secondary,
-                        duration: entry.duration)
+                        duration: entry.duration, apps: showsAppSegments ? entry.apps : [])
                 }
                 if summary.undetected > 0 {
                     row(name: String(localized: "categories.usage.undetected"), symbol: "questionmark.circle",
-                        color: .secondary, duration: summary.undetected)
+                        color: .secondary, duration: summary.undetected,
+                        apps: showsAppSegments ? summary.undetectedApps : [],
+                        unrecordedDuration: showsAppSegments ? summary.unrecordedDuration : 0)
                 }
             }
             if storageFailed {
@@ -41,8 +46,9 @@ struct CategoryUsageView: View {
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
     }
 
-    private func row(name: String, symbol: String, color: Color, duration: TimeInterval) -> some View {
-        VStack(spacing: 5) {
+    private func row(name: String, symbol: String, color: Color, duration: TimeInterval,
+                     apps: [CategoryUsageSummary.AppEntry] = [], unrecordedDuration: TimeInterval = 0) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 8) {
                 Image(systemName: symbol).foregroundStyle(color)
                 Text(name)
@@ -54,8 +60,86 @@ struct CategoryUsageView: View {
                     .frame(minWidth: 38, alignment: .trailing)
             }
             .font(.callout)
-            ProgressView(value: duration, total: summary.total).tint(color)
-                .accessibilityLabel(name)
+            if apps.isEmpty && unrecordedDuration == 0 {
+                ProgressView(value: duration, total: summary.total).tint(color)
+                    .accessibilityLabel(name)
+            } else {
+                segmentedBar(apps: apps, color: color, unrecordedDuration: unrecordedDuration)
+            }
         }
+    }
+
+    private func segmentedBar(apps: [CategoryUsageSummary.AppEntry], color: Color,
+                              unrecordedDuration: TimeInterval) -> some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                HStack(spacing: 0) {
+                    ForEach(Array(apps.enumerated()), id: \.element.id) { index, entry in
+                        Rectangle()
+                            .fill(color.opacity(index.isMultiple(of: 2) ? 1 : 0.7))
+                            .frame(width: geometry.size.width * entry.duration / summary.total)
+                            .overlay(alignment: .trailing) {
+                                if index < apps.count - 1 || unrecordedDuration > 0 {
+                                    Rectangle()
+                                        .fill(StatisticsStyle.panelFill(for: colorScheme))
+                                        .frame(width: 1)
+                                }
+                            }
+                    }
+                    if unrecordedDuration > 0 {
+                        Rectangle().fill(color.opacity(0.4))
+                            .frame(width: geometry.size.width * unrecordedDuration / summary.total)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(height: 8)
+                .background(.primary.opacity(0.08))
+                .clipShape(Capsule())
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+                HStack(spacing: 0) {
+                    ForEach(apps) { entry in
+                        CategoryUsageSegment(title: entry.app.name, seconds: entry.duration)
+                            .frame(width: geometry.size.width * entry.duration / summary.total)
+                    }
+                    if unrecordedDuration > 0 {
+                        CategoryUsageSegment(title: String(localized: "categories.usage.appUnknown"),
+                                             seconds: unrecordedDuration)
+                            .frame(width: geometry.size.width * unrecordedDuration / summary.total)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            }
+        }
+        .frame(height: 20)
+    }
+}
+
+private struct CategoryUsageSegment: View {
+    let title: String
+    let seconds: TimeInterval
+    @State private var isHovered = false
+
+    private var duration: String {
+        Duration.seconds(seconds).formatted(.units(
+            allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2))
+    }
+
+    var body: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .onHover { isHovered = $0 }
+            .onTapGesture { isHovered = true }
+            .popover(isPresented: $isHovered, arrowEdge: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.subheadline.weight(.semibold))
+                    Text(duration).font(.caption).foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .fixedSize()
+            }
+            .accessibilityLabel(title)
+            .accessibilityValue(duration)
     }
 }

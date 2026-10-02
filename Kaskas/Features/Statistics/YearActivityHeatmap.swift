@@ -2,7 +2,7 @@ import SwiftUI
 
 struct YearActivityHeatmap: View {
     @Binding var selectedYear: Int
-    let days: [DailyActivity]
+    let data: YearHeatmapData
     let scheme: ColorScheme
 
     @State private var hoveredDate: Date?
@@ -11,8 +11,8 @@ struct YearActivityHeatmap: View {
     private let cellSpacing: CGFloat = 3
 
     var body: some View {
-        let weeks = weeks
-        let activityByDate = activityByDate
+        let weeks = data.weeks
+        let activityByDate = data.activityByDate
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Image(systemName: "square.grid.3x3.fill")
@@ -91,28 +91,6 @@ struct YearActivityHeatmap: View {
             .background(StatisticsStyle.panelFill(for: scheme), in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.09)))
         }
-    }
-
-    private var activityByDate: [Date: TimeInterval] {
-        Dictionary(uniqueKeysWithValues: days.map { ($0.date, $0.studying) })
-    }
-
-    private var weeks: [[Date]] {
-        let calendar = Calendar.current
-        guard let yearStart = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)),
-              let yearEnd = calendar.date(from: DateComponents(year: selectedYear, month: 12, day: 31)),
-              let firstWeek = calendar.dateInterval(of: .weekOfYear, for: yearStart)?.start else {
-            return []
-        }
-        var result: [[Date]] = []
-        var weekStart = firstWeek
-        while weekStart <= yearEnd {
-            result.append((0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: weekStart) })
-            guard let next = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStart),
-                  next > weekStart else { break }
-            weekStart = next
-        }
-        return result
     }
 
     private func monthLabels(for weeks: [[Date]]) -> some View {

@@ -2,35 +2,12 @@ import Charts
 import SwiftUI
 
 struct StudyTrendChart: View {
-    let days: [DailyActivity]
-    let intervals: [ActivityInterval]
+    let data: StudyTrendData
 
     @State private var hoveredDate: Date?
 
-    private struct Point: Identifiable {
-        let date: Date
-        let hours: Double
-        let averageHours: Double
-        var id: Date { date }
-    }
-
-    private var points: [Point] {
-        guard let start = days.first?.date, let end = days.last?.date else { return [] }
-        let calendar = Calendar.current
-        let averageStart = calendar.date(byAdding: .day, value: -6, to: start) ?? start
-        let all = ActivityStatistics.days(from: averageStart, through: end, intervals: intervals)
-        let amounts = Dictionary(uniqueKeysWithValues: all.map { ($0.date, $0.studying) })
-        return days.map { day in
-            let total = (0..<7).reduce(0.0) { result, distance in
-                let date = calendar.date(byAdding: .day, value: -distance, to: day.date) ?? day.date
-                return result + (amounts[date] ?? 0)
-            }
-            return Point(date: day.date, hours: day.studying / 3600, averageHours: total / 7 / 3600)
-        }
-    }
-
     var body: some View {
-        let chartPoints = points
+        let chartPoints = data.points
         let selected = chartPoints.first { $0.date == hoveredDate }
         Chart {
             ForEach(chartPoints) { point in
@@ -56,7 +33,7 @@ struct StudyTrendChart: View {
         }
         .chartLegend(.hidden)
         .chartYAxis { AxisMarks(position: .trailing) }
-        .chartXAxis { AxisMarks(values: .stride(by: .day, count: days.count == 7 ? 1 : 5)) }
+        .chartXAxis { AxisMarks(values: .stride(by: .day, count: chartPoints.count == 7 ? 1 : 5)) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {
@@ -112,8 +89,8 @@ struct StudyTrendChart: View {
             }
         }
         .frame(height: 220)
-        .onChange(of: days.first?.date) { _, _ in hoveredDate = nil }
-        .onChange(of: days.last?.date) { _, _ in hoveredDate = nil }
+        .onChange(of: data.points.first?.date) { _, _ in hoveredDate = nil }
+        .onChange(of: data.points.last?.date) { _, _ in hoveredDate = nil }
     }
 
     private func tooltipOriginX(for x: CGFloat, in plot: CGRect) -> CGFloat {

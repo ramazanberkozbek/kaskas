@@ -16,7 +16,8 @@ struct StatisticsView: View {
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
-    @State private var appUsage: [AppUsageSegment] = []
+    @State private var categorySummary: CategoryUsageSummary = .empty
+    @State private var chartSnapshot: StatisticsChartSnapshot = .empty
     @State private var loaded = false
     @State private var loadedStart: Date?
     @State private var loadedEnd: Date?
@@ -48,11 +49,10 @@ struct StatisticsView: View {
                         endDate: $trendEndDate,
                         now: now
                     )
-                    StudyTrendChart(days: trendDays, intervals: intervals)
+                    StudyTrendChart(data: chartSnapshot.trend)
                 }
 
-                CategoryUsageView(summary: .make(intervals: intervals, usage: appUsage,
-                    from: trendWindow.start, to: Calendar.current.date(byAdding: .day, value: 1, to: trendWindow.end) ?? now),
+                CategoryUsageView(summary: categorySummary,
                     registry: controller.categoryRegistry, storageFailed: controller.appUsage.storageFailed)
 
                 chartSection(
@@ -89,7 +89,7 @@ struct StatisticsView: View {
 
                 YearActivityHeatmap(
                     selectedYear: $selectedYear,
-                    days: yearDays,
+                    data: chartSnapshot.year,
                     scheme: colorScheme
                 )
 
@@ -127,8 +127,7 @@ struct StatisticsView: View {
     }
 
     private var today: DailyActivity {
-        ActivityStatistics.days(from: now, through: now, intervals: intervals).first
-            ?? DailyActivity(date: Calendar.current.startOfDay(for: now))
+        chartSnapshot.today
     }
 
     private var summaryCards: some View {
@@ -179,41 +178,9 @@ struct StatisticsView: View {
         hourlyPeriod.window(endingAt: hourlyEndDate)
     }
 
-    private var trendDays: [DailyActivity] {
-        ActivityStatistics.days(from: trendWindow.start, through: trendWindow.end, intervals: intervals)
-    }
-
-    private var distributionDays: [DailyActivity] {
-        ActivityStatistics.days(from: distributionWindow.start, through: distributionWindow.end, intervals: intervals)
-    }
-
-    private var hourlyDays: [DailyActivity] {
-        ActivityStatistics.days(from: hourlyWindow.start, through: hourlyWindow.end, intervals: intervals)
-    }
-
-    private var yearDays: [DailyActivity] {
-        let calendar = Calendar.current
-        guard let start = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)),
-              let end = calendar.date(from: DateComponents(year: selectedYear, month: 12, day: 31)) else {
-            return []
-        }
-        return ActivityStatistics.days(from: start, through: end, intervals: intervals)
-    }
-
-    private struct DistributionPoint: Identifiable {
-        let date: Date
-        let kind: ActivityKind
-        let hours: Double
-        var id: String { "\(date.timeIntervalSinceReferenceDate)-\(kind.rawValue)" }
-    }
-
-    private var distributionPoints: [DistributionPoint] {
-        distributionDays.flatMap { day in
-            ActivityKind.allCases.map {
-                DistributionPoint(date: day.date, kind: $0, hours: day.duration(for: $0) / 3600)
-            }
-        }
-    }
+    private var distributionDays: [DailyActivity] { chartSnapshot.distributionDays }
+    private var hourlyDays: [DailyActivity] { chartSnapshot.hourlyDays }
+    private var distributionPoints: [StatisticsChartSnapshot.DistributionPoint] { chartSnapshot.distributionPoints }
 
     private var distributionChart: some View {
         let selected = distributionDays.first { $0.date == hoveredDistributionDate }
@@ -273,25 +240,12 @@ struct StatisticsView: View {
         .frame(height: 220)
     }
 
-    private struct HourlyPoint: Identifiable {
-        let date: Date
-        let hour: Int
-        let minutes: Double
-        var id: String { "\(date.timeIntervalSinceReferenceDate)-\(hour)" }
-    }
-
-    private var hourlyPoints: [HourlyPoint] {
-        hourlyDays.flatMap { day in
-            ActivityStatistics.focusMinutesByHour(on: day.date, intervals: intervals).enumerated().map { hour, minutes in
-                HourlyPoint(date: day.date, hour: hour, minutes: minutes)
-            }
-        }
-    }
+    private var hourlyPoints: [StatisticsChartSnapshot.HourlyPoint] { chartSnapshot.hourlyPoints }
 
     private var hourlyChart: some View {
         let points = hourlyPoints
         let selectedHour = hoveredHour
-        let upperBound = max(60, (points.map(\.minutes).max() ?? 0).rounded(.up))
+        let upperBound = chartSnapshot.hourlyUpperBound
         return Chart {
             if hourlyPeriod == .day {
                 ForEach(points) { point in
@@ -536,15 +490,17 @@ struct StatisticsView: View {
         let start = min(trendStart, distributionWindow.start, hourlyWindow.start, yearStart)
         let end = calendar.date(byAdding: .day, value: 1, to: now) ?? now
         let categoryEnd = calendar.date(byAdding: .day, value: 1, to: trendWindow.end) ?? now
-        appUsage = controller.appUsage.segments(from: trendWindow.start, to: categoryEnd, now: now)
-        if !force, let loadedStart, let loadedEnd,
-           start >= loadedStart, end <= loadedEnd {
-            return
+        let coversWindow = loadedStart.map { start >= $0 } == true && loadedEnd.map { end <= $0 } == true
+        if force || !coversWindow {
+            intervals = controller.activityIntervals(from: start, to: end, now: now)
+            loadedStart = start
+            loadedEnd = end
+            loaded = true
         }
-        intervals = controller.activityIntervals(from: start, to: end, now: now)
-        loadedStart = start
-        loadedEnd = end
-        loaded = true
+        let appUsage = controller.appUsage.segments(from: trendWindow.start, to: categoryEnd, now: now)
+        categorySummary = .make(intervals: intervals, usage: appUsage, from: trendWindow.start, to: categoryEnd)
+        chartSnapshot = .make(intervals: intervals, now: now, trendWindow: trendWindow,
+                              distributionWindow: distributionWindow, hourlyWindow: hourlyWindow, year: selectedYear)
     }
 }
 
