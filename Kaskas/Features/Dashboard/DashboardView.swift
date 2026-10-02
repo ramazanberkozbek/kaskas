@@ -8,11 +8,10 @@ struct DashboardView: View {
     @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
-    @State private var appUsage: [AppUsageSegment] = []
-    @State private var breakEntries: [BreakHistoryEntry] = []
-    @State private var selectedSession: StudySession?
+    @State private var categorySnapshot: DashboardCategorySnapshot = .empty
+    @State private var chartSnapshot: DashboardChartSnapshot = .empty
+    @State private var selectedSession: DashboardCategorySnapshot.Session?
     @State private var showingCalendar = false
-    @State private var showShortSessions = false
     @State private var annotationsRevision = 0
 #if DEBUG
     @AppStorage("debugModeEnabled") private var debugModeEnabled = false
@@ -28,39 +27,25 @@ struct DashboardView: View {
         let start = Calendar.current.date(byAdding: .day, value: -6, to: end) ?? end
         return (start, end)
     }
-    private var days: [DailyActivity] {
-        ActivityStatistics.days(from: window.start, through: window.end, intervals: intervals)
-    }
+    private var days: [DailyActivity] { chartSnapshot.days }
     private var weekTotal: TimeInterval { days.reduce(0) { $0 + $1.studying } }
-    private var sessions: [StudySession] {
-        let today = Calendar.current.startOfDay(for: now)
-        let end = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? now
-        let todayIntervals = intervals.filter {
-            $0.kind == .studying && $0.startedAt >= today && $0.startedAt < end
-        }
-        return Array(StudySessionGrouping.group(todayIntervals, breakEntries: breakEntries).reversed())
-    }
-    private var visibleSessions: [StudySession] {
+    private var sessions: [DashboardCategorySnapshot.Session] { categorySnapshot.sessions }
+    private var visibleSessions: [DashboardCategorySnapshot.Session] {
 #if DEBUG
         if showsSessionDebug { return sessions }
 #endif
         _ = annotationsRevision
         _ = controller.annotationsRevision
-        return sessions.filter { session in
+        return sessions.filter { item in
+            let session = item.value
             let annotation = controller.annotation(for: session)
-            let hasAnnotation = !annotation.note.isEmpty || !annotation.category.isEmpty
+            let hasAnnotation = !annotation.isEmpty
             return session.isVisible(
-                showShortSessions: showShortSessions,
+                showShortSessions: false,
                 hasAnnotation: hasAnnotation,
                 activeStartedAt: controller.activeStudyingStartedAt
             )
         }
-    }
-
-    private var categorySummary: CategoryUsageSummary {
-        let start = period == .today ? Calendar.current.startOfDay(for: endDate) : window.start
-        let end = Calendar.current.date(byAdding: .day, value: 1, to: window.end) ?? now
-        return .make(intervals: intervals, usage: appUsage, from: start, to: end)
     }
 
     var body: some View {
@@ -69,9 +54,9 @@ struct DashboardView: View {
                 VStack(spacing: 14) {
                     rangeControls
                     if period == .today {
-                            DashboardTodayChart(date: endDate, intervals: intervals)
+                            DashboardTodayChart(data: chartSnapshot.today)
                         } else {
-                            StudyTrendChart(days: days, intervals: intervals)
+                            StudyTrendChart(data: chartSnapshot.trend)
                         }
                         Divider()
                         HStack(spacing: 18) {
@@ -99,17 +84,11 @@ struct DashboardView: View {
                     }
                     .dashboardPanel(colorScheme)
 
-                CategoryUsageView(summary: categorySummary, registry: controller.categoryRegistry,
-                    storageFailed: controller.appUsage.storageFailed)
+                CategoryUsageView(summary: categorySnapshot.usage, registry: controller.categoryRegistry,
+                    storageFailed: controller.appUsage.storageFailed, showsAppSegments: true)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .center, spacing: 12) {
-                        sectionHeading("dashboard.sessions.title", subtitle: "dashboard.sessions.subtitle", symbol: "list.bullet.rectangle")
-                        Spacer(minLength: 8)
-                        Toggle("dashboard.sessions.showShort", isOn: $showShortSessions)
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
-                    }
+                    sectionHeading("dashboard.sessions.title", subtitle: "dashboard.sessions.subtitle", symbol: "list.bullet.rectangle")
                     if visibleSessions.isEmpty {
                         Text(sessions.isEmpty ? "dashboard.sessions.empty" : "dashboard.sessions.shortOnly")
                             .foregroundStyle(.secondary)
@@ -137,12 +116,14 @@ struct DashboardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Color(nsColor: .windowBackgroundColor))
-        .sheet(item: $selectedSession) { session in
+        .sheet(item: $selectedSession) { selected in
+            let item = sessions.first { $0.id == selected.id } ?? selected
             SessionDetailView(
-                session: session,
+                session: item.value,
                 controller: controller,
+                summary: item.summary,
                 allIntervals: intervals,
-                nextSession: nextSession(after: session),
+                nextSession: nextSession(after: item.value),
                 onSave: {
                     annotationsRevision += 1
                     reload()
@@ -241,15 +222,19 @@ struct DashboardView: View {
         }
     }
 
-    private func sessionRow(_ session: StudySession) -> some View {
+    private func sessionRow(_ item: DashboardCategorySnapshot.Session) -> some View {
+        let session = item.value
         let annotation = controller.annotation(for: session)
+        let summary = item.summary
+        let category = SessionCategoryPresentation(selection: .init(annotation: annotation), summary: summary,
+            registry: controller.categoryRegistry, isOngoing: session.isOngoing(startedAt: controller.activeStudyingStartedAt))
         let timeRange = "\(formatTime(session.startedAt))–\(formatTime(session.endedAt))"
         let durationLabel = SessionDuration.minutesLabel(session.focusedDuration)
-        return HStack(spacing: 14) {
-            Image(systemName: "timer")
-                .foregroundStyle(StatisticsStyle.studying)
-                .frame(width: 30)
-            VStack(alignment: .leading, spacing: 4) {
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 14) {
+                Image(systemName: "timer")
+                    .foregroundStyle(StatisticsStyle.studying)
+                    .frame(width: 30)
                 HStack(alignment: .center, spacing: 10) {
                     Text(durationLabel)
                         .font(.subheadline.weight(.semibold))
@@ -265,35 +250,46 @@ struct DashboardView: View {
                         }
                     }
                 }
-#if DEBUG
-                if showsSessionDebug {
-                    DashboardSessionDebugRow(
-                        session: session,
-                        allIntervals: intervals,
-                        nextSession: nextSession(after: session),
-                        isHiddenByShortFilter: !showShortSessions
-                            && session.focusedDuration < StudySessionGrouping.minimumDefaultDuration
-                            && annotation.note.isEmpty
-                            && annotation.category.isEmpty,
-                        controller: controller
-                    )
-                }
-#endif
-                if !annotation.note.isEmpty {
-                    Text(annotation.note)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 4) {
+                    Label(category.title, systemImage: category.symbol)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(category.color)
                         .lineLimit(1)
+                    if let breakdown = category.mixedBreakdown {
+                        Text(breakdown)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
+                .frame(maxWidth: 220, alignment: .trailing)
+                .help(category.explanation)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
             }
-            Spacer(minLength: 8)
-            if !annotation.category.isEmpty {
-                Text(annotation.category)
+#if DEBUG
+            if showsSessionDebug {
+                DashboardSessionDebugRow(
+                    session: session,
+                    allIntervals: intervals,
+                    nextSession: nextSession(after: session),
+                    isHiddenByShortFilter: session.focusedDuration < StudySessionGrouping.minimumDefaultDuration
+                        && annotation.note.isEmpty
+                        && !annotation.hasManualCategory,
+                    controller: controller
+                )
+                .padding(.leading, 44)
+            }
+#endif
+            if !annotation.note.isEmpty {
+                Text(annotation.note)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 44)
             }
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
         .padding(.vertical, 12)
         .contentShape(Rectangle())
@@ -305,14 +301,24 @@ struct DashboardView: View {
         let today = Calendar.current.startOfDay(for: now)
         let start = min(averageStart, yesterday, today)
         intervals = controller.activityIntervals(from: start, to: now, now: now)
-        appUsage = controller.appUsage.segments(from: start, to: now, now: now)
-        breakEntries = controller.breakEntries(from: today, through: now)
+        let appUsage = controller.appUsage.segments(from: start, to: now, now: now)
+        let breakEntries = controller.breakEntries(from: today, through: now)
+        let todayEnd = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? now
+        let todayIntervals = intervals.filter {
+            $0.kind == .studying && $0.startedAt >= today && $0.startedAt < todayEnd
+        }
+        let sessions = Array(StudySessionGrouping.group(todayIntervals, breakEntries: breakEntries).reversed())
+        let categoryStart = period == .today ? Calendar.current.startOfDay(for: endDate) : window.start
+        let categoryEnd = Calendar.current.date(byAdding: .day, value: 1, to: window.end) ?? now
+        categorySnapshot = .make(intervals: intervals, appUsage: appUsage, sessions: sessions,
+                                 from: categoryStart, to: categoryEnd)
+        chartSnapshot = .make(intervals: intervals, date: endDate, weekStart: window.start)
     }
 
     private func nextSession(after session: StudySession) -> StudySession? {
         let ordered = sessions
         guard let index = ordered.firstIndex(where: { $0.id == session.id }), index > 0 else { return nil }
-        return ordered[index - 1]
+        return ordered[index - 1].value
     }
 
     private func formatTime(_ date: Date) -> String {
@@ -325,160 +331,7 @@ private enum DashboardPeriod: Int {
     case week = 7
 }
 
-private struct SessionDetailView: View {
-    let session: StudySession
-    let controller: SessionController
-    let allIntervals: [ActivityInterval]
-    let nextSession: StudySession?
-    let onSave: (() -> Void)?
-
-    @State private var category: String
-    @State private var note: String
-    @Environment(\.dismiss) private var dismiss
-#if DEBUG
-    @AppStorage("debugModeEnabled") private var debugModeEnabled = false
-    @AppStorage("debugSessionDetailsEnabled") private var debugSessionDetailsEnabled = false
-#endif
-
-    init(
-        session: StudySession,
-        controller: SessionController,
-        allIntervals: [ActivityInterval],
-        nextSession: StudySession?,
-        onSave: (() -> Void)? = nil
-    ) {
-        self.session = session
-        self.controller = controller
-        self.allIntervals = allIntervals
-        self.nextSession = nextSession
-        self.onSave = onSave
-        let annotation = controller.annotation(for: session)
-        _category = State(initialValue: annotation.category)
-        _note = State(initialValue: annotation.note)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("dashboard.session.detail").font(.title2.weight(.semibold))
-            Text("\(session.startedAt.formatted(date: .abbreviated, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))")
-                .foregroundStyle(.secondary)
-            Text("\(SessionDuration.label(session.focusedDuration)) \(String(localized: "dashboard.session.focused")) · \(session.interruptionCount) \(String(localized: "dashboard.session.interruptions"))")
-                .font(.subheadline.weight(.medium))
-            Divider()
-            Text("dashboard.session.parts").font(.subheadline.weight(.semibold))
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(session.segments) { segment in
-                        HStack {
-                            Text("\(segment.start.formatted(date: .omitted, time: .shortened))–\(segment.end.formatted(date: .omitted, time: .shortened))")
-                            Spacer()
-                            Text(SessionDuration.label(segment.duration))
-                                .foregroundStyle(.secondary)
-                        }
-                        .font(.caption)
-                    }
-                }
-            }
-            .frame(maxHeight: 150)
-#if DEBUG
-            if debugModeEnabled && debugSessionDetailsEnabled {
-                SessionDebugDetailView(
-                    session: session,
-                    allIntervals: allIntervals,
-                    nextSession: nextSession,
-                    controller: controller
-                )
-            }
-#endif
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    TextField("dashboard.session.category", text: $category)
-                    Menu {
-                        ForEach(controller.categoryRegistry.categories) { cat in
-                            Button {
-                                category = cat.name
-                            } label: {
-                                Label(cat.name, systemImage: cat.iconName)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "tag")
-                            .font(.caption)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .help("Kayıtlı kategorilerden seç")
-                }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(controller.categoryRegistry.categories) { cat in
-                            Button {
-                                category = cat.name
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: cat.iconName)
-                                        .font(.system(size: 8))
-                                    Text(cat.name)
-                                        .font(.system(size: 10))
-                                }
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 2)
-                                .background(
-                                    category == cat.name
-                                        ? cat.color.opacity(0.18)
-                                        : Color.primary.opacity(0.04),
-                                    in: Capsule()
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(
-                                            category == cat.name ? cat.color.opacity(0.6) : Color.clear,
-                                            lineWidth: 1
-                                        )
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                Text("dashboard.session.note").font(.subheadline.weight(.medium))
-                TextEditor(text: $note)
-                    .frame(minHeight: 130)
-                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.primary.opacity(0.12)))
-            }
-            HStack {
-                Spacer()
-                Button("dashboard.session.cancel") { dismiss() }
-                Button("dashboard.session.save") {
-                    controller.save(
-                        annotation: SessionAnnotation(
-                            category: category.trimmingCharacters(in: .whitespacesAndNewlines),
-                            note: note.trimmingCharacters(in: .whitespacesAndNewlines)
-                        ),
-                        for: session
-                    )
-                    onSave?()
-                    dismiss()
-                }
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(24)
-        .frame(width: detailWidth)
-    }
-
-    private var detailWidth: CGFloat {
-#if DEBUG
-        debugModeEnabled && debugSessionDetailsEnabled ? 620 : 430
-#else
-        430
-#endif
-    }
-}
-
-private enum SessionDuration {
+enum SessionDuration {
     static func minutesLabel(_ duration: TimeInterval) -> String {
         let value = max(0, duration)
         if value < 60 {

@@ -2,14 +2,11 @@ import Charts
 import SwiftUI
 
 struct DashboardTodayChart: View {
-    let date: Date
-    let intervals: [ActivityInterval]
+    let data: DashboardTodayChartData
+    private var date: Date { data.date }
 
     @State private var hoveredHour: Int?
 
-    private var yesterday: Date {
-        Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date
-    }
     private var currentLabel: LocalizedStringKey {
         Calendar.current.isDateInToday(date) ? "dashboard.today" : "dashboard.day.selected"
     }
@@ -17,17 +14,9 @@ struct DashboardTodayChart: View {
         Calendar.current.isDateInToday(date) ? "dashboard.yesterday" : "dashboard.day.previous"
     }
 
-    private var todayHours: [Double] {
-        ActivityStatistics.focusMinutesByHour(on: date, intervals: intervals).map { $0 / 60 }
-    }
-
-    private var yesterdayHours: [Double] {
-        ActivityStatistics.focusMinutesByHour(on: yesterday, intervals: intervals).map { $0 / 60 }
-    }
-
     var body: some View {
-        let current = todayHours
-        let previous = yesterdayHours
+        let current = data.todayHours
+        let previous = data.yesterdayHours
         Chart {
             ForEach(0..<24, id: \.self) { hour in
                 LineMark(
