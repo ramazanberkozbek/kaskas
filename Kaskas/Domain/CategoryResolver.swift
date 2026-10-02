@@ -10,6 +10,13 @@ nonisolated struct CategoryResolution: Codable, Equatable, Sendable {
     let ruleKey: String?
 
     static let unmatched = Self(categoryID: "other", source: .unmatched, ruleKey: nil)
+
+    var isResolved: Bool {
+        switch source {
+        case .userRule, .builtInRule, .legacyNameRule: true
+        case .suppressed, .ambiguous, .unmatched: false
+        }
+    }
 }
 
 /// An immutable index. Presentation order and application discovery never affect matching.

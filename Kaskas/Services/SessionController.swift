@@ -236,6 +236,17 @@ final class SessionController {
         annotationsRevision += 1
     }
 
+    func save(categorySelection: SessionCategorySelection, note: String, for session: StudySession) {
+        let categoryName: String?
+        if case .category(let id) = categorySelection {
+            categoryName = categoryRegistry.historicalCategory(for: id)?.name
+        } else {
+            categoryName = nil
+        }
+        store.save(categorySelection: categorySelection, categoryName: categoryName, note: note, for: session)
+        annotationsRevision += 1
+    }
+
     func breakEntries(from start: Date, through end: Date) -> [BreakHistoryEntry] {
         guard let breakHistoryStore else { return [] }
         return (try? breakHistoryStore.entries(from: start, to: end.addingTimeInterval(0.001))) ?? []

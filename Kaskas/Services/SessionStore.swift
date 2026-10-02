@@ -16,6 +16,7 @@ final class SessionStore {
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private var annotationCache: (data: Data?, values: [String: SessionAnnotation])?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -109,27 +110,33 @@ final class SessionStore {
         let annotations = loadAnnotations()
         var seen: Set<String> = []
         var categories: [String] = []
+        var categoryAnnotations: [SessionAnnotation] = []
         var notes: [String] = []
         for interval in session.intervals where seen.insert(interval.sessionKey).inserted {
             guard let annotation = annotations[interval.sessionKey] else { continue }
             if !annotation.category.isEmpty { categories.append(annotation.category) }
+            else if let id = annotation.categoryID { categories.append(id) }
+            if annotation.hasManualCategory { categoryAnnotations.append(annotation) }
             if !annotation.note.isEmpty { notes.append(annotation.note) }
         }
+        let ids = Set(categoryAnnotations.compactMap(\.categoryID))
+        let sharedID = ids.count == 1 && categoryAnnotations.allSatisfy { $0.categoryID != nil }
+            ? ids.first : nil
         return SessionAnnotation(
             category: categories.joined(separator: ", "),
-            note: notes.joined(separator: "\n\n")
+            note: notes.joined(separator: "\n\n"),
+            categoryID: sharedID
         )
     }
 
     func save(annotation: SessionAnnotation, for interval: ActivityInterval) {
         var annotations = loadAnnotations()
-        if annotation.category.isEmpty && annotation.note.isEmpty {
+        if annotation.isEmpty {
             annotations.removeValue(forKey: interval.sessionKey)
         } else {
             annotations[interval.sessionKey] = annotation
         }
-        guard let data = try? encoder.encode(annotations) else { return }
-        defaults.set(data, forKey: Key.sessionAnnotations)
+        saveAnnotations(annotations)
     }
 
     func save(annotation: SessionAnnotation, for session: StudySession) {
@@ -137,16 +144,57 @@ final class SessionStore {
         for interval in session.intervals {
             annotations.removeValue(forKey: interval.sessionKey)
         }
-        if !annotation.category.isEmpty || !annotation.note.isEmpty {
+        if !annotation.isEmpty {
             annotations[session.id] = annotation
         }
-        guard let data = try? encoder.encode(annotations) else { return }
-        defaults.set(data, forKey: Key.sessionAnnotations)
+        saveAnnotations(annotations)
     }
 
     private func loadAnnotations() -> [String: SessionAnnotation] {
-        guard let data = defaults.data(forKey: Key.sessionAnnotations) else { return [:] }
-        return (try? decoder.decode([String: SessionAnnotation].self, from: data)) ?? [:]
+        let data = defaults.data(forKey: Key.sessionAnnotations)
+        // Check the stored bytes so writes by another store instance and resets
+        // are visible immediately, without decoding unchanged JSON on each read.
+        if let annotationCache, annotationCache.data == data { return annotationCache.values }
+        let values = data.flatMap { try? decoder.decode([String: SessionAnnotation].self, from: $0) } ?? [:]
+        annotationCache = (data, values)
+        return values
+    }
+
+    private func saveAnnotations(_ values: [String: SessionAnnotation]) {
+        guard let data = try? encoder.encode(values) else { return }
+        defaults.set(data, forKey: Key.sessionAnnotations)
+        annotationCache = (data, values)
+    }
+
+    /// Editing notes does not turn an automatic label into a manual override.
+    /// Returning to automatic preserves each interval's notes unless the note itself was edited.
+    func save(categorySelection: SessionCategorySelection, categoryName: String?, note: String, for session: StudySession) {
+        let original = annotation(for: session)
+        let categoryChanged = categorySelection != SessionCategorySelection(annotation: original)
+        let noteChanged = note != original.note
+        guard categoryChanged || noteChanged else { return }
+        var annotations = loadAnnotations()
+        for key in Set(session.intervals.map(\.sessionKey)) {
+            var value = annotations[key] ?? SessionAnnotation()
+            if categoryChanged { value.category = ""; value.categoryID = nil }
+            if noteChanged { value.note = "" }
+            if value.isEmpty { annotations.removeValue(forKey: key) }
+            else { annotations[key] = value }
+        }
+        var first = annotations[session.id] ?? SessionAnnotation()
+        if categoryChanged {
+            switch categorySelection {
+            case .automatic: break
+            case .category(let id):
+                first.categoryID = id
+                first.category = categoryName ?? ""
+            case .legacy(let label): first.category = label
+            }
+        }
+        if noteChanged { first.note = note }
+        if first.isEmpty { annotations.removeValue(forKey: session.id) }
+        else { annotations[session.id] = first }
+        saveAnnotations(annotations)
     }
 
     private struct LegacySessionState: Decodable {

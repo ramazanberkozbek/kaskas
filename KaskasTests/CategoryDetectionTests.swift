@@ -206,8 +206,11 @@ struct CategoryDetectionTests {
         let record = AppUsageSegment(id: UUID(), app: xcode, resolution: .unmatched, startedAt: began, endedAt: ended)
         let summary = CategoryUsageSummary.make(intervals: [interval], usage: [record], from: day, to: nextDay)
         #expect(summary.total == 25 * 3600)
-        #expect(summary.entries[0].duration == summary.total)
-        #expect(summary.undetected == 0)
+        #expect(summary.entries.isEmpty)
+        #expect(summary.undetected == summary.total)
+        #expect(summary.undetectedApps.map(\.app) == [xcode])
+        #expect(summary.undetectedApps.map(\.duration) == [summary.total])
+        #expect(summary.unrecordedDuration == 0)
     }
 
     @Test func retrospectiveIdleAndOverlapsDoNotInflateStudyTotals() {

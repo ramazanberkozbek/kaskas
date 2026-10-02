@@ -25,9 +25,13 @@ struct ActivityInterval: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-struct SessionAnnotation: Codable, Equatable, Sendable {
+nonisolated struct SessionAnnotation: Codable, Equatable, Sendable {
     var category = ""
     var note = ""
+    var categoryID: String?
+
+    var hasManualCategory: Bool { categoryID != nil || !category.isEmpty }
+    var isEmpty: Bool { !hasManualCategory && note.isEmpty }
 }
 
 struct ActivityCursor: Codable, Equatable, Sendable {

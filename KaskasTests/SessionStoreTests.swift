@@ -3,6 +3,51 @@ import Testing
 @testable import Kaskas
 
 struct SessionStoreTests {
+    @Test func cachedAnnotationsImmediatelyFollowOtherWritersAndPreserveUnrelatedNotes() throws {
+        let suite = "SessionStoreTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let reader = SessionStore(defaults: defaults), writer = SessionStore(defaults: defaults)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let first = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(600))
+        let second = ActivityInterval(kind: .studying, startedAt: start.addingTimeInterval(1200), endedAt: start.addingTimeInterval(1800))
+        #expect(reader.annotation(for: first).isEmpty)
+        writer.save(annotation: .init(note: "Alpha"), for: first)
+        #expect(reader.annotation(for: first).note == "Alpha")
+        // Equal length is insufficient for invalidation: compare content too.
+        writer.save(annotation: .init(note: "Bravo"), for: first)
+        #expect(reader.annotation(for: first).note == "Bravo")
+        reader.save(annotation: .init(category: "Proje", note: "İkinci"), for: second)
+        #expect(writer.annotation(for: second).note == "İkinci")
+        writer.save(annotation: .init(), for: first)
+        #expect(reader.annotation(for: first).isEmpty)
+        #expect(reader.annotation(for: second).note == "İkinci")
+        let reopened = SessionStore(defaults: defaults)
+        #expect(reopened.annotation(for: first).isEmpty)
+        #expect(reopened.annotation(for: second).category == "Proje")
+    }
+
+    @Test func cachedAnnotationsRecoverFromRemovedOrMalformedData() throws {
+        let suite = "SessionStoreTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = SessionStore(defaults: defaults)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let interval = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(600))
+        store.save(annotation: .init(note: "Not"), for: interval)
+        #expect(store.annotation(for: interval).note == "Not")
+        defaults.removeObject(forKey: "sessionAnnotations")
+        #expect(store.annotation(for: interval).isEmpty)
+        defaults.set(Data("broken JSON".utf8), forKey: "sessionAnnotations")
+        #expect(store.annotation(for: interval).isEmpty)
+        let restored = SessionAnnotation(category: "Eski etiket", note: "Geri geldi")
+        defaults.set(try JSONEncoder().encode([interval.sessionKey: restored]), forKey: "sessionAnnotations")
+        #expect(store.annotation(for: interval) == restored)
+        store.save(annotation: .init(note: "Yeni not"), for: interval)
+        #expect(store.annotation(for: interval).note == "Yeni not")
+        #expect(SessionStore(defaults: defaults).annotation(for: interval).note == "Yeni not")
+    }
+
     @Test
     func annotationsFollowAnIntervalAsItsEndChanges() {
         let suiteName = "SessionStoreTests.\(UUID().uuidString)"
