@@ -5,7 +5,18 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            Section("settings.startup.section") {
+            Section {
+                Picker("settings.language.title", selection: appLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        languageOptionRow(for: language)
+                            .tag(language)
+                    }
+                }
+                .pickerStyle(.menu)
+            } header: {
+                sectionHeader("settings.language.section")
+            }
+            Section {
                 Toggle(isOn: launchAtLogin) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("settings.startup.enabled")
@@ -27,9 +38,11 @@ struct GeneralSettingsView: View {
                         .font(.callout)
                         .foregroundStyle(.red)
                 }
+            } header: {
+                sectionHeader("settings.startup.section")
             }
             MenuBarAppearanceSettingsView(controller: controller)
-            Section("settings.meetings.section") {
+            Section {
                 Toggle(isOn: pauseDuringMeetings) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("settings.meetings.enabled")
@@ -38,8 +51,10 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+            } header: {
+                sectionHeader("settings.meetings.section")
             }
-            Section("settings.idle.section") {
+            Section {
                 Toggle(isOn: idleDetectionEnabled) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("settings.idle.enabled")
@@ -55,6 +70,8 @@ struct GeneralSettingsView: View {
                     options: [1, 2, 3, 5, 10, 15].map { TimeInterval($0 * 60) }
                 )
                 .disabled(!controller.configuration.idleDetectionEnabled)
+            } header: {
+                sectionHeader("settings.idle.section")
             }
 #if DEBUG
             DebugSettingsView(controller: controller)
@@ -62,6 +79,32 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .onAppear { controller.launchAtLogin.refresh() }
+    }
+
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(.primary)
+            .textCase(nil)
+    }
+
+    private var appLanguage: Binding<AppLanguage> {
+        Binding {
+            controller.configuration.appLanguage
+        } set: { language in
+            var configuration = controller.configuration
+            configuration.appLanguage = language
+            controller.updateConfiguration(configuration)
+        }
+    }
+
+    private func languageOptionRow(for language: AppLanguage) -> some View {
+        Label {
+            Text(language.displayName)
+        } icon: {
+            languageFlagImage(for: language.rawValue)
+                .renderingMode(.original)
+        }
     }
 
     private var launchAtLogin: Binding<Bool> {

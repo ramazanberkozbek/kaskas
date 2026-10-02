@@ -16,10 +16,15 @@ struct FocusDesignView: View {
                     onFullscreen: { controller.previewBreak() }
                 )
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("settings.breakAppearance.sectionTitle")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.breakAppearance.sectionTitle")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("settings.breakAppearance.sectionSubtitle")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -144,13 +149,15 @@ struct FocusDesignView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("settings.breakLayout.title")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
-                    Text("settings.breakLayout.subtitle")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.breakLayout.title")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("settings.breakLayout.subtitle")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
 
                     HStack(spacing: 14) {
                         ForEach(BreakLayout.allCases) { layout in

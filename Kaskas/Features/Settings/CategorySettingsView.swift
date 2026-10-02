@@ -7,8 +7,10 @@ struct CategorySettingsView: View {
 
     @State private var searchText: String = ""
     @State private var showingAddSheet: Bool = false
+    @State private var categoryForNewRule: AppCategory? = nil
     @State private var showingAddCategorySheet: Bool = false
     @State private var showingResetAlert: Bool = false
+    @State private var isResetHovered: Bool = false
     @State private var categoryToDelete: AppCategory? = nil
     @State private var expandedCategories: Set<String> = []
     @State private var hasInitializedExpansion: Bool = false
@@ -57,17 +59,6 @@ struct CategorySettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Toggle("categories.detection.enabled", isOn: Binding(
-                        get: { controller.appUsage.isEnabled },
-                        set: { controller.appUsage.setEnabled($0) }
-                    ))
-                    .toggleStyle(.switch)
-                    Text("categories.detection.description")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
                 // Top Action Toolbar (No large title header)
                 HStack(spacing: 12) {
                     // Search bar
@@ -75,7 +66,7 @@ struct CategorySettingsView: View {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
-                        TextField("Uygulama veya Bundle ID ara...", text: $searchText)
+                        TextField("Uygulama ara", text: $searchText)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13))
                         if !searchText.isEmpty {
@@ -118,6 +109,7 @@ struct CategorySettingsView: View {
                         .controlSize(.regular)
 
                         Button {
+                            categoryForNewRule = nil
                             showingAddSheet = true
                         } label: {
                             Label("Kural Ekle", systemImage: "plus")
@@ -127,6 +119,33 @@ struct CategorySettingsView: View {
                     }
                 }
 
+                // Sub-header Bar: Count & Expand/Collapse All
+                HStack(alignment: .center) {
+                    Text("\(totalMatchingCount) uygulama")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Button {
+                        toggleAllCategories()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: areAllExpanded ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text(areAllExpanded ? "Tümünü Daralt" : "Tümünü Genişlet")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 2)
+
                 // Folder-like Expandable Category Sections
                 VStack(spacing: 12) {
                     ForEach(registry.categories) { category in
@@ -135,38 +154,27 @@ struct CategorySettingsView: View {
                     }
                 }
 
-                // Bottom Footer: Reset & Expand/Collapse All
+                // Bottom Footer: Reset to defaults
                 HStack {
                     Button(role: .destructive) {
                         showingResetAlert = true
                     } label: {
-                        Label("Varsayılan Kurallara Sıfırla", systemImage: "arrow.counterclockwise")
-                            .font(.caption)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 4)
-                            .contentShape(Rectangle())
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 11, weight: .medium))
+                            Text("Varsayılana Sıfırla")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 10)
+                        .background(isResetHovered ? Color.red.opacity(0.1) : Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 6))
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isResetHovered ? Color.red : .secondary)
+                    .onHover { isResetHovered = $0 }
 
                     Spacer()
-
-                    // Toggle expand / collapse all button
-                    Button {
-                        toggleAllCategories()
-                    } label: {
-                        Text(areAllExpanded ? "Tümünü Daralt" : "Tümünü Genişlet")
-                            .font(.caption)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 4)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-
-                    Text("· \(totalMatchingCount) uygulama")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
                 }
                 .padding(.top, 4)
             }
@@ -179,8 +187,11 @@ struct CategorySettingsView: View {
         .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
         .task { _ = await CategoryRegistry.discoverInstalledApplicationsAsync() }
         .sheet(isPresented: $showingAddSheet) {
-            AddCategoryRuleSheet(registry: registry) {
-                // Sheet dismissed and saved
+            AddCategoryRuleSheet(registry: registry, initialCategory: categoryForNewRule) {
+                if let cat = categoryForNewRule {
+                    expandedCategories.insert(cat.id)
+                    saveExpansionState()
+                }
             }
         }
         .sheet(isPresented: $showingAddCategorySheet) {
@@ -282,7 +293,7 @@ struct CategorySettingsView: View {
                         .help("İkonu değiştir")
 
                         // Category name text field
-                        TextField("Kategori adı...", text: $editingCategoryName)
+                        TextField("Kategori adı", text: $editingCategoryName)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13, weight: .semibold))
                             .focused($isNameFieldFocused)
@@ -305,6 +316,13 @@ struct CategorySettingsView: View {
                             .onExitCommand {
                                 cancelCategoryEdit()
                             }
+
+                        Text("\(rules.count)")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Color.primary.opacity(0.06), in: Capsule())
 
                         Spacer()
 
@@ -336,13 +354,6 @@ struct CategorySettingsView: View {
                         }
                         .buttonStyle(.plain)
                         .help("Vazgeç (Esc)")
-
-                        Text("\(rules.count)")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(Color.primary.opacity(0.06), in: Capsule())
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
@@ -352,7 +363,7 @@ struct CategorySettingsView: View {
                         Button {
                             toggleCategory(category.id)
                         } label: {
-                            HStack(spacing: 10) {
+                            HStack(spacing: 8) {
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 11, weight: .bold))
                                     .foregroundStyle(.secondary)
@@ -369,6 +380,13 @@ struct CategorySettingsView: View {
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(.primary)
 
+                                Text("\(rules.count)")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 2)
+                                    .background(Color.primary.opacity(0.06), in: Capsule())
+
                                 Spacer(minLength: 0)
                             }
                             .padding(.leading, 14)
@@ -379,44 +397,41 @@ struct CategorySettingsView: View {
                         }
                         .buttonStyle(.plain)
 
-                        // Action buttons (edit, delete, count)
+                        // Action buttons (delete, edit, add)
                         HStack(spacing: 4) {
-                            // Edit Category button (Pencil)
-                            Button {
-                                startEditing(category)
-                            } label: {
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 28, height: 28)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .help("Bu kategoriyi düzenle")
-
                             // Allow deleting any category except "Diğer" (fallback)
                             if category.id != "other" {
                                 Button {
                                     categoryToDelete = category
                                 } label: {
                                     Image(systemName: "trash")
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(.secondary)
-                                        .frame(width: 28, height: 28)
-                                        .contentShape(Rectangle())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
                                 .help("Bu kategoriyi sil")
                             }
 
-                            Text("\(rules.count)")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 2)
-                                .background(Color.primary.opacity(0.06), in: Capsule())
+                            // Edit Category button (Pencil)
+                            Button {
+                                startEditing(category)
+                            } label: {
+                                Image(systemName: "pencil")
+                            }
+                            .buttonStyle(HeaderActionButtonStyle())
+                            .help("Bu kategoriyi düzenle")
+
+                            // Add app to this category button (Plus)
+                            Button {
+                                categoryForNewRule = category
+                                showingAddSheet = true
+                                expandedCategories.insert(category.id)
+                                saveExpansionState()
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                            .buttonStyle(HeaderActionButtonStyle())
+                            .help("Bu kategoriye uygulama ekle")
                         }
-                        .padding(.trailing, 14)
+                        .padding(.trailing, 10)
                         .padding(.vertical, 8)
                     }
                 }
@@ -434,24 +449,16 @@ struct CategorySettingsView: View {
                             .foregroundStyle(.tertiary)
                         Spacer()
                         Button {
+                            categoryForNewRule = category
                             showingAddSheet = true
                         } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 10, weight: .bold))
-                                Text("Uygulama Ekle")
-                                    .font(.system(size: 12, weight: .medium))
-                            }
-                            .foregroundStyle(Color.accentColor)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
-                            .contentShape(RoundedRectangle(cornerRadius: 6))
+                            Label("Kural Ekle", systemImage: "plus")
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 10)
                 } else {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(rules.enumerated()), id: \.element.id) { index, rule in
@@ -541,31 +548,14 @@ struct CategorySettingsView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
 
-            Menu {
-                Button("categories.rules.block") {
-                    registry.suppressAutomaticAssignment(appIdentifier: rule.appIdentifier)
-                }
-                if !rule.isDefault {
-                    Button("categories.rules.removeOverride") { registry.removeRule(id: rule.id) }
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-
             // Delete Rule Button (all rules are deletable)
             Button {
                 registry.removeRule(id: rule.id)
             } label: {
                 Image(systemName: "trash")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 28, height: 28)
-                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .help(rule.isDefault ? String(localized: "categories.rules.block") : String(localized: "categories.rules.removeOverride"))
+            .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
+            .help(rule.isDefault ? String(localized: "categories.rules.removeRule") : String(localized: "categories.rules.removeOverride"))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
@@ -697,7 +687,7 @@ struct CategorySettingsView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                TextField("İkon ara...", text: $editIconSearchText)
+                TextField("İkon ara", text: $editIconSearchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12))
                 if !editIconSearchText.isEmpty {
@@ -753,5 +743,34 @@ struct CategorySettingsView: View {
         }
         .padding(10)
         .frame(width: 270, height: 250)
+    }
+}
+
+// MARK: - Header Action Button Style (macOS Standard Hover & Press Feedback)
+
+private struct HeaderActionButtonStyle: ButtonStyle {
+    var isDestructive: Bool = false
+    @State private var isHovered: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(
+                isDestructive
+                    ? (isHovered || configuration.isPressed ? Color.red : Color.secondary)
+                    : (configuration.isPressed ? Color.primary : (isHovered ? Color.primary : Color.secondary))
+            )
+            .frame(width: 28, height: 28)
+            .background(
+                configuration.isPressed
+                    ? (isDestructive ? Color.red.opacity(0.18) : Color.primary.opacity(0.12))
+                    : (isHovered ? (isDestructive ? Color.red.opacity(0.10) : Color.primary.opacity(0.07)) : Color.clear),
+                in: RoundedRectangle(cornerRadius: 6, style: .continuous)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .scaleEffect(configuration.isPressed ? 0.93 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+            .animation(.easeInOut(duration: 0.15), value: isHovered)
+            .onHover { isHovered = $0 }
     }
 }

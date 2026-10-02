@@ -5,18 +5,15 @@ struct AddCategorySheet: View {
     let onSave: (AppCategory) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
-
     @State private var categoryName: String = ""
     @State private var selectedIcon: String = "folder.fill"
+    @State private var showingIconPickerPopover: Bool = false
+    @State private var iconSearchText: String = ""
+    @FocusState private var isNameFieldFocused: Bool
 
     private var isValid: Bool {
         !categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-
-    private let iconGridColumns = [
-        GridItem(.adaptive(minimum: 36, maximum: 44), spacing: 8)
-    ]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,49 +38,43 @@ struct AddCategorySheet: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(18)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 18) {
-                // Live Preview
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Önizleme")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+            // Content: single-line icon picker + text field (matches AddCategoryRuleSheet)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Kategori")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
 
-                    HStack {
-                        Spacer()
-                        HStack(spacing: 8) {
-                            Image(systemName: selectedIcon)
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Kategori Adı" : categoryName)
-                                .font(.system(size: 13, weight: .semibold))
-                        }
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(Color.primary.opacity(0.06), in: Capsule())
-                        .overlay(
-                            Capsule()
-                                .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
-                        )
-                        Spacer()
+                HStack(spacing: 8) {
+                    // Icon picker trigger button
+                    Button {
+                        showingIconPickerPopover.toggle()
+                    } label: {
+                        Image(systemName: selectedIcon)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.primary)
+                            .frame(width: 28, height: 28)
+                            .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 7)
+                                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                            )
                     }
-                    .padding(.vertical, 10)
-                    .background(Color.primary.opacity(0.02), in: RoundedRectangle(cornerRadius: 10))
-                }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showingIconPickerPopover, arrowEdge: .bottom) {
+                        iconPickerPopover
+                    }
 
-                // Category Name Field
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Kategori Adı")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-
+                    // Category name text field
                     HStack {
-                        TextField("Örn: Ders, Borsa, 3D Modelleme...", text: $categoryName)
+                        TextField("Kategori adı", text: $categoryName)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13))
+                            .focused($isNameFieldFocused)
 
                         if !categoryName.isEmpty {
                             Button {
@@ -99,53 +90,16 @@ struct AddCategorySheet: View {
                         }
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 7)
                     .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
                     )
                 }
-
-
-                // Icon Selection
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("İkon")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-
-                    LazyVGrid(columns: iconGridColumns, spacing: 8) {
-                        ForEach(AppCategory.suggestedIcons, id: \.self) { icon in
-                            Button {
-                                selectedIcon = icon
-                            } label: {
-                                Image(systemName: icon)
-                                    .font(.system(size: 15))
-                                    .frame(width: 36, height: 34)
-                                    .foregroundStyle(selectedIcon == icon ? Color.accentColor : .secondary)
-                                    .background(
-                                        selectedIcon == icon
-                                            ? Color.accentColor.opacity(0.15)
-                                            : Color.primary.opacity(0.04),
-                                        in: RoundedRectangle(cornerRadius: 7)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 7)
-                                            .strokeBorder(
-                                                selectedIcon == icon
-                                                    ? Color.accentColor.opacity(0.4)
-                                                    : Color.primary.opacity(0.06),
-                                                lineWidth: 1
-                                            )
-                                    )
-                                    .contentShape(RoundedRectangle(cornerRadius: 7))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
             }
-            .padding(18)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
 
             Divider()
 
@@ -165,9 +119,84 @@ struct AddCategorySheet: View {
                 .keyboardShortcut(.defaultAction)
                 .disabled(!isValid)
             }
-            .padding(16)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
         }
-        .frame(width: 460)
+        .frame(width: 360)
+        .onAppear {
+            isNameFieldFocused = true
+        }
+    }
+
+    private var filteredIcons: [String] {
+        let query = iconSearchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !query.isEmpty else { return AppCategory.suggestedIcons }
+        return AppCategory.suggestedIcons.filter { $0.lowercased().contains(query) }
+    }
+
+    private var iconPickerPopover: some View {
+        VStack(spacing: 8) {
+            // Search field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField("İkon ara", text: $iconSearchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12))
+                if !iconSearchText.isEmpty {
+                    Button {
+                        iconSearchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .frame(width: 22, height: 22)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 6))
+
+            // Grid of icons
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(34), spacing: 6), count: 6), spacing: 6) {
+                    ForEach(filteredIcons, id: \.self) { icon in
+                        Button {
+                            selectedIcon = icon
+                            showingIconPickerPopover = false
+                        } label: {
+                            Image(systemName: icon)
+                                .font(.system(size: 15))
+                                .frame(width: 34, height: 34)
+                                .foregroundStyle(selectedIcon == icon ? Color.accentColor : .primary)
+                                .background(
+                                    selectedIcon == icon
+                                        ? Color.accentColor.opacity(0.15)
+                                        : Color.primary.opacity(0.03),
+                                    in: RoundedRectangle(cornerRadius: 6)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .strokeBorder(
+                                            selectedIcon == icon ? Color.accentColor.opacity(0.4) : Color.clear,
+                                            lineWidth: 1
+                                        )
+                                )
+                                .contentShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(4)
+            }
+            .frame(height: 190)
+        }
+        .padding(10)
+        .frame(width: 270, height: 250)
     }
 
     private func saveCategory() {

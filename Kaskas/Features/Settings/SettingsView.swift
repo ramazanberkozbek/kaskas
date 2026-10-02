@@ -37,6 +37,8 @@ struct SettingsView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .background(SettingsWindowChrome(colorScheme: colorScheme))
+        .environment(\.locale, controller.locale)
+        .id(controller.configuration.appLanguage)
     }
 
     @ViewBuilder

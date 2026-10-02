@@ -17,14 +17,13 @@ struct MicroReminderDesignView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                VStack(alignment: .leading, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("settings.microReminderDesign.sectionTitle")
-                            .font(.system(size: 12, weight: .bold))
-                            .tracking(1.5)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
                         Text("settings.microReminderDesign.sectionDescription")
-                            .font(.system(size: 14))
+                            .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
 

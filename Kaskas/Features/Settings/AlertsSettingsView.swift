@@ -16,8 +16,7 @@ struct AlertsSettingsView: View {
                     HStack {
                         Text("settings.alerts.preview")
                             .font(.system(size: 13, weight: .semibold))
-                            .textCase(.uppercase)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
                         Spacer()
                         Toggle("settings.alerts.breakWarning", isOn: binding(for: \.breakWarningEnabled))
                             .labelsHidden()
@@ -35,13 +34,12 @@ struct AlertsSettingsView: View {
 
                 // Bildirim ayarları
                 VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("settings.alerts.notificationSettings")
                             .font(.system(size: 13, weight: .semibold))
-                            .textCase(.uppercase)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
                         Text("settings.alerts.notificationSettings.description")
-                            .font(.callout)
+                            .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.horizontal, 4)

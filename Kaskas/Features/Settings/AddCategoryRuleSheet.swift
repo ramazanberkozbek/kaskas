@@ -3,17 +3,26 @@ import SwiftUI
 
 struct AddCategoryRuleSheet: View {
     let registry: CategoryRegistry
+    let initialCategory: AppCategory?
     let onSave: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var appSearchText: String = ""
     @State private var selectedApp: CategoryRegistry.DiscoveredApp? = nil
-    @State private var categoryName: String = ""
-    @State private var categoryIcon: String = "folder.fill"
+    @State private var categoryName: String
+    @State private var categoryIcon: String
     @State private var showingIconPickerPopover: Bool = false
     @State private var iconSearchText: String = ""
     @State private var installedApps: [CategoryRegistry.DiscoveredApp] = []
     @State private var isLoadingApps: Bool = false
+
+    init(registry: CategoryRegistry, initialCategory: AppCategory? = nil, onSave: @escaping () -> Void) {
+        self.registry = registry
+        self.initialCategory = initialCategory
+        self.onSave = onSave
+        _categoryName = State(initialValue: initialCategory?.name ?? "")
+        _categoryIcon = State(initialValue: initialCategory?.iconName ?? "folder.fill")
+    }
 
     private var filteredInstalledApps: [CategoryRegistry.DiscoveredApp] {
         let query = appSearchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -22,6 +31,22 @@ struct AddCategoryRuleSheet: View {
             $0.name.lowercased().contains(query) ||
             $0.bundleId.lowercased().contains(query)
         }
+    }
+
+    private func existingCategory(for app: CategoryRegistry.DiscoveredApp) -> AppCategory? {
+        if let rule = registry.allRules.first(where: { $0.matches(bundleId: app.bundleId, appName: app.name) }) {
+            return registry.category(for: rule.categoryId) ?? AppCategory.defaultCategories.first { $0.id == rule.categoryId }
+        }
+        let res = registry.resolution(bundleID: app.bundleId, appName: app.name)
+        if res.isResolved {
+            return registry.category(for: res.categoryID) ?? AppCategory.defaultCategories.first { $0.id == res.categoryID }
+        }
+        return nil
+    }
+
+    private var selectedAppHasExistingRule: Bool {
+        guard let selectedApp else { return false }
+        return existingCategory(for: selectedApp) != nil
     }
 
 
@@ -64,7 +89,7 @@ struct AddCategoryRuleSheet: View {
                         Image(systemName: "magnifyingglass")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        TextField("Yüklü uygulama ara (örn: Cursor, Xcode, Arc)...", text: $appSearchText)
+                        TextField("Uygulama ara", text: $appSearchText)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13))
                         if !appSearchText.isEmpty {
@@ -108,8 +133,15 @@ struct AddCategoryRuleSheet: View {
                         } else {
                             LazyVStack(spacing: 4) {
                                 ForEach(filteredInstalledApps) { app in
+                                    let currentCategory = existingCategory(for: app)
+                                    let isSelected = selectedApp?.bundleId == app.bundleId
+
                                     Button {
                                         selectedApp = app
+                                        if initialCategory == nil, let currentCategory {
+                                            categoryName = currentCategory.name
+                                            categoryIcon = currentCategory.iconName
+                                        }
                                     } label: {
                                         HStack(spacing: 10) {
                                             appIcon(for: app)
@@ -127,7 +159,16 @@ struct AddCategoryRuleSheet: View {
 
                                             Spacer(minLength: 0)
 
-                                            if selectedApp?.bundleId == app.bundleId {
+                                            if let currentCategory {
+                                                Image(systemName: currentCategory.iconName)
+                                                    .font(.system(size: 11, weight: .medium))
+                                                    .foregroundStyle(.secondary)
+                                                    .frame(width: 22, height: 22)
+                                                    .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                                    .help("\(currentCategory.name) kategorisinde tanımlı")
+                                            }
+
+                                            if isSelected {
                                                 Image(systemName: "checkmark.circle.fill")
                                                     .foregroundStyle(Color.accentColor)
                                             }
@@ -137,7 +178,7 @@ struct AddCategoryRuleSheet: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .contentShape(RoundedRectangle(cornerRadius: 8))
                                         .background(
-                                            selectedApp?.bundleId == app.bundleId
+                                            isSelected
                                                 ? Color.accentColor.opacity(0.12)
                                                 : Color.clear,
                                             in: RoundedRectangle(cornerRadius: 8)
@@ -159,9 +200,22 @@ struct AddCategoryRuleSheet: View {
 
                 // Target Category — single-line: icon picker + text field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Atanacak Kategori")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                    HStack {
+                        Text("Atanacak Kategori")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+
+                        if let selectedApp, let curCat = existingCategory(for: selectedApp) {
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Image(systemName: curCat.iconName)
+                                    .font(.caption2)
+                                Text("Mevcut: \(curCat.name)")
+                                    .font(.caption2)
+                            }
+                            .foregroundStyle(.secondary)
+                        }
+                    }
 
                     HStack(spacing: 8) {
                         // Icon picker trigger button
@@ -185,7 +239,7 @@ struct AddCategoryRuleSheet: View {
 
                         // Category name text field
                         HStack {
-                            TextField("Kategori adı yazın (örn: Yazılım, Ders, Borsa)...", text: $categoryName)
+                            TextField("Kategori adı", text: $categoryName)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 13))
 
@@ -268,7 +322,7 @@ struct AddCategoryRuleSheet: View {
 
                 Spacer()
 
-                Button("Kuralı Kaydet") {
+                Button(selectedAppHasExistingRule ? "Kuralı Güncelle" : "Kuralı Kaydet") {
                     saveRule()
                 }
                 .buttonStyle(.borderedProminent)
@@ -357,7 +411,7 @@ struct AddCategoryRuleSheet: View {
                 Image(systemName: "magnifyingglass")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                TextField("İkon ara...", text: $iconSearchText)
+                TextField("İkon ara", text: $iconSearchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12))
                 if !iconSearchText.isEmpty {

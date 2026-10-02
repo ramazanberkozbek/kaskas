@@ -129,8 +129,8 @@ struct FocusSettingsView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.primary)
                 .padding(.leading, 10)
 
             VStack(spacing: 0, content: content)

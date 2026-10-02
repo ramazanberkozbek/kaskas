@@ -10,7 +10,7 @@ struct DebugSettingsView: View {
     @AppStorage("debugSessionDetailsEnabled") private var sessionDetailsEnabled = false
 
     var body: some View {
-        Section("debug.title") {
+        Section {
             Toggle("debug.enable", isOn: $isEnabled)
 
             if isEnabled {
@@ -52,6 +52,11 @@ struct DebugSettingsView: View {
                     Text(controller.breaksTakenToday().formatted())
                 }
             }
+        } header: {
+            Text("debug.title")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.primary)
+                .textCase(nil)
         }
         .onChange(of: isEnabled) { _, enabled in
             if !enabled {
