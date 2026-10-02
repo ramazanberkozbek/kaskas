@@ -13,23 +13,15 @@ struct YearActivityHeatmap: View {
     var body: some View {
         let weeks = data.weeks
         let activityByDate = data.activityByDate
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: "square.grid.3x3.fill")
-                    .foregroundStyle(StatisticsStyle.kaskasPaused)
-                    .frame(width: 32, height: 32)
-                    .background(
-                        StatisticsStyle.kaskasPaused.opacity(0.15),
-                        in: RoundedRectangle(cornerRadius: 9)
-                    )
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("stats.year.title")
-                        .font(.caption.weight(.bold))
-                        .tracking(1.1)
-                    Text("stats.year.subtitle")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("stats.year.title")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                Text("stats.year.subtitle")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             VStack(alignment: .leading, spacing: 16) {

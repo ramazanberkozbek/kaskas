@@ -48,6 +48,54 @@ struct DashboardView: View {
         }
     }
 
+    private var groupedSessions: [(date: Date, sessions: [DashboardCategorySnapshot.Session])] {
+        let calendar = Calendar.current
+        var groups: [(date: Date, sessions: [DashboardCategorySnapshot.Session])] = []
+        for item in visibleSessions {
+            let day = calendar.startOfDay(for: item.value.startedAt)
+            if let lastIndex = groups.indices.last, groups[lastIndex].date == day {
+                groups[lastIndex].sessions.append(item)
+            } else {
+                groups.append((date: day, sessions: [item]))
+            }
+        }
+        return groups
+    }
+
+    private var isSelectedDayToday: Bool {
+        Calendar.current.isDateInToday(endDate)
+    }
+
+    private var sessionsSubtitle: LocalizedStringKey {
+        if period == .week {
+            return "dashboard.sessions.subtitle.week"
+        } else if isSelectedDayToday {
+            return "dashboard.sessions.subtitle"
+        } else {
+            return "dashboard.sessions.subtitle.selected"
+        }
+    }
+
+    private var sessionsEmptyText: LocalizedStringKey {
+        if period == .week {
+            return "dashboard.sessions.empty.week"
+        } else if isSelectedDayToday {
+            return "dashboard.sessions.empty"
+        } else {
+            return "dashboard.sessions.empty.selected"
+        }
+    }
+
+    private var sessionsShortOnlyText: LocalizedStringKey {
+        if period == .week {
+            return "dashboard.sessions.shortOnly.week"
+        } else if isSelectedDayToday {
+            return "dashboard.sessions.shortOnly"
+        } else {
+            return "dashboard.sessions.shortOnly.selected"
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -87,19 +135,42 @@ struct DashboardView: View {
                 CategoryUsageView(summary: categorySnapshot.usage, registry: controller.categoryRegistry,
                     storageFailed: controller.appUsage.storageFailed, showsAppSegments: true)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    sectionHeading("dashboard.sessions.title", subtitle: "dashboard.sessions.subtitle", symbol: "list.bullet.rectangle")
+                VStack(alignment: .leading, spacing: 8) {
+                    sectionHeading("dashboard.sessions.title", subtitle: sessionsSubtitle)
                     if visibleSessions.isEmpty {
-                        Text(sessions.isEmpty ? "dashboard.sessions.empty" : "dashboard.sessions.shortOnly")
+                        Text(sessions.isEmpty ? sessionsEmptyText : sessionsShortOnlyText)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, minHeight: 90, alignment: .center)
                             .dashboardPanel(colorScheme)
                     } else {
                         LazyVStack(spacing: 0) {
-                            ForEach(visibleSessions) { session in
-                                Button { selectedSession = session } label: { sessionRow(session) }
-                                    .buttonStyle(.plain)
-                                if session.id != visibleSessions.last?.id { Divider() }
+                            if period == .week {
+                                ForEach(groupedSessions, id: \.date) { group in
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        dayHeader(
+                                            group.date,
+                                            totalDuration: group.sessions.reduce(0) { $0 + $1.value.focusedDuration },
+                                            isFirst: group.date == groupedSessions.first?.date
+                                        )
+                                        ForEach(group.sessions) { session in
+                                            Button { selectedSession = session } label: { sessionRow(session) }
+                                                .buttonStyle(.plain)
+                                            if session.id != group.sessions.last?.id {
+                                                Divider()
+                                            }
+                                        }
+                                        if group.date != groupedSessions.last?.date {
+                                            Divider()
+                                                .padding(.vertical, 8)
+                                        }
+                                    }
+                                }
+                            } else {
+                                ForEach(visibleSessions) { session in
+                                    Button { selectedSession = session } label: { sessionRow(session) }
+                                        .buttonStyle(.plain)
+                                    if session.id != visibleSessions.last?.id { Divider() }
+                                }
                             }
                         }
                         .dashboardPanel(colorScheme)
@@ -136,7 +207,13 @@ struct DashboardView: View {
         }
         .onAppear(perform: reload)
         .onChange(of: period) { _, _ in reload() }
-        .onChange(of: endDate) { _, _ in reload() }
+        .onChange(of: endDate) { _, newDate in
+            let normalized = Calendar.current.startOfDay(for: newDate)
+            if endDate != normalized {
+                endDate = normalized
+            }
+            reload()
+        }
         .onReceive(clock) { date in
             let oldToday = Calendar.current.startOfDay(for: now)
             now = date
@@ -198,18 +275,15 @@ struct DashboardView: View {
         return "\(start)–\(end)"
     }
 
-    private func sectionHeading(_ title: LocalizedStringKey, subtitle: LocalizedStringKey, symbol: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: symbol)
-                .foregroundStyle(StatisticsStyle.studying)
-                .frame(width: 32, height: 32)
-                .background(StatisticsStyle.studying.opacity(0.15), in: RoundedRectangle(cornerRadius: 9))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.caption.weight(.bold))
-                    .tracking(1.1)
+    private func sectionHeading(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.primary)
+
+            if let subtitle {
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
         }
@@ -296,22 +370,26 @@ struct DashboardView: View {
     }
 
     private func reload() {
-        let averageStart = Calendar.current.date(byAdding: .day, value: -6, to: window.start) ?? window.start
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: endDate) ?? endDate
-        let today = Calendar.current.startOfDay(for: now)
-        let start = min(averageStart, yesterday, today)
+        let calendar = Calendar.current
+        let selectedDay = calendar.startOfDay(for: endDate)
+        let averageStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: selectedDay) ?? selectedDay
+        let today = calendar.startOfDay(for: now)
+        let start = min(averageStart, yesterday, today, selectedDay)
         intervals = controller.activityIntervals(from: start, to: now, now: now)
         let appUsage = controller.appUsage.segments(from: start, to: now, now: now)
-        let breakEntries = controller.breakEntries(from: today, through: now)
-        let todayEnd = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? now
-        let todayIntervals = intervals.filter {
-            $0.kind == .studying && $0.startedAt >= today && $0.startedAt < todayEnd
+
+        let sessionStart = period == .today ? selectedDay : window.start
+        let sessionEnd = calendar.date(byAdding: .day, value: 1, to: period == .today ? selectedDay : window.end) ?? now
+        let breakEnd = min(sessionEnd, now)
+        let breakEntries = controller.breakEntries(from: sessionStart, through: breakEnd)
+        let targetIntervals = intervals.filter {
+            $0.kind == .studying && $0.startedAt >= sessionStart && $0.startedAt < sessionEnd
         }
-        let sessions = Array(StudySessionGrouping.group(todayIntervals, breakEntries: breakEntries).reversed())
-        let categoryStart = period == .today ? Calendar.current.startOfDay(for: endDate) : window.start
-        let categoryEnd = Calendar.current.date(byAdding: .day, value: 1, to: window.end) ?? now
+        let sessions = Array(StudySessionGrouping.group(targetIntervals, breakEntries: breakEntries).reversed())
+
         categorySnapshot = .make(intervals: intervals, appUsage: appUsage, sessions: sessions,
-                                 from: categoryStart, to: categoryEnd)
+                                 from: sessionStart, to: sessionEnd)
         chartSnapshot = .make(intervals: intervals, date: endDate, weekStart: window.start)
     }
 
@@ -319,6 +397,33 @@ struct DashboardView: View {
         let ordered = sessions
         guard let index = ordered.firstIndex(where: { $0.id == session.id }), index > 0 else { return nil }
         return ordered[index - 1].value
+    }
+
+    private func dayHeader(_ date: Date, totalDuration: TimeInterval, isFirst: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(dayHeaderTitle(date))
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.primary)
+            Spacer()
+            Text(SessionDuration.label(totalDuration))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, isFirst ? 0 : 4)
+        .padding(.bottom, 6)
+    }
+
+    private func dayHeaderTitle(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let dayFormatted = date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
+        if calendar.isDateInToday(date) {
+            return "\(String(localized: "dashboard.today")) · \(dayFormatted)"
+        } else if calendar.isDateInYesterday(date) {
+            return "\(String(localized: "dashboard.yesterday")) · \(dayFormatted)"
+        }
+        return dayFormatted
     }
 
     private func formatTime(_ date: Date) -> String {

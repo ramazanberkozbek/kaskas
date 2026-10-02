@@ -28,17 +28,23 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
-                Text("stats.subtitle")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("stats.today.title")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
 
-                summaryCards
+                        Text("stats.subtitle")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    summaryCards
+                }
 
                 chartSection(
                     title: "stats.trend.title",
                     subtitle: "stats.trend.subtitle",
-                    symbol: "chart.xyaxis.line",
-                    tint: StatisticsStyle.studying,
                     legend: [
                         (StatisticsStyle.studying, "stats.kind.studying"),
                         (StatisticsStyle.average, "stats.trend.average")
@@ -52,14 +58,16 @@ struct StatisticsView: View {
                     StudyTrendChart(data: chartSnapshot.trend)
                 }
 
-                CategoryUsageView(summary: categorySummary,
-                    registry: controller.categoryRegistry, storageFailed: controller.appUsage.storageFailed)
+                CategoryUsageView(
+                    summary: categorySummary,
+                    registry: controller.categoryRegistry,
+                    storageFailed: controller.appUsage.storageFailed,
+                    showsAppSegments: true
+                )
 
                 chartSection(
                     title: "stats.distribution.title",
                     subtitle: "stats.distribution.subtitle",
-                    symbol: "chart.bar.fill",
-                    tint: StatisticsStyle.breakTime,
                     legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
                 ) {
                     StatisticsRangeControls(
@@ -73,8 +81,6 @@ struct StatisticsView: View {
                 chartSection(
                     title: "stats.hourly.title",
                     subtitle: "stats.hourly.subtitle",
-                    symbol: "clock.fill",
-                    tint: StatisticsStyle.computerInactive,
                     legend: hourlyPeriod == .day
                         ? [(StatisticsStyle.computerInactive, "stats.kind.studying")]
                         : hourlyDays.map { (hourlyColor(for: $0.date), $0.date.formatted(.dateTime.weekday(.abbreviated).day())) }
@@ -131,39 +137,36 @@ struct StatisticsView: View {
     }
 
     private var summaryCards: some View {
-        VStack(spacing: 10) {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(ActivityKind.allCases.filter { $0 != .meeting }, id: \.self) { kind in
-                    summaryCard(for: kind)
-                }
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 135), spacing: 10)], spacing: 10) {
+            ForEach(ActivityKind.allCases, id: \.self) { kind in
+                summaryCard(for: kind)
             }
-
-            summaryCard(for: .meeting)
         }
     }
 
     private func summaryCard(for kind: ActivityKind) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: kind.symbol)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(kind.color)
-                .frame(width: 38, height: 38)
-                .background(kind.color.opacity(0.13), in: RoundedRectangle(cornerRadius: 11))
-
-            VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(kind.color)
+                    .frame(width: 7, height: 7)
                 Text(LocalizedStringKey(kind.labelKey))
-                    .font(.caption)
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
-                Text(StatisticsDuration.label(today.duration(for: kind)))
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
-                    .monospacedDigit()
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
+
+            Text(StatisticsDuration.label(today.duration(for: kind)))
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
+                .lineLimit(1)
         }
-        .padding(12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
+        .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.08)))
     }
 
     private var trendWindow: (start: Date, end: Date) {
@@ -435,24 +438,19 @@ struct StatisticsView: View {
 
     private func chartSection<Content: View>(
         title: String,
-        subtitle: String,
-        symbol: String,
-        tint: Color,
-        legend: [(Color, String)],
+        subtitle: String? = nil,
+        legend: [(Color, String)] = [],
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: symbol)
-                    .foregroundStyle(tint)
-                    .frame(width: 32, height: 32)
-                    .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 9))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(LocalizedStringKey(title))
-                        .font(.caption.weight(.bold))
-                        .tracking(1.1)
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(LocalizedStringKey(title))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                if let subtitle {
                     Text(LocalizedStringKey(subtitle))
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -463,10 +461,10 @@ struct StatisticsView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(legend.indices, id: \.self) { index in
-                            HStack(spacing: 5) {
-                                RoundedRectangle(cornerRadius: 2)
+                            HStack(spacing: 6) {
+                                Circle()
                                     .fill(legend[index].0)
-                                    .frame(width: 13, height: 5)
+                                    .frame(width: 7, height: 7)
                                 Text(LocalizedStringKey(legend[index].1))
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)

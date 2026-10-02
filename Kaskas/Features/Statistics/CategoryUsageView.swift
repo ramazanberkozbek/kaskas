@@ -6,44 +6,51 @@ struct CategoryUsageView: View {
     let storageFailed: Bool
     var title: LocalizedStringKey = "categories.usage.title"
     var subtitle: LocalizedStringKey = "categories.usage.subtitle"
-    var showsAppSegments = false
+    var showsAppSegments = true
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: "tag.fill")
-                .font(.headline)
-            Text(subtitle)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            if summary.total == 0 {
-                Text("categories.usage.empty")
-                    .font(.callout)
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                Text(subtitle)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
-            } else {
-                ForEach(summary.entries) { entry in
-                    let category = registry.historicalCategory(for: entry.categoryID)
-                    row(name: category?.name ?? String(localized: "categories.usage.deleted"),
-                        symbol: category?.iconName ?? "tag", color: category?.color ?? .secondary,
-                        duration: entry.duration, apps: showsAppSegments ? entry.apps : [])
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                if summary.total == 0 {
+                    Text("categories.usage.empty")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(summary.entries) { entry in
+                        let category = registry.historicalCategory(for: entry.categoryID)
+                        row(name: category?.name ?? String(localized: "categories.usage.deleted"),
+                            symbol: category?.iconName ?? "tag", color: category?.color ?? .secondary,
+                            duration: entry.duration, apps: showsAppSegments ? entry.apps : [])
+                    }
+                    if summary.undetected > 0 {
+                        row(name: String(localized: "categories.usage.undetected"), symbol: "questionmark.circle",
+                            color: .secondary, duration: summary.undetected,
+                            apps: showsAppSegments ? summary.undetectedApps : [],
+                            unrecordedDuration: showsAppSegments ? summary.unrecordedDuration : 0)
+                    }
                 }
-                if summary.undetected > 0 {
-                    row(name: String(localized: "categories.usage.undetected"), symbol: "questionmark.circle",
-                        color: .secondary, duration: summary.undetected,
-                        apps: showsAppSegments ? summary.undetectedApps : [],
-                        unrecordedDuration: showsAppSegments ? summary.unrecordedDuration : 0)
+                if storageFailed {
+                    Label("categories.usage.storageWarning", systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
-            if storageFailed {
-                Label("categories.usage.storageWarning", systemImage: "exclamationmark.triangle")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
     }
 
     private func row(name: String, symbol: String, color: Color, duration: TimeInterval,
