@@ -45,9 +45,14 @@ struct StudySessionCategoryTests {
         #expect(value.decision == (coding < 600 ? .mixed : .dominant(categoryID: "coding")))
     }
 
-    @Test(arguments: [699.0, 700.0]) func minimumCoverageIncludesUndetectedTime(_ detected: Double) {
+    @Test(arguments: [499.0, 500.0]) func minimumDominantShareThreshold(_ coding: Double) {
+        let value = summary([segment("coding", 0, coding), segment("design", 500, 600)])
+        #expect(value.decision == (coding < 500 ? .mixed : .dominant(categoryID: "coding")))
+    }
+
+    @Test(arguments: [499.0, 500.0]) func minimumCoverageIncludesUndetectedTime(_ detected: Double) {
         let value = summary([segment("coding", 0, detected)])
-        #expect(value.decision == (detected < 700 ? .insufficient(.lowCoverage) : .dominant(categoryID: "coding")))
+        #expect(value.decision == (detected < 500 ? .insufficient(.lowCoverage) : .dominant(categoryID: "coding")))
         #expect(value.usage.undetected == 1000 - detected)
     }
 

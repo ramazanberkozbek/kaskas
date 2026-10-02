@@ -25,10 +25,9 @@ nonisolated struct CategoryResolver: Sendable {
     private let defaultByID: [String: CategoryRule]
     private let customByName: [String: [CategoryRule]]
     private let defaultByName: [String: [CategoryRule]]
-    private let suppressed: Set<String>
     private let categoryIDs: Set<String>
 
-    init(customRules: [CategoryRule], defaultRules: [CategoryRule], suppressed: Set<String>, categoryIDs: Set<String>) {
+    init(customRules: [CategoryRule], defaultRules: [CategoryRule], suppressed: Set<String> = [], categoryIDs: Set<String>) {
         func byID(_ rules: [CategoryRule]) -> [String: CategoryRule] {
             var result: [String: CategoryRule] = [:]
             for rule in rules { result[Self.normalize(rule.appIdentifier)] = rule }
@@ -46,8 +45,7 @@ nonisolated struct CategoryResolver: Sendable {
         customByID = byID(customRules)
         defaultByID = byID(defaultRules)
         customByName = byName(customRules)
-        defaultByName = byName(defaultRules.filter { !suppressed.contains(Self.normalize($0.appIdentifier)) })
-        self.suppressed = suppressed
+        defaultByName = byName(defaultRules)
         self.categoryIDs = categoryIDs
     }
 
@@ -55,9 +53,6 @@ nonisolated struct CategoryResolver: Sendable {
         let identifier = Self.normalize(bundleID ?? "")
         if !identifier.isEmpty {
             if let rule = customByID[identifier] { return resolution(rule, source: .userRule) }
-            if suppressed.contains(identifier) {
-                return CategoryResolution(categoryID: "other", source: .suppressed, ruleKey: identifier)
-            }
             if let rule = defaultByID[identifier] { return resolution(rule, source: .builtInRule) }
             return .unmatched
         }

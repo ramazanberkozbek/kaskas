@@ -48,4 +48,57 @@ struct DashboardCategorySnapshotTests {
         #expect(undetected.summary.usage.undetectedApps.map(\.app.name) == ["Safari"])
         #expect(snapshot.sessions.reduce(0) { $0 + $1.summary.usage.total } == snapshot.usage.total)
     }
+
+    @Test func snapshotForSelectedPastDayIncludesOnlyThatDaysIntervalsAndSessions() throws {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let yesterdayEnd = today
+
+        let yesterdayFocus = ActivityInterval(
+            kind: .studying,
+            startedAt: yesterday.addingTimeInterval(3600),
+            endedAt: yesterday.addingTimeInterval(7200)
+        )
+        let todayFocus = ActivityInterval(
+            kind: .studying,
+            startedAt: today.addingTimeInterval(1800),
+            endedAt: today.addingTimeInterval(3600)
+        )
+        let app = ForegroundApp(bundleID: "com.apple.dt.Xcode", name: "Xcode")
+        let usage = [
+            AppUsageSegment(
+                id: UUID(), app: app,
+                resolution: .init(categoryID: "coding", source: .builtInRule, ruleKey: nil),
+                startedAt: yesterday.addingTimeInterval(3600),
+                endedAt: yesterday.addingTimeInterval(7200)
+            ),
+            AppUsageSegment(
+                id: UUID(), app: app,
+                resolution: .init(categoryID: "coding", source: .builtInRule, ruleKey: nil),
+                startedAt: today.addingTimeInterval(1800),
+                endedAt: today.addingTimeInterval(3600)
+            )
+        ]
+
+        let allIntervals = [yesterdayFocus, todayFocus]
+        let yesterdayIntervals = allIntervals.filter { $0.startedAt >= yesterday && $0.startedAt < yesterdayEnd }
+        let yesterdaySessions = StudySessionGrouping.group(yesterdayIntervals)
+
+        let snapshot = DashboardCategorySnapshot.make(
+            intervals: allIntervals,
+            appUsage: usage,
+            sessions: yesterdaySessions,
+            from: yesterday,
+            to: yesterdayEnd
+        )
+
+        #expect(snapshot.usage.total == 3600)
+        #expect(snapshot.sessions.count == 1)
+        let session = try #require(snapshot.sessions.first)
+        #expect(session.value.startedAt == yesterdayFocus.startedAt)
+        #expect(session.summary.usage.total == 3600)
+        #expect(session.summary.decision == .dominant(categoryID: "coding"))
+    }
 }
+

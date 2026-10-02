@@ -104,7 +104,7 @@ struct SessionStoreTests {
         #expect(configuration.microReminderMascot == .flame)
         #expect(configuration.microReminderColor == .peach)
         #expect(configuration.menuBarDisplayMode == .iconAndTimer)
-        #expect(configuration.idleDetectionEnabled == false)
+        #expect(configuration.idleDetectionEnabled == true)
         #expect(configuration.idleThreshold == 3 * 60)
         #expect(configuration.breakWarningEnabled)
         #expect(configuration.breakWarningLeadTime == 20)
@@ -240,5 +240,26 @@ struct SessionStoreTests {
         #expect(cleanConfiguration["smartPauseEnabled"] == nil)
         #expect(cleanState["pendingIdleStartedAt"] == nil)
         #expect(cleanState["triggerPauseStartedAt"] == nil)
+    }
+
+    @Test
+    func savesAndRestoresAppLanguage() {
+        let suiteName = "SessionStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SessionStore(defaults: defaults)
+        var configuration = FocusConfiguration()
+        configuration.appLanguage = .english
+        store.save(configuration: configuration)
+
+        let loaded = store.loadConfiguration()
+        #expect(loaded.appLanguage == .english)
+
+        configuration.appLanguage = .turkish
+        store.save(configuration: configuration)
+
+        let reloaded = store.loadConfiguration()
+        #expect(reloaded.appLanguage == .turkish)
     }
 }

@@ -12,8 +12,12 @@ struct KaskasApp: App {
     var body: some Scene {
         MenuBarExtra {
             MenuBarView(controller: appDelegate.sessionController)
+                .environment(\.locale, appDelegate.sessionController.locale)
+                .id(appDelegate.sessionController.configuration.appLanguage)
         } label: {
             MenuBarStatusLabel(controller: appDelegate.sessionController)
+                .environment(\.locale, appDelegate.sessionController.locale)
+                .id(appDelegate.sessionController.configuration.appLanguage)
         }
         .menuBarExtraStyle(.window)
     }
@@ -39,7 +43,7 @@ private struct MenuBarStatusLabel: View {
             }
 
             if displayMode != .iconOnly {
-                Text(MenuBarDurationFormatter.string(for: remaining))
+                Text(MenuBarDurationFormatter.string(for: remaining, locale: controller.locale))
                     .monospacedDigit()
             }
         }

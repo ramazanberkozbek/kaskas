@@ -30,7 +30,7 @@ public final class CategoryRegistry {
     func resolution(bundleID: String?, appName: String?) -> CategoryResolution {
         if let cachedResolver { return cachedResolver.resolve(bundleID: bundleID, appName: appName) }
         let resolver = CategoryResolver(customRules: customRules, defaultRules: Self.defaultRules,
-            suppressed: suppressedDefaultRuleIdentifiers, categoryIDs: Set(categories.map(\.id)))
+            categoryIDs: Set(categories.map(\.id)))
         cachedResolver = resolver
         return resolver.resolve(bundleID: bundleID, appName: appName)
     }

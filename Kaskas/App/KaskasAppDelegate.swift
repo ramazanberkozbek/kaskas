@@ -49,16 +49,41 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
             name: .NSSystemClockDidChange,
             object: nil
         )
-        NSWorkspace.shared.notificationCenter.addObserver(
+        let center = NSWorkspace.shared.notificationCenter
+        center.addObserver(
             self,
             selector: #selector(workspaceWillSleep(_:)),
             name: NSWorkspace.willSleepNotification,
             object: nil
         )
-        NSWorkspace.shared.notificationCenter.addObserver(
+        center.addObserver(
             self,
             selector: #selector(workspaceDidWake(_:)),
             name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+        center.addObserver(
+            self,
+            selector: #selector(screensDidSleep(_:)),
+            name: NSWorkspace.screensDidSleepNotification,
+            object: nil
+        )
+        center.addObserver(
+            self,
+            selector: #selector(screensDidWake(_:)),
+            name: NSWorkspace.screensDidWakeNotification,
+            object: nil
+        )
+        center.addObserver(
+            self,
+            selector: #selector(sessionDidResignActive(_:)),
+            name: NSWorkspace.sessionDidResignActiveNotification,
+            object: nil
+        )
+        center.addObserver(
+            self,
+            selector: #selector(sessionDidBecomeActive(_:)),
+            name: NSWorkspace.sessionDidBecomeActiveNotification,
             object: nil
         )
         sessionController.start()
@@ -66,6 +91,9 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
             sessionController.openSettings()
         }
     }
+
+    private var isScreenAwake = true
+    private var isSessionActive = true
 
     func applicationDidBecomeActive(_ notification: Notification) {
         sessionController.launchAtLogin.refresh()
@@ -86,6 +114,32 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func workspaceDidWake(_ notification: Notification) {
+        isScreenAwake = true
+        isSessionActive = true
         sessionController.systemDidWake()
+    }
+
+    @objc private func screensDidSleep(_ notification: Notification) {
+        isScreenAwake = false
+        sessionController.screenOrSessionDidLock()
+    }
+
+    @objc private func screensDidWake(_ notification: Notification) {
+        isScreenAwake = true
+        if isScreenAwake && isSessionActive {
+            sessionController.screenOrSessionDidUnlock()
+        }
+    }
+
+    @objc private func sessionDidResignActive(_ notification: Notification) {
+        isSessionActive = false
+        sessionController.screenOrSessionDidLock()
+    }
+
+    @objc private func sessionDidBecomeActive(_ notification: Notification) {
+        isSessionActive = true
+        if isScreenAwake && isSessionActive {
+            sessionController.screenOrSessionDidUnlock()
+        }
     }
 }

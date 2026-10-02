@@ -120,7 +120,7 @@ final class BreakPresenter {
                     onSkip: presentation.onSkip,
                     onLockScreen: presentation.onLockScreen,
                     onOpenSettings: presentation.onOpenSettings
-                ))
+                ).environment(\.locale, presentation.configuration.appLanguage.locale))
             } else {
                 panel.contentViewController = NSHostingController(rootView: BreakBackgroundView(
                     background: presentation.configuration.breakBackground,

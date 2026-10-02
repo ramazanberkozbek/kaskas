@@ -14,6 +14,10 @@ final class SessionController {
     let categoryRegistry: CategoryRegistry
     let launchAtLogin = LaunchAtLoginController()
 
+    var locale: Locale {
+        configuration.appLanguage.locale
+    }
+
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
     @ObservationIgnored private let store: SessionStore
@@ -46,6 +50,9 @@ final class SessionController {
     ) {
         let configuration = store.loadConfiguration()
         self.configuration = configuration
+        if UserDefaults.standard.array(forKey: "AppleLanguages") == nil, configuration.appLanguage != .system {
+            UserDefaults.standard.set([configuration.appLanguage.rawValue], forKey: "AppleLanguages")
+        }
         self.store = store
         self.categoryRegistry = categoryRegistry
         appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore)
@@ -158,6 +165,29 @@ final class SessionController {
         startIdleMonitoringIfNeeded()
     }
 
+    func screenOrSessionDidLock(at now: Date = Date()) {
+        guard engine.session.phase == .focusing else { return }
+        stopIdleMonitoring(at: now)
+        engine.beginSystemPause(at: now)
+        scheduler.cancel()
+        microReminderPresenter.dismiss()
+        breakWarningPresenter.dismiss()
+        refreshSnapshot(at: now)
+        persistSession(at: now, activityKind: .computerInactive)
+    }
+
+    func screenOrSessionDidUnlock(at now: Date = Date()) {
+        if engine.systemPauseStartedAt != nil {
+            engine.endSystemPause(
+                at: now,
+                meetingActive: configuration.pauseDuringMeetings && meetingMonitor.sample()
+            )
+            if engine.manualPauseStartedAt != nil { persistSession(at: now) }
+        }
+        reconcile(at: now)
+        startIdleMonitoringIfNeeded()
+    }
+
     func reconcile(at now: Date = Date(), showsBreakWarning: Bool = true) {
         if configuration.idleDetectionEnabled { cursorIdleMonitor.sample(threshold: configuration.idleThreshold, at: now) }
         guard engine.idlePauseStartedAt == nil else { return }
@@ -266,6 +296,16 @@ final class SessionController {
         if configuration.focusDuration != self.configuration.focusDuration {
             breakWarningPresenter.dismiss()
             engine.endMeetingPause(at: now)
+        }
+        if configuration.appLanguage != self.configuration.appLanguage {
+            switch configuration.appLanguage {
+            case .system:
+                UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+            case .english:
+                UserDefaults.standard.set(["en"], forKey: "AppleLanguages")
+            case .turkish:
+                UserDefaults.standard.set(["tr"], forKey: "AppleLanguages")
+            }
         }
         self.configuration = configuration
         if !configuration.pauseDuringMeetings {

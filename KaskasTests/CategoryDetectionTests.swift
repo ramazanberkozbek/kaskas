@@ -42,13 +42,13 @@ struct CategoryDetectionTests {
         #expect(registry.resolution(bundleID: nil, appName: "Tool").source == .ambiguous)
     }
 
-    @Test func suppressionAndExplicitOtherSurviveReload() {
+    @Test func customRulesAndExplicitOtherSurviveReload() {
         let (_, registry, defaults, suite) = fixture()
         defer { defaults.removePersistentDomain(forName: suite) }
         registry.addOrUpdateRule(appIdentifier: xcode.bundleID!, displayName: "Xcode", categoryId: "design")
-        registry.suppressAutomaticAssignment(appIdentifier: xcode.bundleID!)
         let restored = CategoryRegistry(defaults: defaults)
-        #expect(restored.resolution(bundleID: xcode.bundleID, appName: xcode.name).source == .suppressed)
+        #expect(restored.resolution(bundleID: xcode.bundleID, appName: xcode.name).source == .userRule)
+        #expect(restored.resolveCategory(bundleId: xcode.bundleID, appName: xcode.name).id == "design")
         restored.addOrUpdateRule(appIdentifier: xcode.bundleID!, displayName: "Xcode", categoryId: "other")
         #expect(restored.resolution(bundleID: xcode.bundleID, appName: xcode.name).source == .userRule)
         #expect(restored.resolveCategory(bundleId: xcode.bundleID, appName: xcode.name).id == "other")
@@ -303,6 +303,18 @@ struct CategoryDetectionTests {
         monitor.stop()
         NSWorkspace.shared.notificationCenter.post(name: NSWorkspace.screensDidSleepNotification, object: NSWorkspace.shared)
         #expect(count <= 2)
+    }
+
+    @Test func currentAppIsIdentifiedAsForegroundApp() {
+        let monitor = ForegroundAppMonitor()
+        var reportedApp: ForegroundApp?
+        monitor.start { reportedApp = $0 }
+        let current = NSRunningApplication.current
+        NSWorkspace.shared.notificationCenter.post(name: NSWorkspace.didActivateApplicationNotification, object: NSWorkspace.shared,
+            userInfo: [NSWorkspace.applicationUserInfoKey: current])
+        #expect(reportedApp != nil)
+        #expect(reportedApp?.name == (current.localizedName ?? "Kaskas"))
+        monitor.stop()
     }
 }
 

@@ -30,8 +30,8 @@ nonisolated enum SessionCategoryDecision: Equatable, Sendable {
 nonisolated struct StudySessionCategorySummary: Equatable, Sendable {
     struct Policy: Equatable, Sendable {
         var minimumDuration: TimeInterval = 60
-        var minimumCoverage = 0.70
-        var minimumDominantShare = 0.60
+        var minimumCoverage = 0.50
+        var minimumDominantShare = 0.50
         var minimumLead = 0.20
     }
 

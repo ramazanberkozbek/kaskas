@@ -85,7 +85,46 @@ enum NotificationPosition: String, Codable, CaseIterable, Identifiable, Sendable
     var id: Self { self }
 }
 
+enum AppLanguage: String, Codable, CaseIterable, Identifiable, Sendable {
+    case system = "system"
+    case english = "en"
+    case turkish = "tr"
+
+    var id: Self { self }
+
+    var localeIdentifier: String {
+        switch self {
+        case .system:
+            let preferred = Locale.preferredLanguages.first ?? Locale.current.language.languageCode?.identifier ?? "en"
+            return preferred.hasPrefix("tr") ? "tr" : "en"
+        case .english:
+            return "en"
+        case .turkish:
+            return "tr"
+        }
+    }
+
+    var locale: Locale {
+        Locale(identifier: localeIdentifier)
+    }
+
+    var displayName: String {
+        switch self {
+        case .system:
+            return String(localized: "settings.language.system")
+        case .english:
+            return "English"
+        case .turkish:
+            return "Türkçe"
+        }
+    }
+}
+
 struct FocusConfiguration: Codable, Equatable, Sendable {
+    static var defaultLanguage: AppLanguage {
+        .system
+    }
+
     var focusDuration: TimeInterval
     var microReminderInterval: TimeInterval
     var breakDuration: TimeInterval
@@ -109,6 +148,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var breakWarningEnabled: Bool
     var breakWarningLeadTime: TimeInterval
     var notificationPosition: NotificationPosition
+    var appLanguage: AppLanguage
 
     init(
         focusDuration: TimeInterval = 45 * 60,
@@ -128,12 +168,13 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         microReminderColor: MicroReminderColor = .peach,
         customWallpaperPath: String? = nil,
         pauseDuringMeetings: Bool = true,
-        idleDetectionEnabled: Bool = false,
+        idleDetectionEnabled: Bool = true,
         idleThreshold: TimeInterval = 3 * 60,
         menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer,
         breakWarningEnabled: Bool = true,
         breakWarningLeadTime: TimeInterval = 20,
-        notificationPosition: NotificationPosition = .center
+        notificationPosition: NotificationPosition = .center,
+        appLanguage: AppLanguage = FocusConfiguration.defaultLanguage
     ) {
         self.focusDuration = max(1, focusDuration)
         self.microReminderInterval = max(1, microReminderInterval)
@@ -158,6 +199,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.breakWarningEnabled = breakWarningEnabled
         self.breakWarningLeadTime = min(30, max(5, (breakWarningLeadTime / 5).rounded() * 5))
         self.notificationPosition = notificationPosition
+        self.appLanguage = appLanguage
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -184,6 +226,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case breakWarningEnabled
         case breakWarningLeadTime
         case notificationPosition
+        case appLanguage
     }
 
     init(from decoder: Decoder) throws {
@@ -239,7 +282,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             idleDetectionEnabled: try container.decodeIfPresent(
                 Bool.self,
                 forKey: .idleDetectionEnabled
-            ) ?? false,
+            ) ?? true,
             idleThreshold: try container.decodeIfPresent(
                 TimeInterval.self,
                 forKey: .idleThreshold
@@ -250,7 +293,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             ) ?? .iconAndTimer,
             breakWarningEnabled: try container.decodeIfPresent(Bool.self, forKey: .breakWarningEnabled) ?? true,
             breakWarningLeadTime: try container.decodeIfPresent(TimeInterval.self, forKey: .breakWarningLeadTime) ?? 20,
-            notificationPosition: try container.decodeIfPresent(NotificationPosition.self, forKey: .notificationPosition) ?? .center
+            notificationPosition: try container.decodeIfPresent(NotificationPosition.self, forKey: .notificationPosition) ?? .center,
+            appLanguage: try container.decodeIfPresent(AppLanguage.self, forKey: .appLanguage) ?? FocusConfiguration.defaultLanguage
         )
     }
 }
