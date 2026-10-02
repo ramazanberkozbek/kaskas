@@ -4,9 +4,6 @@
     " " : {
 
     },
-    "· %lld uygulama" : {
-
-    },
     "\"%@\" kategorisini silmek istiyor musunuz?" : {
 
     },
@@ -20,6 +17,9 @@
         }
       }
     },
+    "%@ kategorisinde tanımlı" : {
+
+    },
     "%lld" : {
 
     },
@@ -27,6 +27,9 @@
 
     },
     "%lld molada bir" : {
+
+    },
+    "%lld uygulama" : {
 
     },
     "•" : {
@@ -52,6 +55,12 @@
     "break.backgroundHint" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change the background later in Settings."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -63,6 +72,12 @@
     "break.complete" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish Break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +89,12 @@
     "break.lockScreen" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock Screen"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -85,6 +106,12 @@
     "break.message" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step away from the screen, rest your eyes and mind."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -96,6 +123,12 @@
     "break.press" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PRESS:"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -107,6 +140,12 @@
     "break.remaining.label" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remaining break time"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -118,6 +157,12 @@
     "break.skip" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -129,6 +174,12 @@
     "break.snooze" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snooze"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -140,6 +191,12 @@
     "break.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look away and rest"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -151,6 +208,12 @@
     "break.toSkip" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TO SKIP"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -165,6 +228,9 @@
     "Bu kategoriye ait tüm uygulamalar 'Diğer' kategorisine aktarılacaktır." : {
 
     },
+    "Bu kategoriye uygulama ekle" : {
+
+    },
     "Bu kategoriyi düzenle" : {
 
     },
@@ -172,6 +238,7 @@
 
     },
     "categories.detection.description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -188,6 +255,7 @@
       }
     },
     "categories.detection.enabled" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -199,22 +267,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kategorileri otomatik algıla"
-          }
-        }
-      }
-    },
-    "categories.rules.block" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Block automatic assignment"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otomatik atamayı engelle"
           }
         }
       }
@@ -231,6 +283,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Özel atamayı kaldır"
+          }
+        }
+      }
+    },
+    "categories.rules.removeRule" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove rule"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuralı kaldır"
           }
         }
       }
@@ -320,13 +388,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Category breakdown"
+            "value" : "Category Breakdown"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kategori dağılımı"
+            "value" : "Kategori Dağılımı"
           }
         }
       }
@@ -336,19 +404,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Undetected"
+            "value" : "Uncategorized"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Algılanmadı"
+            "value" : "Kategorisiz"
           }
         }
       }
     },
     "dashboard.day.previous" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous day"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -359,6 +433,12 @@
     },
     "dashboard.day.selected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected day"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -369,6 +449,12 @@
     },
     "dashboard.day.total" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily total"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -379,6 +465,12 @@
     },
     "dashboard.period.today" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -686,10 +778,48 @@
     },
     "dashboard.sessions.empty" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No study sessions today."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bugün çalışma oturumu yok."
+          }
+        }
+      }
+    },
+    "dashboard.sessions.empty.selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No study sessions for the selected day."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili gün için çalışma oturumu yok."
+          }
+        }
+      }
+    },
+    "dashboard.sessions.empty.week" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No study sessions this week."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu hafta için çalışma oturumu yok."
           }
         }
       }
@@ -700,6 +830,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bugün yalnızca kısa oturumlar var."
+          }
+        }
+      }
+    },
+    "dashboard.sessions.shortOnly.selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only short sessions for the selected day."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili günde yalnızca kısa oturumlar var."
+          }
+        }
+      }
+    },
+    "dashboard.sessions.shortOnly.week" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only short sessions this week."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu haftada yalnızca kısa oturumlar var."
           }
         }
       }
@@ -716,7 +878,14 @@
       }
     },
     "dashboard.sessions.subtitle" : {
+      "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's records"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -725,12 +894,52 @@
         }
       }
     },
-    "dashboard.sessions.title" : {
+    "dashboard.sessions.subtitle.selected" : {
+      "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected day's records"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ÇALIŞMA OTURUMLARI"
+            "value" : "Seçili günün kayıtları"
+          }
+        }
+      }
+    },
+    "dashboard.sessions.subtitle.week" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week's records"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu haftanın kayıtları"
+          }
+        }
+      }
+    },
+    "dashboard.sessions.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study Sessions"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma Oturumları"
           }
         }
       }
@@ -771,6 +980,12 @@
     "dashboard.today" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -826,6 +1041,12 @@
     "dashboard.yesterday" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1073,10 +1294,7 @@
         }
       }
     },
-    "İkon" : {
-
-    },
-    "İkon ara..." : {
+    "İkon ara" : {
 
     },
     "İkonu değiştir" : {
@@ -1088,13 +1306,10 @@
     "Kapat" : {
 
     },
-    "Kategori Adı" : {
+    "Kategori" : {
 
     },
-    "Kategori adı yazın (örn: Yazılım, Ders, Borsa)..." : {
-
-    },
-    "Kategori adı..." : {
+    "Kategori adı" : {
 
     },
     "Kategori Ekle" : {
@@ -1110,6 +1325,9 @@
 
     },
     "Kural Ekle" : {
+
+    },
+    "Kuralı Güncelle" : {
 
     },
     "Kuralı Kaydet" : {
@@ -1460,13 +1678,10 @@
         }
       }
     },
+    "Mevcut: %@" : {
+
+    },
     "Minutes" : {
-
-    },
-    "Önizleme" : {
-
-    },
-    "Örn: Ders, Borsa, 3D Modelleme..." : {
 
     },
     "Özel bir çalışma kategorisi oluşturun." : {
@@ -1522,6 +1737,12 @@
     "settings.alerts.breakWarning" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break alert"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1533,6 +1754,12 @@
     "settings.alerts.breakWarning.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifies you shortly before a break starts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1544,6 +1771,12 @@
     "settings.alerts.center" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Center"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1555,6 +1788,12 @@
     "settings.alerts.leadTime" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lead time"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1566,6 +1805,12 @@
     "settings.alerts.leadTime.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long before the break the alert appears"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1577,6 +1822,12 @@
     "settings.alerts.left" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1588,6 +1839,12 @@
     "settings.alerts.notificationSettings" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Settings"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1599,6 +1856,12 @@
     "settings.alerts.notificationSettings.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust lead time and position of break alerts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1610,6 +1873,12 @@
     "settings.alerts.position" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1621,6 +1890,12 @@
     "settings.alerts.position.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview above updates when changed"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1632,6 +1907,12 @@
     "settings.alerts.preview" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1643,6 +1924,12 @@
     "settings.alerts.right" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1654,6 +1941,12 @@
     "settings.alerts.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customize reminders and gentle alerts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1665,6 +1958,12 @@
     "settings.alerts.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerts & Reminders"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1797,10 +2096,16 @@
     "settings.breakAppearance.sectionSubtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the background appearance for your break screen"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mola ekranınızın görünümünü özelleştirin"
+            "value" : "Mola ekranınızın arka plan görünümünü seçin"
           }
         }
       }
@@ -1808,10 +2113,16 @@
     "settings.breakAppearance.sectionTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ARKA PLAN"
+            "value" : "Arka Plan"
           }
         }
       }
@@ -1929,10 +2240,16 @@
     "settings.breakLayout.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "YERLEŞİM"
+            "value" : "Yerleşim"
           }
         }
       }
@@ -2039,10 +2356,16 @@
     "settings.breakSound.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break Sound"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MOLA SESİ"
+            "value" : "Mola Sesi"
           }
         }
       }
@@ -2072,10 +2395,16 @@
     "settings.categories.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categories"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "KATEGORİLER"
+            "value" : "Kategoriler"
           }
         }
       }
@@ -2094,10 +2423,16 @@
     "settings.focus.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odak ve mola"
+            "value" : "Odak"
           }
         }
       }
@@ -2105,10 +2440,16 @@
     "settings.focusDesign.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customize the break screen design"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mola ekranı arka planını seçin ve önizleyin"
+            "value" : "Mola ekranının tasarımını özelleştir"
           }
         }
       }
@@ -2116,10 +2457,16 @@
     "settings.focusDesign.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break Appearance"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odak Tasarım"
+            "value" : "Mola Görünümü"
           }
         }
       }
@@ -2127,10 +2474,16 @@
     "settings.focusDuration" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus Duration"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tam mola aralığı"
+            "value" : "Odak Süresi"
           }
         }
       }
@@ -2138,10 +2491,16 @@
     "settings.focusDuration.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration of each focus session"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaskas’ın ne sıklıkla mola hatırlatacağı"
+            "value" : "Her odak seansının süresi"
           }
         }
       }
@@ -2160,6 +2519,12 @@
     "settings.idle.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause the focus timer when you leave your Mac and offer to log that time as a break upon return."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2171,6 +2536,12 @@
     "settings.idle.enabled" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detect idle time"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2182,6 +2553,12 @@
     "settings.idle.section" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle Detection"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2193,6 +2570,12 @@
     "settings.idle.threshold" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle threshold"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2204,10 +2587,67 @@
     "settings.idle.threshold.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long without activity before idle is detected"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaç dakika imleç hareket etmezse algılanacağı"
+          }
+        }
+      }
+    },
+    "settings.language.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dil"
+          }
+        }
+      }
+    },
+    "settings.language.system" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Default"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Varsayılanı"
+          }
+        }
+      }
+    },
+    "settings.language.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dil"
           }
         }
       }
@@ -2281,10 +2721,16 @@
     "settings.longBreak.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long Breaks"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "UZUN MOLALAR"
+            "value" : "Uzun Molalar"
           }
         }
       }
@@ -2292,6 +2738,12 @@
     "settings.meetings.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silently postpone scheduled breaks while microphone or camera is in use. Audio and video are never recorded."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2303,6 +2755,12 @@
     "settings.meetings.enabled" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause breaks during meetings"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2314,6 +2772,12 @@
     "settings.meetings.section" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting Protection"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2413,13 +2877,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PREVIEW"
+            "value" : "Preview"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ÖNİZLEME"
+            "value" : "Önizleme"
           }
         }
       }
@@ -2498,13 +2962,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MENU BAR"
+            "value" : "Menu Bar"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MENÜ ÇUBUĞU"
+            "value" : "Menü çubuğu"
           }
         }
       }
@@ -2611,10 +3075,16 @@
     "settings.microReminderDesign.mascot" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mascot"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MASKOT"
+            "value" : "Maskot"
           }
         }
       }
@@ -2633,10 +3103,16 @@
     "settings.microReminderDesign.sectionTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micro-Break Reminder"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GÖZ KIRPMA HATIRLATICISI"
+            "value" : "Göz Kırpma Hatırlatıcısı"
           }
         }
       }
@@ -2754,6 +3230,12 @@
     "settings.sidebar.categories" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categories"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2765,10 +3247,16 @@
     "settings.sidebar.dashboard" : {
       "extractionState" : "manual",
       "localizations" : {
-        "tr" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dashboard"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pano"
           }
         }
       }
@@ -2776,6 +3264,12 @@
     "settings.sidebar.focus" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2787,6 +3281,12 @@
     "settings.sidebar.general" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2798,6 +3298,12 @@
     "settings.sidebar.notifications" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2809,6 +3315,12 @@
     "settings.sidebar.statistics" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3043,6 +3555,12 @@
     "stats.distribution.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study, break, and pause durations"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3054,10 +3572,16 @@
     "stats.distribution.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Distribution"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ZAMAN DAĞILIMI"
+            "value" : "Zaman Dağılımı"
           }
         }
       }
@@ -3098,6 +3622,12 @@
     "stats.hourly.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you focused throughout the day"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3109,10 +3639,16 @@
     "stats.hourly.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hourly Focus"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SAATLİK ODAKLANMA"
+            "value" : "Saatlik Odaklanma"
           }
         }
       }
@@ -3280,10 +3816,16 @@
     "stats.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's study rhythm and activities"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Çalışma düzenin ve bilgisayardan uzak kaldığın zaman"
+            "value" : "Bugünkü çalışma düzenin ve etkinliklerin"
           }
         }
       }
@@ -3295,6 +3837,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İstatistikler"
+          }
+        }
+      }
+    },
+    "stats.today.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily Summary"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlük Özet"
           }
         }
       }
@@ -3324,6 +3883,12 @@
     "stats.trend.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily study time and moving average"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3335,10 +3900,16 @@
     "stats.trend.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study Trend"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ÇALIŞMA EĞİLİMİ"
+            "value" : "Çalışma Eğilimi"
           }
         }
       }
@@ -3401,6 +3972,12 @@
     "stats.year.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Year-round study pattern"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3412,10 +3989,16 @@
     "stats.year.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly Activity"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "YILLIK ETKİNLİK"
+            "value" : "Yıllık Aktivite"
           }
         }
       }
@@ -3429,13 +4012,10 @@
     "Tümünü Genişlet" : {
 
     },
-    "Uygulama Ekle" : {
+    "Uygulama ara" : {
 
     },
-    "Uygulama veya Bundle ID ara..." : {
-
-    },
-    "Varsayılan Kurallara Sıfırla" : {
+    "Varsayılana Sıfırla" : {
 
     },
     "Varsayılanlara dönmek istediğinize emin misiniz?" : {
@@ -3517,9 +4097,6 @@
 
     },
     "Yeni Kural Ekle" : {
-
-    },
-    "Yüklü uygulama ara (örn: Cursor, Xcode, Arc)..." : {
 
     },
     "Yüklü uygulamalar taranıyor..." : {
