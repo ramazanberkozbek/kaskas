@@ -184,6 +184,7 @@ struct CategorySettingsView: View {
             .padding(.top, 20)
             .padding(.bottom, 36)
         }
+        .scrollIndicators(.hidden)
         .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
         .task { _ = await CategoryRegistry.discoverInstalledApplicationsAsync() }
         .sheet(isPresented: $showingAddSheet) {
@@ -201,7 +202,7 @@ struct CategorySettingsView: View {
             }
         }
         .confirmationDialog(
-            "\"\(categoryToDelete?.name ?? "")\" kategorisini silmek istiyor musunuz?",
+            "\"\(categoryToDelete?.localizedName ?? "")\" kategorisini silmek istiyor musunuz?",
             isPresented: Binding(
                 get: { categoryToDelete != nil },
                 set: { if !$0 { categoryToDelete = nil } }
@@ -376,7 +377,7 @@ struct CategorySettingsView: View {
                                     .foregroundStyle(.primary)
                                     .frame(width: 18)
 
-                                Text(category.name)
+                                Text(category.localizedName)
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(.primary)
 
@@ -517,7 +518,7 @@ struct CategorySettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: cat.iconName)
-                            Text(cat.name)
+                            Text(cat.localizedName)
                             if cat.id == rule.categoryId {
                                 Image(systemName: "checkmark")
                             }
@@ -529,7 +530,7 @@ struct CategorySettingsView: View {
                     Image(systemName: currentCategory.iconName)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                    Text(currentCategory.name)
+                    Text(currentCategory.localizedName)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.up.chevron.down")
@@ -739,6 +740,7 @@ struct CategorySettingsView: View {
                 }
                 .padding(4)
             }
+            .scrollIndicators(.hidden)
             .frame(height: 190)
         }
         .padding(10)

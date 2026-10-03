@@ -165,7 +165,7 @@ struct AddCategoryRuleSheet: View {
                                                     .foregroundStyle(.secondary)
                                                     .frame(width: 22, height: 22)
                                                     .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                                                    .help("\(currentCategory.name) kategorisinde tanımlı")
+                                                    .help("\(currentCategory.localizedName) kategorisinde tanımlı")
                                             }
 
                                             if isSelected {
@@ -190,6 +190,7 @@ struct AddCategoryRuleSheet: View {
                             .padding(.vertical, 4)
                         }
                     }
+                    .scrollIndicators(.hidden)
                     .frame(height: 190)
                     .background(Color.primary.opacity(0.02), in: RoundedRectangle(cornerRadius: 8))
                     .overlay(
@@ -210,7 +211,7 @@ struct AddCategoryRuleSheet: View {
                             HStack(spacing: 4) {
                                 Image(systemName: curCat.iconName)
                                     .font(.caption2)
-                                Text("Mevcut: \(curCat.name)")
+                                Text("Mevcut: \(curCat.localizedName)")
                                     .font(.caption2)
                             }
                             .foregroundStyle(.secondary)
@@ -276,7 +277,7 @@ struct AddCategoryRuleSheet: View {
                                     HStack(spacing: 5) {
                                         Image(systemName: cat.iconName)
                                             .font(.system(size: 11))
-                                        Text(cat.name)
+                                        Text(cat.localizedName)
                                             .font(.system(size: 12, weight: .medium))
                                     }
                                     .foregroundStyle(
@@ -463,6 +464,7 @@ struct AddCategoryRuleSheet: View {
                 }
                 .padding(4)
             }
+            .scrollIndicators(.hidden)
             .frame(height: 190)
         }
         .padding(10)

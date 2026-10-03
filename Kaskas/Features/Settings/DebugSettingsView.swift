@@ -1,13 +1,12 @@
 #if DEBUG
 import SwiftUI
 
-/// Development-only controls. Remove this file and the guarded section in
-/// SettingsView to remove the debug UI entirely.
+/// Development-only controls, excluded from Release builds.
 struct DebugSettingsView: View {
     let controller: SessionController
 
-    @AppStorage("debugModeEnabled") private var isEnabled = false
-    @AppStorage("debugSessionDetailsEnabled") private var sessionDetailsEnabled = false
+    @AppStorage(DebugPreferences.Key.modeEnabled, store: DebugPreferences.store) private var isEnabled = false
+    @AppStorage(DebugPreferences.Key.sessionDetailsEnabled, store: DebugPreferences.store) private var sessionDetailsEnabled = false
 
     var body: some View {
         Section {

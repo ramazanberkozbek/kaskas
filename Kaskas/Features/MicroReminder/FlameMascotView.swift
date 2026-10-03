@@ -115,13 +115,13 @@ private struct FlameAccessoryView: View {
     }
 }
 
-private struct FlameSilhouette: Shape {
+nonisolated private struct FlameSilhouette: Shape {
     func path(in rect: CGRect) -> Path {
         FlameGeometry.body.applying(FlameGeometry.transform(for: rect))
     }
 }
 
-private struct FlameCutOut: Shape {
+nonisolated private struct FlameCutOut: Shape {
     let eyeOpenness: CGFloat
     let smileProgress: CGFloat
 

@@ -6,13 +6,17 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker("settings.language.title", selection: appLanguage) {
-                    ForEach(AppLanguage.allCases) { language in
-                        languageOptionRow(for: language)
-                            .tag(language)
+                LabeledContent("settings.language.title") {
+                    SettingsMenuPicker(
+                        title: "settings.language.title",
+                        selection: appLanguage,
+                        selectedLabel: Text(controller.configuration.appLanguage.displayName)
+                    ) {
+                        ForEach(AppLanguage.allCases) { language in
+                            languageOptionRow(for: language).tag(language)
+                        }
                     }
                 }
-                .pickerStyle(.menu)
             } header: {
                 sectionHeader("settings.language.section")
             }
@@ -67,7 +71,7 @@ struct GeneralSettingsView: View {
                     title: "settings.idle.threshold",
                     subtitle: "settings.idle.threshold.description",
                     selection: idleThreshold,
-                    options: [1, 2, 3, 5, 10, 15].map { TimeInterval($0 * 60) }
+                    options: [1, 3, 5, 10].map { TimeInterval($0 * 60) }
                 )
                 .disabled(!controller.configuration.idleDetectionEnabled)
             } header: {
@@ -78,6 +82,7 @@ struct GeneralSettingsView: View {
 #endif
         }
         .formStyle(.grouped)
+        .scrollIndicators(.hidden)
         .onAppear { controller.launchAtLogin.refresh() }
     }
 

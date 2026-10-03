@@ -29,7 +29,7 @@ struct CategoryUsageView: View {
                 } else {
                     ForEach(summary.entries) { entry in
                         let category = registry.historicalCategory(for: entry.categoryID)
-                        row(name: category?.name ?? String(localized: "categories.usage.deleted"),
+                        row(name: category?.localizedName ?? String(localized: "categories.usage.deleted"),
                             symbol: category?.iconName ?? "tag", color: category?.color ?? .secondary,
                             duration: entry.duration, apps: showsAppSegments ? entry.apps : [])
                     }

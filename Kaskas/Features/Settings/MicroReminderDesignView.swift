@@ -4,7 +4,7 @@ struct MicroReminderDesignView: View {
     let controller: SessionController
     @State private var showingMascotPicker = false
 
-    private let reminderIntervals: [TimeInterval] = [5, 10, 15, 20, 25, 30].map { $0 * 60 }
+    private let reminderIntervals: [TimeInterval] = [5, 10, 20, 30].map { $0 * 60 }
 
     var body: some View {
         ScrollView {
@@ -62,13 +62,11 @@ struct MicroReminderDesignView: View {
                             Text("settings.reminderInterval")
                                 .font(.body.weight(.semibold))
                             Spacer()
-                            Picker("settings.reminderInterval", selection: reminderInterval) {
-                                ForEach(reminderIntervals, id: \.self) { duration in
-                                    Text(Self.formattedDuration(duration)).tag(duration)
-                                }
-                            }
-                            .labelsHidden()
-                            .frame(width: 150)
+                            SettingsDurationPicker(
+                                title: "settings.reminderInterval",
+                                selection: reminderInterval,
+                                options: reminderIntervals
+                            )
                         }
                         .padding(.horizontal, 16)
                         .frame(height: 56)
@@ -116,6 +114,7 @@ struct MicroReminderDesignView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(24)
         }
+        .scrollIndicators(.hidden)
         .overlay {
             if showingMascotPicker {
                 GeometryReader { geometry in
@@ -163,10 +162,6 @@ struct MicroReminderDesignView: View {
         controller.updateConfiguration(configuration)
     }
 
-    private static func formattedDuration(_ seconds: TimeInterval) -> String {
-        Measurement(value: seconds / 60, unit: UnitDuration.minutes)
-            .formatted(.measurement(width: .wide, usage: .asProvided))
-    }
 }
 
 private struct MicroReminderArtwork: View {
@@ -224,7 +219,7 @@ private struct MicroReminderArtwork: View {
     }
 }
 
-private struct MascotWheelPicker: View {
+struct MascotWheelPicker: View {
     private let slots: [MicroReminderMascot?] = [.flame, nil, nil, .glasses, nil, nil]
 
     let mascot: MicroReminderMascot
@@ -382,7 +377,7 @@ private struct MascotWheelPicker: View {
     }
 }
 
-private struct MascotWheelSegment: Shape {
+nonisolated struct MascotWheelSegment: Shape {
     let startAngle: CGFloat
     let endAngle: CGFloat
 

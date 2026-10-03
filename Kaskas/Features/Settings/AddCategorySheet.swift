@@ -193,6 +193,7 @@ struct AddCategorySheet: View {
                 }
                 .padding(4)
             }
+            .scrollIndicators(.hidden)
             .frame(height: 190)
         }
         .padding(10)

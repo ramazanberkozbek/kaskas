@@ -5,26 +5,18 @@ struct SettingsView: View {
     let controller: SessionController
 
     @State private var selection: SettingsPane = .dashboard
-    @State private var focusSubpage: FocusSubpage?
     @State private var navigationTrace = SettingsNavigationTrace()
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationSplitView {
             List(SettingsPane.allCases, selection: paneSelection) { pane in
-                Group {
-                    if pane == .focus, selection == .focus, focusSubpage != nil {
-                        // Reselecting Focus returns from its design subpage.
-                        Button { focusSubpage = nil } label: { sidebarLabel(pane) }
-                            .buttonStyle(.plain)
-                    } else {
-                        sidebarLabel(pane)
-                    }
-                }
-                .tag(pane)
+                sidebarLabel(pane)
+                    .tag(pane)
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .navigationSplitViewColumnWidth(
                 min: 180, ideal: 200, max: 260
             )
@@ -34,8 +26,10 @@ struct SettingsView: View {
         } detail: {
             detailContent
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .scrollIndicators(.hidden)
         }
         .navigationSplitViewStyle(.balanced)
+        .scrollIndicators(.hidden)
         .background(SettingsWindowChrome(colorScheme: colorScheme))
         .environment(\.locale, controller.locale)
         .id(controller.configuration.appLanguage)
@@ -47,7 +41,7 @@ struct SettingsView: View {
         case .dashboard:
             DashboardView(controller: controller)
         case .focus:
-            FocusSettingsView(controller: controller, subpage: $focusSubpage)
+            FocusSettingsView(controller: controller)
                 .onAppear { navigationTrace.appeared(SettingsPane.focus.rawValue) }
         case .alerts:
             AlertsSettingsView(controller: controller)
@@ -68,7 +62,6 @@ struct SettingsView: View {
         Binding {
             selection
         } set: { pane in
-            if pane == .focus { focusSubpage = nil }
             guard pane != selection else { return }
             navigationTrace.selected(pane.rawValue)
             selection = pane

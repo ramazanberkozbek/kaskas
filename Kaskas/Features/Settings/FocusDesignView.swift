@@ -28,29 +28,18 @@ struct FocusDesignView: View {
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                                // None / Calm gradient
+                                // Ocean
                                 WallpaperChoiceThumbnail(
-                                    background: .calmGradient,
-                                    title: "settings.breakAppearance.none",
+                                    background: .ocean,
+                                    title: "settings.breakAppearance.ocean",
                                     selectedBackground: controller.configuration.breakBackground,
                                     onSelect: {
-                                        updateBackground(.calmGradient)
+                                        updateBackground(.ocean)
                                     }
                                 ) {
-                                    ZStack {
-                                        LinearGradient(
-                                            colors: [
-                                                Color(red: 0.08, green: 0.10, blue: 0.14),
-                                                Color(red: 0.04, green: 0.05, blue: 0.08)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-
-                                        Image(systemName: "circle.slash")
-                                            .font(.system(size: 22, weight: .light))
-                                            .foregroundStyle(.white.opacity(0.4))
-                                    }
+                                    Image("BreakOcean")
+                                        .resizable()
+                                        .scaledToFill()
                                 }
 
                                 // Mountain Lake (Lake Tahoe)
@@ -201,6 +190,7 @@ struct FocusDesignView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
         }
+        .scrollIndicators(.hidden)
     }
 
     private func updateBackground(_ background: BreakBackground) {
@@ -215,8 +205,8 @@ struct FocusDesignView: View {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         panel.allowedContentTypes = [.image]
-        panel.prompt = "Seç"
-        panel.message = "Mola ekranı için bir arka plan görseli seçin"
+        panel.prompt = String(localized: "Seç")
+        panel.message = String(localized: "settings.breakAppearance.chooseImageMessage", defaultValue: "Mola ekranı için bir arka plan görseli seçin")
 
         if panel.runModal() == .OK, let url = panel.url {
             saveCustomWallpaper(from: url)
@@ -243,172 +233,9 @@ struct FocusDesignView: View {
     }
 }
 
-private struct BreakMiniPreviewCard: View {
-    let configuration: FocusConfiguration
-    let onFullscreen: () -> Void
 
-    var body: some View {
-        ZStack {
-            // Live rendering of the background
-            BreakBackgroundView(
-                background: configuration.breakBackground,
-                customWallpaperPath: configuration.customWallpaperPath
-            )
 
-            // Scaled miniature break content
-            VStack(spacing: 5) {
-                // Top localized date
-                Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
-                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(.top, 14)
-
-                Spacer()
-
-                if configuration.breakLayout == .gentleBar {
-                    HStack(alignment: .bottom, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("break.title")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .lineLimit(2)
-                            Text("break.message")
-                                .font(.system(size: 8, weight: .medium, design: .rounded))
-                                .lineLimit(2)
-                                .foregroundStyle(.white.opacity(0.85))
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .multilineTextAlignment(.leading)
-
-                        VStack(alignment: .trailing, spacing: 7) {
-                            Text("00:20")
-                                .font(.system(size: 31, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                            HStack(spacing: 4) {
-                                miniPill(title: "break.snooze", icon: "clock")
-                                miniPill(title: "break.skip", icon: "forward.fill")
-                                miniPill(title: "break.lockScreen", icon: "lock.fill")
-                            }
-                        }
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.bottom, 16)
-                } else {
-                    VStack(spacing: 4) {
-                        Text("break.title")
-                            .font(.system(size: 19, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
-
-                        Text("break.message")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.85))
-                            .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
-
-                        Capsule()
-                            .fill(.white.opacity(0.35))
-                            .frame(width: 36, height: 1.5)
-                            .padding(.top, 2)
-
-                        Text("00:20")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
-
-                        HStack(spacing: 8) {
-                            miniPill(title: "break.snooze", icon: "clock.arrow.circlepath")
-                            miniPill(title: "break.skip", icon: "forward.end.fill")
-                            miniPill(title: "break.lockScreen", icon: "lock.fill")
-                        }
-                        .padding(.top, 2)
-
-                        HStack(spacing: 3) {
-                            Text("break.press")
-                            Text("esc")
-                                .font(.system(size: 7, weight: .bold, design: .monospaced))
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 1)
-                                .background(.white.opacity(0.25), in: RoundedRectangle(cornerRadius: 2.5))
-                            Text("break.toSkip")
-                        }
-                        .font(.system(size: 8, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.65))
-                        .tracking(0.8)
-                    }
-                }
-
-                if configuration.breakLayout == .horizon {
-                    Spacer()
-                }
-            }
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 16)
-
-            // Top overlay bar with Live Preview badge and Fullscreen button
-            VStack {
-                HStack {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(.green)
-                            .frame(width: 5, height: 5)
-
-                        Text("settings.breakAppearance.livePreview")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(.white.opacity(0.92))
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .overlay {
-                        Capsule().stroke(.white.opacity(0.2), lineWidth: 0.5)
-                    }
-
-                    Spacer()
-
-                    Button(action: onFullscreen) {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(6)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .overlay {
-                                Circle().stroke(.white.opacity(0.2), lineWidth: 0.5)
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .help("settings.breakAppearance.fullscreenPreview")
-                }
-                .padding(12)
-
-                Spacer()
-            }
-        }
-        .frame(height: 220)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(.white.opacity(0.15), lineWidth: 1)
-        }
-    }
-
-    private func miniPill(title: LocalizedStringKey, icon: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 8, weight: .bold))
-            Text(title)
-                .font(.system(size: 8.5, weight: .semibold, design: .rounded))
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay {
-            Capsule().stroke(.white.opacity(0.22), lineWidth: 0.5)
-        }
-    }
-}
-
-private struct BreakLayoutThumbnail: View {
+struct BreakLayoutThumbnail: View {
     let layout: BreakLayout
 
     var body: some View {
@@ -442,7 +269,7 @@ private struct BreakLayoutThumbnail: View {
     }
 }
 
-private struct WallpaperChoiceThumbnail<Content: View>: View {
+struct WallpaperChoiceThumbnail<Content: View>: View {
     let background: BreakBackground
     let title: LocalizedStringKey
     let selectedBackground: BreakBackground
@@ -486,7 +313,7 @@ private struct WallpaperChoiceThumbnail<Content: View>: View {
     }
 }
 
-private struct CustomWallpaperChoiceThumbnail: View {
+struct CustomWallpaperChoiceThumbnail: View {
     let customPath: String?
     let isSelected: Bool
     let onSelect: () -> Void

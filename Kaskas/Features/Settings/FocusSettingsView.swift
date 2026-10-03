@@ -1,239 +1,359 @@
+import AppKit
 import SwiftUI
-
-enum FocusSubpage {
-    case focusDesign
-    case microReminderDesign
-}
+import UniformTypeIdentifiers
 
 struct FocusSettingsView: View {
     let controller: SessionController
-    @Binding var subpage: FocusSubpage?
     @Environment(\.colorScheme) private var colorScheme
-
-    private let focusDurations: [TimeInterval] = [10, 15, 20, 30, 45, 60, 90].map { $0 * 60 }
-    private let breakDurations: [TimeInterval] = [1, 3, 5, 10, 15].map { $0 * 60 }
-    private let longBreakDurations: [TimeInterval] = [3, 5, 10, 15, 20, 30].map { $0 * 60 }
+    private let focusDurations: [TimeInterval] = [20, 30, 45, 60].map { $0 * 60 }
+    private let breakDurations: [TimeInterval] = [1, 3, 5, 10].map { $0 * 60 }
+    private let longBreakDurations: [TimeInterval] = [5, 10, 15, 30].map { $0 * 60 }
     private let snoozeDurations: [TimeInterval] = [3, 5, 10, 15].map { $0 * 60 }
-    private let reminderIntervals: [TimeInterval] = [5, 10, 15, 20, 25, 30].map { $0 * 60 }
 
     var body: some View {
-        switch subpage {
-        case .focusDesign:
-            FocusDesignView(controller: controller)
-        case .microReminderDesign:
-            MicroReminderDesignView(controller: controller)
-        case nil:
-            settingsContent
-        }
-    }
-
-    private var settingsContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 30) {
-                settingsSection(title: "settings.schedule.title", note: "settings.nextCycle.note") {
-                    durationRow("settings.focusDuration", symbol: "timer", tint: .orange,
-                                selection: binding(for: \FocusConfiguration.focusDuration), options: focusDurations)
-                        .help("settings.focusDuration.description")
-                    rowDivider
-                    durationRow("settings.breakDuration", symbol: "cup.and.saucer.fill", tint: .orange,
-                                selection: binding(for: \FocusConfiguration.breakDuration), options: breakDurations)
-                        .help("settings.breakDuration.description")
-                    rowDivider
-                    durationRow("settings.snoozeDuration", symbol: "clock.arrow.circlepath", tint: .orange,
-                                selection: binding(for: \FocusConfiguration.snoozeDuration), options: snoozeDurations)
-                        .help("settings.snoozeDuration.description")
-                }
+            VStack(alignment: .leading, spacing: 28) {
+                // 1. Mola Programı (BREAK SCHEDULE)
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeading(
+                        "settings.schedule.title",
+                        subtitle: "settings.nextCycle.note"
+                    )
 
-                settingsSection(title: "settings.microReminders.title", note: "settings.reminderInterval.description") {
-                    durationRow("settings.reminderInterval", symbol: "sparkles", tint: .orange,
-                                selection: binding(for: \FocusConfiguration.microReminderInterval), options: reminderIntervals)
-                }
+                    VStack(spacing: 0) {
+                        durationRow(
+                            "settings.focusDuration",
+                            subtitle: "settings.focusDuration.description",
+                            selection: binding(for: \.focusDuration),
+                            options: focusDurations
+                        )
 
-                settingsSection(title: "settings.longBreak.title", note: "settings.longBreak.description") {
-                    settingRow("settings.longBreak.enabled", symbol: "bed.double.fill", tint: .purple) {
-                        Toggle("settings.longBreak.enabled", isOn: binding(for: \FocusConfiguration.longBreakEnabled))
-                            .labelsHidden()
-                            .toggleStyle(.switch)
-                    }
-                    rowDivider
-                    settingRow("settings.longBreak.frequency", symbol: "repeat", tint: .purple) {
-                        Picker("settings.longBreak.frequency", selection: binding(for: \FocusConfiguration.longBreakFrequency)) {
-                            ForEach(1...10, id: \.self) { frequency in
-                                if frequency == 1 {
-                                    Text("Her molada").tag(frequency)
-                                } else {
-                                    Text("\(frequency) molada bir").tag(frequency)
+                        rowDivider
+
+                        durationRow(
+                            "settings.breakDuration",
+                            subtitle: "settings.breakDuration.description",
+                            selection: binding(for: \.breakDuration),
+                            options: breakDurations
+                        )
+
+                        rowDivider
+
+                        durationRow(
+                            "settings.snoozeDuration",
+                            subtitle: "settings.snoozeDuration.description",
+                            selection: binding(for: \.snoozeDuration),
+                            options: snoozeDurations
+                        )
+
+                        rowDivider
+
+                        settingRow(
+                            "settings.longBreak.enabled",
+                            subtitle: "settings.longBreak.description"
+                        ) {
+                            Toggle("settings.longBreak.enabled", isOn: binding(for: \.longBreakEnabled))
+                                .labelsHidden()
+                                .toggleStyle(.switch)
+                        }
+
+                        if controller.configuration.longBreakEnabled {
+                            rowDivider
+
+                            settingRow(
+                                "settings.longBreak.frequency",
+                                subtitle: "settings.longBreak.frequency.description"
+                            ) {
+                                SettingsMenuPicker(
+                                    title: "settings.longBreak.frequency",
+                                    selection: binding(for: \.longBreakFrequency),
+                                    selectedLabel: controller.configuration.longBreakFrequency == 1
+                                        ? Text("Her molada")
+                                        : Text("\(controller.configuration.longBreakFrequency) molada bir")
+                                ) {
+                                    ForEach(1...10, id: \.self) { frequency in
+                                        if frequency == 1 {
+                                            Text("Her molada").tag(frequency)
+                                        } else {
+                                            Text("\(frequency) molada bir").tag(frequency)
+                                        }
+                                    }
                                 }
                             }
+
+                            rowDivider
+
+                            durationRow(
+                                "settings.longBreak.duration",
+                                subtitle: "settings.longBreak.duration.description",
+                                selection: binding(for: \.longBreakDuration),
+                                options: longBreakDurations
+                            )
                         }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        .frame(width: 136, alignment: .trailing)
                     }
-                    .disabled(!controller.configuration.longBreakEnabled)
-                    .help("settings.longBreak.frequency.description")
-                    rowDivider
-                    durationRow("settings.longBreak.duration", symbol: "hourglass", tint: .purple,
-                                selection: binding(for: \FocusConfiguration.longBreakDuration), options: longBreakDurations)
-                        .disabled(!controller.configuration.longBreakEnabled)
-                        .help("settings.longBreak.duration.description")
+                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                settingsSection(title: "settings.breakSound.title", note: "settings.breakSound.subtitle") {
-                    soundPickerRow(
-                        title: "settings.breakSound.startChoice",
-                        symbol: "speaker.wave.2.fill",
-                        selection: soundSelection(
-                            enabled: \FocusConfiguration.breakSoundEnabled,
-                            sound: \FocusConfiguration.breakSound
-                        )
+                // 2. Canlı Mola Önizleme (Hero Kartı)
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeading("settings.alerts.preview")
+
+                    BreakMiniPreviewCard(
+                        configuration: controller.configuration,
+                        onFullscreen: { controller.previewBreak() }
                     )
-                    .help("settings.breakSound.enabledDescription")
-                    rowDivider
-                    soundPickerRow(
-                        title: "settings.breakSound.endChoice",
-                        symbol: "speaker.wave.2.fill",
-                        selection: soundSelection(
-                            enabled: \FocusConfiguration.breakEndSoundEnabled,
-                            sound: \FocusConfiguration.breakEndSound
-                        )
-                    )
-                    .help("settings.breakSound.endEnabledDescription")
                 }
 
-                settingsSection(title: "settings.focusDesign.title") {
-                    settingsDestination("settings.focusDesign.title", symbol: "paintpalette.fill", tint: .pink) {
-                        subpage = .focusDesign
+                // 3. Duvar Kağıdı Bölümü (BACKGROUND)
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeading(
+                        "settings.breakAppearance.sectionTitle",
+                        subtitle: "settings.breakAppearance.sectionSubtitle"
+                    )
+
+                    VStack(alignment: .leading, spacing: 0) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                WallpaperChoiceThumbnail(
+                                    background: .ocean,
+                                    title: "settings.breakAppearance.ocean",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.ocean) }
+                                ) {
+                                    Image("BreakOcean")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .mountainLake,
+                                    title: "settings.breakAppearance.mountainLake",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.mountainLake) }
+                                ) {
+                                    Image("BreakMountainLake")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .snowPeaks,
+                                    title: "settings.breakAppearance.snowPeaks",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.snowPeaks) }
+                                ) {
+                                    Image("BreakSnowPeaks")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .aurora,
+                                    title: "settings.breakAppearance.aurora",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.aurora) }
+                                ) {
+                                    Image("BreakAurora")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .desertDunes,
+                                    title: "settings.breakAppearance.desertDunes",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.desertDunes) }
+                                ) {
+                                    Image("BreakDesertDunes")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .cosmic,
+                                    title: "settings.breakAppearance.cosmic",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.cosmic) }
+                                ) {
+                                    Image("BreakCosmic")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                CustomWallpaperChoiceThumbnail(
+                                    customPath: controller.configuration.customWallpaperPath,
+                                    isSelected: controller.configuration.breakBackground == .custom,
+                                    onSelect: {
+                                        if controller.configuration.customWallpaperPath != nil {
+                                            updateBackground(.custom)
+                                        } else {
+                                            chooseCustomWallpaper()
+                                        }
+                                    },
+                                    onPickNew: { chooseCustomWallpaper() }
+                                )
+                            }
+                            .padding(14)
+                        }
                     }
-                    .help("settings.focusDesign.description")
-                    rowDivider
-                    settingsDestination("settings.microReminderDesign.title", symbol: "sparkles", tint: .pink) {
-                        subpage = .microReminderDesign
+                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
+                }
+
+                // 4. Mola Düzeni Bölümü (LAYOUT)
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeading(
+                        "settings.breakLayout.title",
+                        subtitle: "settings.breakLayout.subtitle"
+                    )
+
+                    VStack(spacing: 0) {
+                        settingRow(
+                            "settings.breakLayout.title",
+                            subtitle: controller.configuration.breakLayout == .horizon ? "settings.breakLayout.horizonDescription" : "settings.breakLayout.gentleBarDescription"
+                        ) {
+                            SettingsMenuPicker(title: "settings.breakLayout.title", selection: Binding {
+                                controller.configuration.breakLayout
+                            } set: { newLayout in
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    var configuration = controller.configuration
+                                    configuration.breakLayout = newLayout
+                                    controller.updateConfiguration(configuration)
+                                }
+                            }, selectedLabel: Text(controller.configuration.breakLayout == .horizon
+                                ? "settings.breakLayout.horizon" : "settings.breakLayout.gentleBar")) {
+                                Text("settings.breakLayout.horizon").tag(BreakLayout.horizon)
+                                Text("settings.breakLayout.gentleBar").tag(BreakLayout.gentleBar)
+                            }
+                        }
                     }
-                    .help("settings.microReminderDesign.description")
+                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
             }
-            .frame(maxWidth: 680, alignment: .leading)
+            .frame(maxWidth: 600, alignment: .leading)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 28)
             .padding(.top, 28)
             .padding(.bottom, 36)
         }
-        .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
+        .scrollIndicators(.hidden)
+        .background(colorScheme == .dark
+            ? Color(red: 0.075, green: 0.075, blue: 0.075)
+            : Color(nsColor: .windowBackgroundColor))
     }
 
-    private func settingsSection<Content: View>(
-        title: LocalizedStringKey,
-        note: LocalizedStringKey? = nil,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    // MARK: - Yardımcı Satır ve Başlık Görünümleri
+
+    private func sectionHeading(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.primary)
-                .padding(.leading, 10)
 
-            VStack(spacing: 0, content: content)
-                .background(
-                    colorScheme == .dark
-                        ? Color(red: 0.115, green: 0.115, blue: 0.115)
-                        : Color(nsColor: .controlBackgroundColor),
-                    in: RoundedRectangle(cornerRadius: 16)
-                )
-
-            if let note {
-                Text(note)
-                    .font(.callout)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 10)
             }
         }
+        .padding(.horizontal, 4)
+    }
+
+    private var cardBackground: Color {
+        colorScheme == .dark
+            ? Color(red: 0.115, green: 0.115, blue: 0.115)
+            : Color(nsColor: .controlBackgroundColor)
     }
 
     private var rowDivider: some View {
-        Divider().padding(.leading, 58).padding(.trailing, 18)
+        Divider().padding(.horizontal, 16)
     }
 
     private func settingRow<Control: View>(
         _ title: LocalizedStringKey,
-        symbol: String,
-        tint: Color,
+        subtitle: LocalizedStringKey? = nil,
         @ViewBuilder control: () -> Control
     ) -> some View {
         HStack(spacing: 16) {
-            Image(systemName: symbol)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 24)
-                .accessibilityHidden(true)
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-            Spacer(minLength: 12)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 13.5, weight: .medium))
+                    .foregroundStyle(.primary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Spacer(minLength: 16)
+
             control()
         }
-        .frame(minHeight: 58)
-        .padding(.horizontal, 18)
+        .frame(minHeight: 56)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
     }
 
     private func durationRow(
         _ title: LocalizedStringKey,
-        symbol: String,
-        tint: Color,
+        subtitle: LocalizedStringKey? = nil,
         selection: Binding<TimeInterval>,
         options: [TimeInterval]
     ) -> some View {
-        settingRow(title, symbol: symbol, tint: tint) {
-            Picker(title, selection: selection) {
-                ForEach(options, id: \.self) { duration in
-                    Text(Self.formattedDuration(duration)).tag(duration)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(width: 136, alignment: .trailing)
+        settingRow(title, subtitle: subtitle) {
+            SettingsDurationPicker(
+                title: title,
+                selection: selection,
+                options: options
+            )
         }
     }
 
-    private func soundPickerRow(
-        title: LocalizedStringKey,
-        symbol: String,
-        selection: Binding<BreakSound?>
-    ) -> some View {
-        settingRow(title, symbol: symbol, tint: .green) {
-            Picker(title, selection: selection) {
-                Text("settings.breakSound.off").tag(nil as BreakSound?)
-                ForEach(BreakSound.allCases) { sound in
-                    Text(sound.rawValue).tag(Optional(sound))
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(width: 136, alignment: .trailing)
+    // MARK: - Arka Plan & Duvar Kağıdı İşlemleri
+
+    private func updateBackground(_ background: BreakBackground) {
+        var configuration = controller.configuration
+        configuration.breakBackground = background
+        controller.updateConfiguration(configuration)
+    }
+
+    private func chooseCustomWallpaper() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.image]
+        panel.prompt = String(localized: "Seç")
+        panel.message = String(localized: "settings.breakAppearance.chooseImageMessage", defaultValue: "Mola ekranı için bir arka plan görseli seçin")
+
+        if panel.runModal() == .OK, let url = panel.url {
+            saveCustomWallpaper(from: url)
         }
     }
 
-    private func settingsDestination(
-        _ title: LocalizedStringKey,
-        symbol: String,
-        tint: Color,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            settingRow(title, symbol: symbol, tint: tint) {
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+    private func saveCustomWallpaper(from sourceURL: URL) {
+        guard let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else { return }
+
+        let kaskasFolder = appSupport.appendingPathComponent("com.ramazanozbek.kaskas", isDirectory: true)
+        try? FileManager.default.createDirectory(at: kaskasFolder, withIntermediateDirectories: true)
+
+        let targetURL = kaskasFolder.appendingPathComponent("custom_wallpaper.\(sourceURL.pathExtension)")
+        try? FileManager.default.removeItem(at: targetURL)
+        try? FileManager.default.copyItem(at: sourceURL, to: targetURL)
+
+        var config = controller.configuration
+        config.customWallpaperPath = targetURL.path
+        config.breakBackground = .custom
+        controller.updateConfiguration(config)
     }
 
-    private static func formattedDuration(_ seconds: TimeInterval) -> String {
-        Measurement(value: seconds / 60, unit: UnitDuration.minutes)
-            .formatted(.measurement(width: .wide, usage: .asProvided))
-    }
+    // MARK: - Formatlayıcılar & Bağlantılar
+
 
     private func binding<Value>(
         for keyPath: WritableKeyPath<FocusConfiguration, Value>
@@ -246,28 +366,192 @@ struct FocusSettingsView: View {
             controller.updateConfiguration(configuration)
         }
     }
+}
 
-    private func soundSelection(
-        enabled enabledKeyPath: WritableKeyPath<FocusConfiguration, Bool>,
-        sound soundKeyPath: WritableKeyPath<FocusConfiguration, BreakSound>
-    ) -> Binding<BreakSound?> {
-        Binding {
-            let configuration = controller.configuration
-            return configuration[keyPath: enabledKeyPath]
-                ? configuration[keyPath: soundKeyPath] : nil
-        } set: { newValue in
-            var configuration = controller.configuration
-            let currentValue: BreakSound? = configuration[keyPath: enabledKeyPath]
-                ? configuration[keyPath: soundKeyPath] : nil
-            guard currentValue != newValue else { return }
-            configuration[keyPath: enabledKeyPath] = newValue != nil
-            if let newValue {
-                configuration[keyPath: soundKeyPath] = newValue
+// MARK: - Canlı Mola Önizleme Kartı (Fotoğraf 1 Tasarımı - Geniş & Ferah)
+
+struct BreakMiniPreviewCard: View {
+    let configuration: FocusConfiguration
+    let onFullscreen: () -> Void
+
+    var body: some View {
+        ZStack {
+            // Canlı arka plan renderı
+            BreakBackgroundView(
+                background: configuration.breakBackground,
+                customWallpaperPath: configuration.customWallpaperPath
+            )
+
+            // Önizleme içeriği
+            VStack(spacing: 0) {
+                // Üst Bar: "Live preview", Tarih, Tam Ekran Butonu
+                HStack(alignment: .center) {
+                    Text("settings.breakAppearance.livePreview")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                        }
+
+                    Spacer()
+
+                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                        .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.85))
+
+                    Spacer()
+
+                    Button(action: onFullscreen) {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(6)
+                            .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .help("settings.breakAppearance.fullscreenPreview")
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+
+                if configuration.breakLayout == .gentleBar {
+                    Spacer()
+
+                    // Gentle Bar Düzeni (Alt köşelere yerleşmiş ferah yerleşim)
+                    VStack(spacing: 10) {
+                        HStack(alignment: .bottom, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("break.title")
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .lineLimit(2)
+                                    .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
+
+                                Text("break.message")
+                                    .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.85))
+                                    .lineLimit(2)
+                                    .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .multilineTextAlignment(.leading)
+
+                            VStack(alignment: .trailing, spacing: 6) {
+                                Text("00:20")
+                                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
+
+                                HStack(spacing: 5) {
+                                    miniPill(title: "break.snooze", icon: "clock")
+                                    miniPill(title: "break.skip", icon: "forward.fill")
+                                    miniPill(title: "break.lockScreen", icon: "lock.fill")
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+
+                        // Press esc to skip
+                        HStack(spacing: 3) {
+                            Text("break.press")
+                            Text("esc")
+                                .font(.system(size: 6.5, weight: .bold, design: .monospaced))
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 3))
+                            Text("break.toSkip")
+                        }
+                        .font(.system(size: 7.5, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.65))
+                        .tracking(1)
+                    }
+                    .padding(.bottom, 14)
+                } else {
+                    // Horizon Düzeni: Başlık & Sayaç ekranın TAM ORTASINDA, butonlar ise EN ALTTA!
+                    Spacer(minLength: 10)
+
+                    // Merkez Kahraman İçerik (Başlık, Mesaj, Sayaç)
+                    VStack(spacing: 12) {
+                        VStack(spacing: 4) {
+                            Text("break.title")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
+
+                            Text("break.message")
+                                .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.85))
+                                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
+                        }
+
+                        Text("00:20")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
+                    }
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+
+                    Spacer(minLength: 10)
+
+                    // Alt Aksiyon Butonları & ESC İpucu
+                    VStack(spacing: 8) {
+                        HStack(spacing: 5) {
+                            miniPill(title: "break.snooze", icon: "clock.arrow.circlepath")
+                            miniPill(title: "break.skip", icon: "forward.end.fill")
+                            miniPill(title: "break.lockScreen", icon: "lock.fill")
+                        }
+
+                        HStack(spacing: 3) {
+                            Text("break.press")
+                            Text("esc")
+                                .font(.system(size: 6.5, weight: .bold, design: .monospaced))
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 3))
+                            Text("break.toSkip")
+                        }
+                        .font(.system(size: 7.5, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.65))
+                        .tracking(1)
+                    }
+                    .padding(.bottom, 16)
+                }
             }
-            controller.updateConfiguration(configuration)
-            if let newValue {
-                BreakSoundPlayer.preview(newValue)
-            }
+        }
+        .frame(height: 330)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(.white.opacity(0.14), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+    }
+
+    private func miniPill(title: LocalizedStringKey, icon: String) -> some View {
+        HStack(spacing: 3.5) {
+            Image(systemName: icon)
+                .font(.system(size: 7.5, weight: .bold))
+            Text(title)
+                .font(.system(size: 8, weight: .semibold, design: .rounded))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3.5)
+        .background(Color.black.opacity(0.42), in: Capsule())
+        .overlay {
+            Capsule().stroke(.white.opacity(0.22), lineWidth: 0.5)
         }
     }
 }

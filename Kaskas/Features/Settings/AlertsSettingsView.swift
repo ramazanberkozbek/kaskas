@@ -6,7 +6,10 @@ struct AlertsSettingsView: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private let leadTimes: [TimeInterval] = [5, 10, 15, 20, 25, 30]
+    private let leadTimes: [TimeInterval] = [5, 10, 20, 30]
+
+    private let reminderIntervals: [TimeInterval] = [5, 10, 20, 30].map { $0 * 60 }
+    @State private var showingMascotPicker = false
 
     var body: some View {
         ScrollView {
@@ -49,34 +52,148 @@ struct AlertsSettingsView: View {
                             title: "settings.alerts.leadTime",
                             subtitle: "settings.alerts.leadTime.description"
                         ) {
-                            Picker("settings.alerts.leadTime", selection: binding(for: \.breakWarningLeadTime)) {
-                                ForEach(leadTimes, id: \.self) { seconds in
-                                    Text(secondsLabel(seconds)).tag(seconds)
-                                }
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                            .frame(width: 140, alignment: .trailing)
+                            SettingsDurationPicker(
+                                title: "settings.alerts.leadTime",
+                                selection: binding(for: \.breakWarningLeadTime),
+                                options: leadTimes,
+                                minimum: 5,
+                                maximum: 30,
+                                step: 5,
+                                inputUnit: .seconds,
+                                validationHint: "settings.duration.warningRange"
+                            )
                         }
                         .disabled(!controller.configuration.breakWarningEnabled)
 
                         Divider()
-                            .padding(.leading, 16)
+                            .padding(.horizontal, 16)
 
                         settingRow(
                             title: "settings.alerts.position",
                             subtitle: "settings.alerts.position.description"
                         ) {
-                            Picker("settings.alerts.position", selection: binding(for: \.notificationPosition)) {
+                            SettingsMenuPicker(
+                                title: "settings.alerts.position",
+                                selection: positionBinding,
+                                selectedLabel: positionLabel
+                            ) {
                                 Text("settings.alerts.left").tag(NotificationPosition.left)
                                 Text("settings.alerts.center").tag(NotificationPosition.center)
                                 Text("settings.alerts.right").tag(NotificationPosition.right)
                             }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                            .frame(width: 140, alignment: .trailing)
                         }
                         .disabled(!controller.configuration.breakWarningEnabled)
+                    }
+                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
+                }
+
+                // Mola Sesleri Bölümü
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.breakSound.title")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("settings.breakSound.subtitle")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 4)
+
+                    VStack(spacing: 0) {
+                        soundPickerRow(
+                            title: "settings.breakSound.startChoice",
+                            subtitle: "settings.breakSound.enabledDescription",
+                            selection: soundSelection(
+                                enabled: \.breakSoundEnabled,
+                                sound: \.breakSound
+                            )
+                        )
+
+                        Divider().padding(.horizontal, 16)
+
+                        soundPickerRow(
+                            title: "settings.breakSound.endChoice",
+                            subtitle: "settings.breakSound.endEnabledDescription",
+                            selection: soundSelection(
+                                enabled: \.breakEndSoundEnabled,
+                                sound: \.breakEndSound
+                            )
+                        )
+                    }
+                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
+                }
+
+                // Mikro Hatırlatıcılar & Maskot Bölümü
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("settings.microReminders.title")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("settings.reminderInterval.description")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 4)
+
+                    VStack(spacing: 0) {
+                        settingRow(
+                            title: "settings.reminderInterval",
+                            subtitle: "settings.reminderInterval.description"
+                        ) {
+                            SettingsDurationPicker(
+                                title: "settings.reminderInterval",
+                                selection: binding(for: \.microReminderInterval),
+                                options: reminderIntervals
+                            )
+                        }
+
+                        Divider().padding(.horizontal, 16)
+
+                        HStack(spacing: 14) {
+                            MicroReminderMascotView(
+                                mascot: controller.configuration.microReminderMascot,
+                                color: controller.configuration.microReminderColor,
+                                size: 28,
+                                animated: false
+                            )
+                            .frame(width: 32, height: 32)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("settings.microReminderDesign.sidekick")
+                                    .font(.system(size: 14, weight: .medium))
+                                Text(LocalizedStringKey(controller.configuration.microReminderMascot.titleKey))
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer(minLength: 8)
+
+                            HStack(spacing: 8) {
+                                Button {
+                                    controller.previewMicroReminder()
+                                } label: {
+                                    Label("settings.breakAppearance.fullscreenPreview", systemImage: "play.circle")
+                                        .font(.system(size: 12, weight: .medium))
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+
+                                Button {
+                                    showingMascotPicker = true
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text("settings.microReminderDesign.mascot")
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption2.weight(.semibold))
+                                    }
+                                    .font(.system(size: 12, weight: .medium))
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                            }
+                        }
+                        .frame(minHeight: 66)
+                        .padding(.horizontal, 16)
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
@@ -87,9 +204,40 @@ struct AlertsSettingsView: View {
             .padding(.top, 28)
             .padding(.bottom, 36)
         }
+        .scrollIndicators(.hidden)
         .background(colorScheme == .dark
             ? Color(red: 0.075, green: 0.075, blue: 0.075)
             : Color(nsColor: .windowBackgroundColor))
+        .overlay {
+            if showingMascotPicker {
+                GeometryReader { geometry in
+                    ZStack {
+                        Color.black.opacity(0.68)
+                            .onTapGesture { showingMascotPicker = false }
+
+                        MascotWheelPicker(
+                            mascot: controller.configuration.microReminderMascot,
+                            color: controller.configuration.microReminderColor,
+                            onSelectMascot: { newMascot in
+                                var config = controller.configuration
+                                config.microReminderMascot = newMascot
+                                controller.updateConfiguration(config)
+                            },
+                            onSelectColor: { newColor in
+                                var config = controller.configuration
+                                config.microReminderColor = newColor
+                                controller.updateConfiguration(config)
+                            },
+                            onClose: { showingMascotPicker = false },
+                            availableSize: geometry.size
+                        )
+                    }
+                    .ignoresSafeArea()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showingMascotPicker)
     }
 
     private var cardBackground: Color {
@@ -119,9 +267,81 @@ struct AlertsSettingsView: View {
         .padding(.horizontal, 16)
     }
 
-    private func secondsLabel(_ seconds: TimeInterval) -> String {
-        Measurement(value: seconds, unit: UnitDuration.seconds)
-            .formatted(.measurement(width: .wide, usage: .asProvided))
+    private func soundPickerRow(
+        title: LocalizedStringKey,
+        subtitle: LocalizedStringKey,
+        selection: Binding<BreakSound?>
+    ) -> some View {
+        settingRow(title: title, subtitle: subtitle) {
+            HStack(spacing: 8) {
+                SettingsMenuPicker(
+                    title: title,
+                    selection: selection,
+                    selectedLabel: selection.wrappedValue.map { Text($0.rawValue) }
+                        ?? Text("settings.breakSound.off")
+                ) {
+                    Text("settings.breakSound.off").tag(nil as BreakSound?)
+                    ForEach(BreakSound.allCases) { sound in
+                        Text(sound.rawValue).tag(Optional(sound))
+                    }
+                }
+
+                if let currentSound = selection.wrappedValue {
+                    Button {
+                        BreakSoundPlayer.preview(currentSound)
+                    } label: {
+                        Image(systemName: "speaker.wave.2")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 26, height: 26)
+                            .background(Color.primary.opacity(0.06), in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("settings.breakSound.preview")
+                }
+            }
+        }
+    }
+
+
+
+    private func soundSelection(
+        enabled enabledKeyPath: WritableKeyPath<FocusConfiguration, Bool>,
+        sound soundKeyPath: WritableKeyPath<FocusConfiguration, BreakSound>
+    ) -> Binding<BreakSound?> {
+        Binding {
+            let configuration = controller.configuration
+            return configuration[keyPath: enabledKeyPath]
+                ? configuration[keyPath: soundKeyPath] : nil
+        } set: { newValue in
+            var configuration = controller.configuration
+            if let newValue {
+                configuration[keyPath: enabledKeyPath] = true
+                configuration[keyPath: soundKeyPath] = newValue
+            } else {
+                configuration[keyPath: enabledKeyPath] = false
+            }
+            controller.updateConfiguration(configuration)
+        }
+    }
+
+    private var positionLabel: Text {
+        switch controller.configuration.notificationPosition {
+        case .left: Text("settings.alerts.left")
+        case .center: Text("settings.alerts.center")
+        case .right: Text("settings.alerts.right")
+        }
+    }
+
+    private var positionBinding: Binding<NotificationPosition> {
+        Binding {
+            controller.configuration.notificationPosition
+        } set: { newPosition in
+            var configuration = controller.configuration
+            configuration.notificationPosition = newPosition
+            controller.updateConfiguration(configuration)
+            controller.previewBreakWarning()
+        }
     }
 
     private func binding<Value>(for keyPath: WritableKeyPath<FocusConfiguration, Value>) -> Binding<Value> {

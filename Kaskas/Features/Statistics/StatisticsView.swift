@@ -112,6 +112,7 @@ struct StatisticsView: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { reload(force: true) }
         .onChange(of: trendPeriod) { _, _ in reload() }
