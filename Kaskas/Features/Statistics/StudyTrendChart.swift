@@ -34,7 +34,7 @@ struct StudyTrendChart: View {
         }
         .chartLegend(.hidden)
         .chartYAxis { AxisMarks(position: .trailing) }
-        .chartXAxis { AxisMarks(values: .stride(by: .day, count: chartPoints.count == 7 ? 1 : 5)) }
+        .chartXAxis { AxisMarks(values: .stride(by: .day, count: chartPoints.count <= 7 ? 1 : 5)) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {

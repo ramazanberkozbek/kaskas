@@ -66,7 +66,18 @@
         }
       }
     },
+    "%lld / %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
     "%lld dk" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5037,6 +5048,23 @@
         }
       }
     },
+    "stats.apps.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time by App"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamalarda Geçen Süre"
+          }
+        }
+      }
+    },
     "stats.axis.day" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5067,6 +5095,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saat"
+          }
+        }
+      }
+    },
+    "stats.categories.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time by Category"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategorilerde Geçen Süre"
           }
         }
       }
@@ -5122,6 +5167,23 @@
         }
       }
     },
+    "stats.duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Süre"
+          }
+        }
+      }
+    },
     "stats.empty" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5135,6 +5197,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaskas bu sürümden itibaren zaman kaydetmeye başladı."
+          }
+        }
+      }
+    },
+    "stats.hourly.average" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily average"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlük ortalama"
+          }
+        }
+      }
+    },
+    "stats.hourly.averageSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily average focus time for each hour across the selected 30 days"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili 30 günde, her saat için günlük ortalama odaklanma süresi"
           }
         }
       }
@@ -5428,6 +5524,23 @@
         }
       }
     },
+    "stats.range.scope" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All charts use the selected period; the yearly view shows the selected date’s year."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm grafikler seçili dönemi, yıllık görünüm ise seçili tarihin yılını gösterir."
+          }
+        }
+      }
+    },
     "stats.storageWarning" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5458,6 +5571,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bugünkü çalışma düzenin ve etkinliklerin"
+          }
+        }
+      }
+    },
+    "stats.summary.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study and break time in the selected date range"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili tarih aralığındaki çalışma ve mola süreleri"
+          }
+        }
+      }
+    },
+    "stats.summary.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period Summary"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dönem Özeti"
           }
         }
       }
@@ -5560,6 +5707,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çalışma Eğilimi"
+          }
+        }
+      }
+    },
+    "stats.usage.nextPage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki sayfa"
+          }
+        }
+      }
+    },
+    "stats.usage.page" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa"
+          }
+        }
+      }
+    },
+    "stats.usage.previousPage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous page"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki sayfa"
           }
         }
       }

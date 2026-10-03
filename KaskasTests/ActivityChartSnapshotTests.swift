@@ -9,6 +9,42 @@ struct ActivityChartSnapshotTests {
         return value
     }
 
+    @Test func commonPeriodKeepsChartsAndCategoriesAlignedAcrossYearBoundaries() throws {
+        let calendar = calendar()
+        let end = try #require(calendar.date(from: DateComponents(year: 2026, month: 1, day: 3, hour: 15)))
+        for period in StatisticsPeriod.allCases {
+            let window = period.window(endingAt: end, calendar: calendar)
+            let exclusiveEnd = try #require(calendar.date(byAdding: .day, value: 1, to: window.end))
+            let intervals = [ActivityInterval(kind: .studying,
+                startedAt: window.start.addingTimeInterval(-3600), endedAt: window.start.addingTimeInterval(3600)),
+                ActivityInterval(kind: .studying, startedAt: exclusiveEnd.addingTimeInterval(-1800),
+                                 endedAt: exclusiveEnd.addingTimeInterval(1800))]
+            let snapshot = StatisticsChartSnapshot.make(intervals: intervals, now: end,
+                trendWindow: window, distributionWindow: window, hourlyWindow: window,
+                year: 2026, calendar: calendar)
+            let categories = CategoryUsageSummary.make(intervals: intervals, usage: [], from: window.start, to: exclusiveEnd)
+            #expect(snapshot.distributionDays.count == period.rawValue)
+            #expect(snapshot.trend.points.map(\.date) == snapshot.distributionDays.map(\.date))
+            #expect(snapshot.hourlyDays.map(\.date) == snapshot.distributionDays.map(\.date))
+            #expect(snapshot.distributionDays.reduce(0) { $0 + $1.studying } == categories.total)
+            #expect(categories.total == 5400)
+        }
+    }
+
+    @Test func monthlyHourlyAverageIncludesAllThirtyDaysIncludingEmptyDays() throws {
+        let calendar = calendar()
+        let end = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 30)))
+        let window = StatisticsPeriod.thirty.window(endingAt: end, calendar: calendar)
+        let start = window.start.addingTimeInterval(9 * 3600)
+        let intervals = [ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(3600))]
+        let snapshot = StatisticsChartSnapshot.make(intervals: intervals, now: end,
+            trendWindow: window, distributionWindow: window, hourlyWindow: window, year: 2026, calendar: calendar)
+        #expect(snapshot.averageHourlyPoints.count == 24)
+        #expect(snapshot.averageHourlyPoints.first { $0.hour == 9 }?.minutes == 2)
+        #expect(snapshot.averageHourlyPoints.reduce(0) { $0 + $1.minutes } == 2)
+        #expect(StatisticsChartSnapshot.empty.averageHourlyPoints.isEmpty)
+    }
+
     @Test func trendAverageIncludesTheSixPrecedingDaysAndEmptyDays() throws {
         let calendar = calendar()
         let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 20)))

@@ -31,6 +31,15 @@ nonisolated struct CategoryUsageSummary: Equatable, Sendable {
 
     var resolvedDuration: TimeInterval { entries.reduce(0) { $0 + $1.resolvedDuration } }
 
+    /// Combines an app's historical category assignments and unresolved visits.
+    var apps: [AppEntry] {
+        var totals: [String: AppEntry] = [:]
+        for entry in entries.flatMap(\.apps) + undetectedApps {
+            Self.addApp(entry.app, duration: entry.duration, to: &totals)
+        }
+        return Self.sortedApps(totals)
+    }
+
     /// Clips to the authoritative study timeline, including retrospective idle edits.
     /// Overlapping/replayed usage is counted once, with a deterministic first-record winner.
     static func make(intervals: [ActivityInterval], usage: [AppUsageSegment], from start: Date, to end: Date) -> Self {

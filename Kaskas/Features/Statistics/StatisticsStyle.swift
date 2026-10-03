@@ -48,12 +48,19 @@ extension ActivityKind {
 }
 
 enum StatisticsPeriod: Int, CaseIterable, Identifiable {
+    case day = 1
     case seven = 7
     case thirty = 30
 
     var id: Self { self }
 
-    var labelKey: String { self == .seven ? "stats.period.seven" : "stats.period.thirty" }
+    var labelKey: String {
+        switch self {
+        case .day: "stats.hourly.day"
+        case .seven: "stats.period.seven"
+        case .thirty: "stats.period.thirty"
+        }
+    }
 
     func window(endingAt endDate: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
         let end = calendar.startOfDay(for: endDate)

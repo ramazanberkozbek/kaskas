@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct YearActivityHeatmap: View {
-    @Binding var selectedYear: Int
+    let selectedYear: Int
     let data: YearHeatmapData
     let scheme: ColorScheme
 
@@ -26,27 +26,10 @@ struct YearActivityHeatmap: View {
             }
 
             VStack(alignment: .leading, spacing: 16) {
-                ControlGroup {
-                    Button { selectedYear -= 1 } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .accessibilityLabel("stats.previousYear")
-                    Menu {
-                        ForEach((max(2015, Calendar.current.component(.year, from: Date()) - 20)...Calendar.current.component(.year, from: Date())).reversed(), id: \.self) { year in
-                            Button(year.formatted(.number.grouping(.never))) { selectedYear = year }
-                        }
-                    } label: {
-                        Text(selectedYear.formatted(.number.grouping(.never)))
-                            .monospacedDigit()
-                            .frame(minWidth: 55)
-                    }
-                    Button { selectedYear += 1 } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                    .disabled(selectedYear >= Calendar.current.component(.year, from: Date()))
-                    .accessibilityLabel("stats.nextYear")
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                Text(selectedYear.formatted(.number.grouping(.never)))
+                    .font(.subheadline.weight(.medium))
+                    .monospacedDigit()
+                    .frame(maxWidth: .infinity, alignment: .trailing)
 
                 HStack(alignment: .bottom, spacing: 7) {
                     weekdayLabels

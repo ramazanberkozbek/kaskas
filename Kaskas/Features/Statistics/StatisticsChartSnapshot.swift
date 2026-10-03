@@ -24,6 +24,16 @@ struct StatisticsChartSnapshot {
     let hourlyUpperBound: Double
     let year: YearHeatmapData
 
+    /// Includes empty days so the monthly view shows a daily average, not a total.
+    var averageHourlyPoints: [HourlyPoint] {
+        guard let lastDay = hourlyDays.last else { return [] }
+        var totals = Array(repeating: 0.0, count: 24)
+        for point in hourlyPoints { totals[point.hour] += point.minutes }
+        return totals.enumerated().map { hour, minutes in
+            HourlyPoint(date: lastDay.date, hour: hour, minutes: minutes / Double(hourlyDays.count))
+        }
+    }
+
     static let empty = Self(today: .init(date: .distantPast), trend: .empty, distributionDays: [],
                             distributionPoints: [], hourlyDays: [], hourlyPoints: [], hourlyUpperBound: 60, year: .empty)
 

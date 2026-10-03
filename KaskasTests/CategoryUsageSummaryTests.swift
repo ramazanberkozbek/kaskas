@@ -19,6 +19,23 @@ struct CategoryUsageSummaryTests {
               startedAt: start.addingTimeInterval(from), endedAt: start.addingTimeInterval(to))
     }
 
+    @Test func appBreakdownCombinesHistoricalCategoriesAndUnresolvedVisitsWithoutInventingUsage() {
+        let renamedXcode = ForegroundApp(bundleID: " COM.APPLE.DT.XCODE ", name: "Renamed Xcode")
+        let summary = CategoryUsageSummary.make(intervals: [focus(0, 300)], usage: [
+            segment(xcode, "coding", 0, 60),
+            segment(renamedXcode, "design", 60, 120),
+            segment(xcode, "other", 120, 180, source: .unmatched),
+            segment(safari, "browsing", 180, 240)
+        ], from: start, to: start.addingTimeInterval(300))
+
+        #expect(summary.apps.count == 2)
+        #expect(summary.apps.map(\.duration) == [180, 60])
+        #expect(summary.apps.first?.id == "bundle:com.apple.dt.xcode")
+        #expect(summary.apps.reduce(0) { $0 + $1.duration } + summary.unrecordedDuration == summary.total)
+        #expect(summary.unrecordedDuration == 60)
+        #expect(CategoryUsageSummary.empty.apps.isEmpty)
+    }
+
     @Test func repeatedAppVisitsAreCombinedAndSortedWithinEachCategory() throws {
         let summary = CategoryUsageSummary.make(intervals: [focus(0, 600)], usage: [
             segment(xcode, "coding", 0, 120), segment(code, "coding", 120, 180),

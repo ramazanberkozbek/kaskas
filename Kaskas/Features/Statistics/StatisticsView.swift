@@ -5,15 +5,10 @@ import SwiftUI
 struct StatisticsView: View {
     let controller: SessionController
 
-    @State private var trendPeriod: StatisticsPeriod = .seven
-    @State private var trendEndDate = Calendar.current.startOfDay(for: Date())
-    @State private var distributionPeriod: StatisticsPeriod = .seven
-    @State private var distributionEndDate = Calendar.current.startOfDay(for: Date())
-    @State private var hourlyPeriod: HourlyPeriod = .day
-    @State private var hourlyEndDate = Calendar.current.startOfDay(for: Date())
+    @State private var period: StatisticsPeriod = .seven
+    @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var hoveredDistributionDate: Date?
     @State private var hoveredHour: Int?
-    @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
     @State private var categorySummary: CategoryUsageSummary = .empty
@@ -28,88 +23,79 @@ struct StatisticsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+            LazyVStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing, pinnedViews: [.sectionHeaders]) {
                 SettingsPaneHeader(title: "settings.sidebar.statistics")
 
-                VStack(alignment: .leading, spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("stats.today.title")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.primary)
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("stats.summary.title")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.primary)
 
-                        Text("stats.subtitle")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                            Text("stats.summary.subtitle")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        summaryCards
                     }
 
-                    summaryCards
-                }
+                    chartSection(
+                        title: "stats.trend.title",
+                        subtitle: "stats.trend.subtitle",
+                        legend: [
+                            (StatisticsStyle.studying, "stats.kind.studying"),
+                            (StatisticsStyle.average, "stats.trend.average")
+                        ]
+                    ) {
+                        StudyTrendChart(data: chartSnapshot.trend)
+                    }
 
-                chartSection(
-                    title: "stats.trend.title",
-                    subtitle: "stats.trend.subtitle",
-                    legend: [
-                        (StatisticsStyle.studying, "stats.kind.studying"),
-                        (StatisticsStyle.average, "stats.trend.average")
-                    ]
-                ) {
-                    StatisticsRangeControls(
-                        period: $trendPeriod,
-                        endDate: $trendEndDate,
-                        now: now
+                    CategoryUsageView(
+                        summary: categorySummary,
+                        registry: controller.categoryRegistry,
+                        storageFailed: controller.appUsage.storageFailed,
+                        showsAppSegments: true
                     )
-                    StudyTrendChart(data: chartSnapshot.trend)
-                }
 
-                CategoryUsageView(
-                    summary: categorySummary,
-                    registry: controller.categoryRegistry,
-                    storageFailed: controller.appUsage.storageFailed,
-                    showsAppSegments: true
-                )
+                    UsageDonutCharts(summary: categorySummary, registry: controller.categoryRegistry)
 
-                chartSection(
-                    title: "stats.distribution.title",
-                    subtitle: "stats.distribution.subtitle",
-                    legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
-                ) {
-                    StatisticsRangeControls(
-                        period: $distributionPeriod,
-                        endDate: $distributionEndDate,
-                        now: now
+                    chartSection(
+                        title: "stats.distribution.title",
+                        subtitle: "stats.distribution.subtitle",
+                        legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
+                    ) {
+                        distributionChart
+                    }
+
+                    chartSection(
+                        title: "stats.hourly.title",
+                        subtitle: period == .thirty ? "stats.hourly.averageSubtitle" : "stats.hourly.subtitle",
+                        legend: hourlyPeriod == .day
+                            ? [(StatisticsStyle.computerInactive, hourlyValueLabel)]
+                            : hourlyDays.map { (hourlyColor(for: $0.date), $0.date.formatted(.dateTime.weekday(.abbreviated).day().locale(locale))) }
+                    ) {
+                        hourlyChart
+                    }
+
+                    YearActivityHeatmap(
+                        selectedYear: selectedYear,
+                        data: chartSnapshot.year,
+                        scheme: colorScheme
                     )
-                    distributionChart
-                }
 
-                chartSection(
-                    title: "stats.hourly.title",
-                    subtitle: "stats.hourly.subtitle",
-                    legend: hourlyPeriod == .day
-                        ? [(StatisticsStyle.computerInactive, "stats.kind.studying")]
-                        : hourlyDays.map { (hourlyColor(for: $0.date), $0.date.formatted(.dateTime.weekday(.abbreviated).day().locale(locale))) }
-                ) {
-                    HourlyRangeControls(
-                        period: $hourlyPeriod,
-                        endDate: $hourlyEndDate,
-                        now: now
-                    )
-                    hourlyChart
-                }
-
-                YearActivityHeatmap(
-                    selectedYear: $selectedYear,
-                    data: chartSnapshot.year,
-                    scheme: colorScheme
-                )
-
-                if controller.activityStorageFailed {
-                    Label("stats.storageWarning", systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                } else if loaded && intervals.isEmpty {
-                    Text("stats.empty")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if controller.activityStorageFailed {
+                        Label("stats.storageWarning", systemImage: "exclamationmark.triangle")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    } else if loaded && intervals.isEmpty {
+                        Text("stats.empty")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    dateFilterBar
                 }
             }
             .settingsPageContent()
@@ -117,37 +103,41 @@ struct StatisticsView: View {
         .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { reload(force: true) }
-        .onChange(of: trendPeriod) { _, _ in reload() }
-        .onChange(of: trendEndDate) { _, _ in reload() }
-        .onChange(of: distributionPeriod) { _, _ in hoveredDistributionDate = nil; reload() }
-        .onChange(of: distributionEndDate) { _, _ in hoveredDistributionDate = nil; reload() }
-        .onChange(of: hourlyPeriod) { _, _ in hoveredHour = nil; reload() }
-        .onChange(of: hourlyEndDate) { _, _ in hoveredHour = nil; reload() }
-        .onChange(of: selectedYear) { _, _ in reload() }
+        .onChange(of: period) { _, _ in resetSelectionAndReload() }
+        .onChange(of: endDate) { _, _ in resetSelectionAndReload() }
         .onReceive(refreshClock) { date in
             let previousToday = Calendar.current.startOfDay(for: now)
             now = date
             let today = Calendar.current.startOfDay(for: date)
-            if trendEndDate == previousToday { trendEndDate = today }
-            if distributionEndDate == previousToday { distributionEndDate = today }
-            if hourlyEndDate == previousToday { hourlyEndDate = today }
+            if endDate == previousToday { endDate = today }
             reload(force: true)
         }
     }
 
-    private var today: DailyActivity {
-        chartSnapshot.today
+    private var dateFilterBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            StatisticsRangeControls(period: $period, endDate: $endDate, now: now)
+            Text("stats.range.scope")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 12)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .overlay(alignment: .bottom) { Divider() }
     }
+
+    private var selectedYear: Int { Calendar.current.component(.year, from: endDate) }
+    private var hourlyPeriod: HourlyPeriod { period == .seven ? .week : .day }
+    private var hourlyValueLabel: String { period == .thirty ? "stats.hourly.average" : "stats.kind.studying" }
 
     private var summaryKinds: [ActivityKind] {
         [.studying, .breakTime, .kaskasPaused, .computerInactive]
     }
 
     private func summaryDuration(for kind: ActivityKind) -> TimeInterval {
-        if kind == .kaskasPaused {
-            return today.duration(for: .kaskasPaused) + today.duration(for: .meeting)
+        chartSnapshot.distributionDays.reduce(0) { total, day in
+            total + day.duration(for: kind) + (kind == .kaskasPaused ? day.duration(for: .meeting) : 0)
         }
-        return today.duration(for: kind)
     }
 
     private var summaryCards: some View {
@@ -192,16 +182,8 @@ struct StatisticsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var trendWindow: (start: Date, end: Date) {
-        trendPeriod.window(endingAt: trendEndDate)
-    }
-
-    private var distributionWindow: (start: Date, end: Date) {
-        distributionPeriod.window(endingAt: distributionEndDate)
-    }
-
-    private var hourlyWindow: (start: Date, end: Date) {
-        hourlyPeriod.window(endingAt: hourlyEndDate)
+    private var selectedWindow: (start: Date, end: Date) {
+        period.window(endingAt: endDate)
     }
 
     private var distributionDays: [DailyActivity] { chartSnapshot.distributionDays }
@@ -225,7 +207,7 @@ struct StatisticsView: View {
         .chartYAxis {
             AxisMarks(position: .trailing, values: [0, 6, 12, 18, 24])
         }
-        .chartXAxis { AxisMarks(values: .stride(by: .day, count: distributionPeriod == .seven ? 1 : 5)) }
+        .chartXAxis { AxisMarks(values: .stride(by: .day, count: period == .thirty ? 5 : 1)) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {
@@ -266,12 +248,14 @@ struct StatisticsView: View {
         .frame(height: 220)
     }
 
-    private var hourlyPoints: [StatisticsChartSnapshot.HourlyPoint] { chartSnapshot.hourlyPoints }
+    private var hourlyPoints: [StatisticsChartSnapshot.HourlyPoint] {
+        period == .thirty ? chartSnapshot.averageHourlyPoints : chartSnapshot.hourlyPoints
+    }
 
     private var hourlyChart: some View {
         let points = hourlyPoints
         let selectedHour = hoveredHour
-        let upperBound = chartSnapshot.hourlyUpperBound
+        let upperBound = max(60, (points.map(\.minutes).max() ?? 0).rounded(.up))
         return Chart {
             if hourlyPeriod == .day {
                 ForEach(points) { point in
@@ -315,7 +299,7 @@ struct StatisticsView: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let minutes = value.as(Int.self) {
-                        Text("\(minutes) dk")
+                        Text(StatisticsDuration.label(Double(minutes) * 60, locale: locale))
                     }
                 }
             }
@@ -380,7 +364,7 @@ struct StatisticsView: View {
                             } else {
                                 ForEach(activePoints) { point in
                                     tooltipRow(
-                                        hourlyPeriod == .day ? "stats.kind.studying" : point.date.formatted(.dateTime.weekday(.abbreviated).day().locale(locale)),
+                                        hourlyPeriod == .day ? hourlyValueLabel : point.date.formatted(.dateTime.weekday(.abbreviated).day().locale(locale)),
                                         value: StatisticsDuration.label(point.minutes * 60, locale: locale),
                                         color: hourlyColor(for: point.date),
                                         localized: hourlyPeriod == .day
@@ -502,15 +486,21 @@ struct StatisticsView: View {
         }
     }
 
+    private func resetSelectionAndReload() {
+        hoveredDistributionDate = nil
+        hoveredHour = nil
+        reload()
+    }
+
     private func reload(force: Bool = false) {
         let trace = PerformanceTrace.begin("Statistics reload")
         defer { PerformanceTrace.end(trace) }
         let calendar = Calendar.current
-        let trendStart = calendar.date(byAdding: .day, value: -6, to: trendWindow.start) ?? trendWindow.start
+        let trendStart = calendar.date(byAdding: .day, value: -6, to: selectedWindow.start) ?? selectedWindow.start
         let yearStart = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)) ?? now
-        let start = min(trendStart, distributionWindow.start, hourlyWindow.start, yearStart)
+        let start = min(trendStart, yearStart)
         let end = calendar.date(byAdding: .day, value: 1, to: now) ?? now
-        let categoryEnd = calendar.date(byAdding: .day, value: 1, to: trendWindow.end) ?? now
+        let categoryEnd = calendar.date(byAdding: .day, value: 1, to: selectedWindow.end) ?? now
         let coversWindow = loadedStart.map { start >= $0 } == true && loadedEnd.map { end <= $0 } == true
         if force || !coversWindow {
             intervals = controller.activityIntervals(from: start, to: end, now: now)
@@ -518,10 +508,10 @@ struct StatisticsView: View {
             loadedEnd = end
             loaded = true
         }
-        let appUsage = controller.appUsage.segments(from: trendWindow.start, to: categoryEnd, now: now)
-        categorySummary = .make(intervals: intervals, usage: appUsage, from: trendWindow.start, to: categoryEnd)
-        chartSnapshot = .make(intervals: intervals, now: now, trendWindow: trendWindow,
-                              distributionWindow: distributionWindow, hourlyWindow: hourlyWindow, year: selectedYear)
+        let appUsage = controller.appUsage.segments(from: selectedWindow.start, to: categoryEnd, now: now)
+        categorySummary = .make(intervals: intervals, usage: appUsage, from: selectedWindow.start, to: categoryEnd)
+        chartSnapshot = .make(intervals: intervals, now: now, trendWindow: selectedWindow,
+                              distributionWindow: selectedWindow, hourlyWindow: selectedWindow, year: selectedYear)
     }
 }
 
@@ -582,8 +572,8 @@ private struct StatisticsDateNavigator: View {
     }
 
     private var rangeLabel: String {
-        let start = startDate.formatted(.dateTime.day().month(.abbreviated).locale(locale))
-        let end = endDate.formatted(.dateTime.day().month(.abbreviated).locale(locale))
+        let start = startDate.formatted(.dateTime.day().month(.abbreviated).year().locale(locale))
+        let end = endDate.formatted(.dateTime.day().month(.abbreviated).year().locale(locale))
         return stepDays == 1 ? end : "\(start)–\(end)"
     }
 }
@@ -609,33 +599,7 @@ struct StatisticsRangeControls: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 112)
-        }
-    }
-}
-
-private struct HourlyRangeControls: View {
-    @Binding var period: HourlyPeriod
-    @Binding var endDate: Date
-    let now: Date
-
-    var body: some View {
-        HStack(spacing: 10) {
-            StatisticsDateNavigator(
-                endDate: $endDate,
-                startDate: period.window(endingAt: endDate).start,
-                stepDays: period.rawValue,
-                now: now
-            )
-            Spacer(minLength: 8)
-            Picker("stats.period", selection: $period) {
-                ForEach(HourlyPeriod.allCases) { item in
-                    Text(LocalizedStringKey(item.labelKey)).tag(item)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 132)
+            .frame(width: 180)
         }
     }
 }
