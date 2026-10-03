@@ -7,3 +7,5 @@ All photographs are used under the [Unsplash License](https://unsplash.com/licen
 - `BreakAurora.jpg`: “Purple and blue abstract wave lights” by Joel Filipe. Source: https://unsplash.com/photos/QwoNAhbmLLo
 - `BreakDesertDunes.jpg`: “Sand dunes in desert under clear sky” by Jeremy Bishop. Source: https://unsplash.com/photos/EwKXn5CapA4
 - `BreakCosmic.jpg`: “Constellation of stars and nebula in deep space” by Vincentiu Solomon. Source: https://unsplash.com/photos/ln5drpv_ImI
+- `BreakOcean.jpg`: “Tropical turquoise ocean water and beach” by Sean Oulashin. Source: https://unsplash.com/photos/KMn4VEeEPR8
+

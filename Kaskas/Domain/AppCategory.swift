@@ -32,6 +32,21 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         }
     }
 
+    public var localizedName: String {
+        guard isBuiltIn else { return name }
+        switch id {
+        case "coding": return String(localized: "category.coding", defaultValue: "Yazılım")
+        case "design": return String(localized: "category.design", defaultValue: "Tasarım")
+        case "writing": return String(localized: "category.writing", defaultValue: "Yazı")
+        case "communication": return String(localized: "category.communication", defaultValue: "İletişim")
+        case "browsing": return String(localized: "category.browsing", defaultValue: "İnternet")
+        case "entertainment": return String(localized: "category.entertainment", defaultValue: "Eğlence")
+        case "productivity": return String(localized: "category.productivity", defaultValue: "Üretkenlik")
+        case "other": return String(localized: "category.other", defaultValue: "Diğer")
+        default: return name
+        }
+    }
+
     public static let coding = AppCategory(
         id: "coding",
         name: "Yazılım",
@@ -80,6 +95,14 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         isBuiltIn: true
     )
 
+    public static let productivity = AppCategory(
+        id: "productivity",
+        name: "Üretkenlik",
+        iconName: "checkmark.circle.fill",
+        colorName: "teal",
+        isBuiltIn: true
+    )
+
     public static let other = AppCategory(
         id: "other",
         name: "Diğer",
@@ -95,6 +118,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         .communication,
         .browsing,
         .entertainment,
+        .productivity,
         .other
     ]
 

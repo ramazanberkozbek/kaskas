@@ -184,6 +184,8 @@ public final class CategoryRegistry {
         let lowBundle = bundleId.lowercased()
         let lowName = appName.lowercased()
 
+        if lowBundle == Bundle.main.bundleIdentifier?.lowercased() { return true }
+
         if let cache = installedIdentifiersCache {
             if (!lowBundle.isEmpty && cache.contains(lowBundle)) || (!lowName.isEmpty && cache.contains(lowName)) { return true }
             return !bundleId.isEmpty && NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) != nil
@@ -300,6 +302,17 @@ public final class CategoryRegistry {
 
     private static func mergeRunningApplications(into apps: inout [DiscoveredApp]) {
         var existingBundleIds = Set(apps.map { $0.bundleId.lowercased() })
+
+        // Include our own accessory app even when Xcode launches it from DerivedData.
+        // Keep the disk scan's build-artifact filters intact for other applications.
+        if let id = Bundle.main.bundleIdentifier,
+           existingBundleIds.insert(id.lowercased()).inserted {
+            let name = (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+                ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String)
+                ?? "Kaskas"
+            apps.append(DiscoveredApp(id: id, name: name, bundleId: id, path: Bundle.main.bundleURL.path))
+        }
+
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
             if let name = app.localizedName, let id = app.bundleIdentifier {
                 let path = app.bundleURL?.path ?? ""
@@ -415,6 +428,9 @@ public final class CategoryRegistry {
     // MARK: - Default Rules
 
     public static let defaultRules: [CategoryRule] = [
+        // Üretkenlik
+        CategoryRule(appIdentifier: "com.ramazanozbek.kaskas", displayName: "Kaskas", categoryId: "productivity", isDefault: true),
+
         // Yazılım
         CategoryRule(appIdentifier: "com.apple.dt.Xcode", displayName: "Xcode", categoryId: "coding", isDefault: true),
         CategoryRule(appIdentifier: "com.microsoft.VSCode", displayName: "Visual Studio Code", categoryId: "coding", isDefault: true),

@@ -34,6 +34,12 @@ struct CategoryRegistryTests {
         // Entertainment
         #expect(registry.resolveCategory(bundleId: "com.spotify.client", appName: "Spotify").id == "entertainment")
 
+        // Kaskas is assigned automatically, with user overrides still taking precedence.
+        #expect(registry.resolveCategory(bundleId: "com.ramazanozbek.kaskas", appName: "Kaskas").id == "productivity")
+        #expect(registry.resolveCategory(bundleId: nil, appName: "Kaskas").id == "productivity")
+        registry.addOrUpdateRule(appIdentifier: "com.ramazanozbek.kaskas", displayName: "Kaskas", categoryId: "coding")
+        #expect(registry.resolveCategory(bundleId: "com.ramazanozbek.kaskas", appName: "Kaskas").id == "coding")
+
         // Unknown defaults to other
         #expect(registry.resolveCategory(bundleId: "com.unknown.randomapp", appName: "RandomApp").id == "other")
     }
@@ -108,7 +114,9 @@ struct CategoryRegistryTests {
         // Verifies no trash or build artifacts leak in
         for app in apps {
             #expect(!app.path.contains("/.Trash/"))
-            #expect(!app.path.contains("/DerivedData/"))
+            if app.bundleId != Bundle.main.bundleIdentifier {
+                #expect(!app.path.contains("/DerivedData/"))
+            }
             #expect(!app.name.isEmpty)
             #expect(!app.bundleId.isEmpty)
         }
@@ -119,6 +127,10 @@ struct CategoryRegistryTests {
 
         // Test isAppInstalled
         #expect(CategoryRegistry.isAppInstalled(bundleId: "com.apple.Safari", appName: "Safari"))
+        let ownApp = apps.first { $0.bundleId == Bundle.main.bundleIdentifier }
+        #expect(ownApp?.path == Bundle.main.bundleURL.path)
+        #expect(apps.filter { $0.bundleId == Bundle.main.bundleIdentifier }.count == 1)
+        #expect(CategoryRegistry.isAppInstalled(bundleId: Bundle.main.bundleIdentifier!, appName: "Kaskas"))
     }
 
     @Test
@@ -139,6 +151,7 @@ struct CategoryRegistryTests {
         #expect(registry.category(for: "communication")?.name == "İletişim")
         #expect(registry.category(for: "browsing")?.name == "İnternet")
         #expect(registry.category(for: "entertainment")?.name == "Eğlence")
+        #expect(registry.category(for: "productivity")?.name == "Üretkenlik")
         #expect(registry.category(for: "other")?.name == "Diğer")
     }
 

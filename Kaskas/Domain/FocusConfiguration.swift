@@ -1,24 +1,35 @@
 import Foundation
 
 enum BreakBackground: String, Codable, CaseIterable, Identifiable, Sendable {
+    case ocean
     case mountainLake
     case snowPeaks
     case aurora
     case desertDunes
     case cosmic
-    case calmGradient
     case custom
 
     var id: Self { self }
 
     var assetName: String? {
         switch self {
+        case .ocean: "BreakOcean"
         case .mountainLake: "BreakMountainLake"
         case .snowPeaks: "BreakSnowPeaks"
         case .aurora: "BreakAurora"
         case .desertDunes: "BreakDesertDunes"
         case .cosmic: "BreakCosmic"
-        case .calmGradient, .custom: nil
+        case .custom: nil
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        if raw == "calmGradient" {
+            self = .ocean
+        } else {
+            self = BreakBackground(rawValue: raw) ?? .ocean
         }
     }
 }
