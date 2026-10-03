@@ -2079,7 +2079,11 @@
         }
       }
     },
+    "Kaydet" : {
+
+    },
     "Kaydet (Enter)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2880,13 +2884,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows a preview notification when changed"
+            "value" : "Where the break warning appears on the screen"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Değiştirildiğinde önizleme bildirimini gösterir"
+            "value" : "Mola uyarısının ekranda görüneceği konum"
           }
         }
       }
@@ -3298,6 +3302,23 @@
         }
       }
     },
+    "settings.breakLayout.choice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break Layout"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola Düzeni"
+          }
+        }
+      }
+    },
     "settings.breakLayout.gentleBar" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3519,9 +3540,6 @@
         }
       }
     },
-    "settings.breakSound.preview" : {
-
-    },
     "settings.breakSound.startChoice" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3708,22 +3726,6 @@
         }
       }
     },
-    "settings.duration.idleRange" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter a duration between 1 and 240 minutes."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1–240 dakika arasında bir süre girin."
-          }
-        }
-      }
-    },
     "settings.duration.invalid" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3822,22 +3824,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Süre"
-          }
-        }
-      }
-    },
-    "settings.duration.warningRange" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose 5–30 seconds, in steps of 5."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 saniyelik adımlarla 5–30 saniye arasında seçin."
           }
         }
       }
@@ -5916,6 +5902,7 @@
       }
     },
     "Vazgeç (Esc)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
