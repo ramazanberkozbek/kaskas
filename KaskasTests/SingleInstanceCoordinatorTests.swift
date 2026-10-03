@@ -12,6 +12,7 @@ struct SingleInstanceCoordinatorTests {
         let coordinator = SingleInstanceCoordinator(
             runningInstancesProvider: { _ in [100] },
             activationHandler: { pid in activatedPID = pid },
+            lockAcquisition: { _ in true },
             exitHandler: { code in exitCode = code }
         )
 
@@ -34,6 +35,7 @@ struct SingleInstanceCoordinatorTests {
         let coordinator = SingleInstanceCoordinator(
             runningInstancesProvider: { _ in [100, 200] },
             activationHandler: { pid in activatedPID = pid },
+            lockAcquisition: { _ in false },
             exitHandler: { code in exitCode = code }
         )
 
@@ -55,6 +57,7 @@ struct SingleInstanceCoordinatorTests {
         let coordinator = SingleInstanceCoordinator(
             runningInstancesProvider: { _ in [100, 200] },
             activationHandler: { _ in },
+            lockAcquisition: { _ in Issue.record("Should bypass the lock"); return false },
             exitHandler: { code in exitCode = code }
         )
 
@@ -75,6 +78,7 @@ struct SingleInstanceCoordinatorTests {
         let coordinator = SingleInstanceCoordinator(
             runningInstancesProvider: { _ in [100] },
             activationHandler: { _ in },
+            lockAcquisition: { _ in Issue.record("Should bypass the lock"); return false },
             exitHandler: { code in exitCode = code }
         )
 
