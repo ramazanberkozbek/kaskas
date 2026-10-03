@@ -230,12 +230,7 @@ public final class CategoryRegistry {
             image = app.icon
         } else {
             let searchName = appName.hasSuffix(".app") ? appName : "\(appName).app"
-            let standardPaths = [
-                "/Applications",
-                "/System/Applications",
-                "/System/Applications/Utilities",
-                NSHomeDirectory() + "/Applications"
-            ]
+            let standardPaths = AppDiscoveryService.standardApplicationDirectories
             for basePath in standardPaths {
                 let appPath = (basePath as NSString).appendingPathComponent(searchName)
                 if FileManager.default.fileExists(atPath: appPath) {
@@ -276,25 +271,21 @@ public final class CategoryRegistry {
     }
 
     public static func discoverInstalledApplications(forceRefresh: Bool = false) -> [DiscoveredApp] {
-        if !forceRefresh, let cached = cachedApps {
-            return cached
-        }
-        installedIdentifiersCache = nil
-        var apps = AppDiscoveryService.performDiskDiscovery()
-        mergeRunningApplications(into: &apps)
-        apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        cachedApps = apps
-        return apps
+        if !forceRefresh, let cached = cachedApps { return cached }
+        return finalizeDiscoveredApps(AppDiscoveryService.performDiskDiscovery())
     }
 
     public static func discoverInstalledApplicationsAsync(forceRefresh: Bool = false) async -> [DiscoveredApp] {
-        if !forceRefresh, let cached = cachedApps {
-            return cached
-        }
-        installedIdentifiersCache = nil
-        var apps = await Task.detached(priority: .userInitiated) {
+        if !forceRefresh, let cached = cachedApps { return cached }
+        let diskApps = await Task.detached(priority: .userInitiated) {
             AppDiscoveryService.performDiskDiscovery()
         }.value
+        return finalizeDiscoveredApps(diskApps)
+    }
+
+    private static func finalizeDiscoveredApps(_ diskApps: [DiscoveredApp]) -> [DiscoveredApp] {
+        installedIdentifiersCache = nil
+        var apps = diskApps
         mergeRunningApplications(into: &apps)
         apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         cachedApps = apps

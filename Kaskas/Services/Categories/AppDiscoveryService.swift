@@ -4,6 +4,16 @@ import Foundation
 
 /// Scans disk directories and Spotlight metadata to find installed applications.
 enum AppDiscoveryService: Sendable {
+    /// Standard root directories where macOS applications are installed.
+    nonisolated static let standardApplicationDirectories: [String] = [
+        "/Applications",
+        "/System/Applications",
+        "/System/Applications/Utilities",
+        NSHomeDirectory() + "/Applications",
+        "/Users/Shared",
+        "/System/Library/CoreServices/Applications"
+    ]
+
     nonisolated static func performDiskDiscovery() -> [CategoryRegistry.DiscoveredApp] {
         var map: [String: CategoryRegistry.DiscoveredApp] = [:]
 
@@ -35,14 +45,7 @@ enum AppDiscoveryService: Sendable {
 
         // 2. Layer 2: Controlled Directory Scanning (Fallback & nested folders)
         let fm = FileManager.default
-        let scanRoots = [
-            "/Applications",
-            "/System/Applications",
-            "/System/Applications/Utilities",
-            NSHomeDirectory() + "/Applications",
-            "/Users/Shared",
-            "/System/Library/CoreServices/Applications"
-        ]
+        let scanRoots = standardApplicationDirectories
 
         for root in scanRoots {
             guard let items = try? fm.contentsOfDirectory(atPath: root) else { continue }
