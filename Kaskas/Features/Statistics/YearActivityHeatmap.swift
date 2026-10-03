@@ -6,6 +6,7 @@ struct YearActivityHeatmap: View {
     let scheme: ColorScheme
 
     @State private var hoveredDate: Date?
+    @Environment(\.locale) private var locale
 
     private let cellSize: CGFloat = 11
     private let cellSpacing: CGFloat = 3
@@ -96,7 +97,7 @@ struct YearActivityHeatmap: View {
                     .frame(width: cellSize, height: 12)
                     .overlay(alignment: .leading) {
                         if let firstOfMonth {
-                            Text(firstOfMonth.formatted(.dateTime.month(.abbreviated)).uppercased())
+                            Text(firstOfMonth.formatted(.dateTime.month(.abbreviated).locale(locale)).uppercased())
                                 .font(.system(size: 8, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: true, vertical: false)
@@ -156,7 +157,7 @@ struct YearActivityHeatmap: View {
                 set: { if !$0 && hoveredDate == date { hoveredDate = nil } }
             ), arrowEdge: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                    Text(date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(focusText)
@@ -165,7 +166,7 @@ struct YearActivityHeatmap: View {
                 }
                 .padding(10)
             }
-            .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
+            .accessibilityLabel(date.formatted(.dateTime.month(.wide).day().year().locale(locale)))
             .accessibilityValue(focusText)
     }
 

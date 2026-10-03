@@ -105,7 +105,9 @@ struct DashboardView: View {
         let visibleSessions = visibleSessions
         let groupedSessions = period == .week ? groupedSessions(visibleSessions) : []
         return ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                SettingsPaneHeader(title: "settings.sidebar.dashboard")
+
                 VStack(spacing: 14) {
                     rangeControls
                     if period == .today {
@@ -132,7 +134,7 @@ struct DashboardView: View {
                             Text(period == .today ? "dashboard.day.total" : "dashboard.week.total")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text(StatisticsDuration.label(period == .today ? (days.last?.studying ?? 0) : weekTotal))
+                            Text(StatisticsDuration.label(period == .today ? (days.last?.studying ?? 0) : weekTotal, locale: controller.locale))
                                 .font(.subheadline.weight(.semibold))
                                 .monospacedDigit()
                         }
@@ -190,8 +192,7 @@ struct DashboardView: View {
                         .foregroundStyle(.orange)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .settingsPageContent()
         }
         .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
@@ -299,9 +300,10 @@ struct DashboardView: View {
     }
 
     private var rangeLabel: String {
-        if period == .today { return endDate.formatted(.dateTime.day().month(.abbreviated)) }
-        let start = window.start.formatted(.dateTime.day().month(.abbreviated))
-        let end = window.end.formatted(.dateTime.day().month(.abbreviated))
+        let locale = controller.locale
+        if period == .today { return endDate.formatted(.dateTime.day().month(.abbreviated).locale(locale)) }
+        let start = window.start.formatted(.dateTime.day().month(.abbreviated).locale(locale))
+        let end = window.end.formatted(.dateTime.day().month(.abbreviated).locale(locale))
         return "\(start)–\(end)"
     }
 
@@ -331,35 +333,36 @@ struct DashboardView: View {
         let annotation = controller.annotation(for: session)
         let summary = item.summary
         let category = SessionCategoryPresentation(selection: .init(annotation: annotation), summary: summary,
-            registry: controller.categoryRegistry, isOngoing: session.isOngoing(startedAt: controller.activeStudyingStartedAt))
+            registry: controller.categoryRegistry, isOngoing: session.isOngoing(startedAt: controller.activeStudyingStartedAt),
+            locale: controller.locale)
         let timeRange = "\(formatTime(session.startedAt))–\(formatTime(session.endedAt))"
-        let durationLabel = SessionDuration.minutesLabel(session.focusedDuration)
+        let durationLabel = SessionDuration.minutesLabel(session.focusedDuration, locale: controller.locale)
         let categoryTitle = (category.mixedBreakdown?.isEmpty == false) ? category.mixedBreakdown! : category.title
         return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 14) {
-                Image(systemName: "timer")
-                    .foregroundStyle(StatisticsStyle.studying)
-                    .frame(width: 30)
-                HStack(alignment: .center, spacing: 10) {
-                    Text(durationLabel)
-                        .font(.subheadline.weight(.semibold))
+            HStack(spacing: 10) {
+                Text(durationLabel)
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .frame(width: 50, alignment: .leading)
+                HStack(spacing: 6) {
+                    Text(timeRange)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                         .monospacedDigit()
-                        .frame(width: 50, alignment: .leading)
-                    HStack(spacing: 6) {
-                        Text(timeRange)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                        if session.isOngoing(startedAt: controller.activeStudyingStartedAt) {
-                            BlinkingDotView()
-                        }
+                    if session.isOngoing(startedAt: controller.activeStudyingStartedAt) {
+                        BlinkingDotView()
                     }
                 }
                 Spacer(minLength: 8)
-                Label(categoryTitle, systemImage: category.symbol)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(category.color)
-                    .lineLimit(1)
+                Label {
+                    Text(categoryTitle)
+                        .foregroundStyle(.primary)
+                } icon: {
+                    Image(systemName: category.symbol)
+                        .foregroundStyle(category.color)
+                }
+                .font(.caption.weight(.medium))
+                .lineLimit(1)
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
             }
 #if DEBUG
@@ -373,7 +376,6 @@ struct DashboardView: View {
                         && !annotation.hasManualCategory,
                     breakEntries: breakEntries
                 )
-                .padding(.leading, 44)
             }
 #endif
             if !annotation.note.isEmpty {
@@ -383,7 +385,6 @@ struct DashboardView: View {
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, 44)
             }
         }
         .padding(.vertical, 12)
@@ -435,7 +436,7 @@ struct DashboardView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.primary)
             Spacer()
-            Text(SessionDuration.label(totalDuration))
+            Text(SessionDuration.label(totalDuration, locale: controller.locale))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
@@ -446,18 +447,19 @@ struct DashboardView: View {
     }
 
     private func dayHeaderTitle(_ date: Date) -> String {
+        let locale = controller.locale
         let calendar = Calendar.current
-        let dayFormatted = date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
+        let dayFormatted = date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(locale))
         if calendar.isDateInToday(date) {
-            return "\(String(localized: "dashboard.today")) · \(dayFormatted)"
+            return "\(localizedString("dashboard.today", locale: locale)) · \(dayFormatted)"
         } else if calendar.isDateInYesterday(date) {
-            return "\(String(localized: "dashboard.yesterday")) · \(dayFormatted)"
+            return "\(localizedString("dashboard.yesterday", locale: locale)) · \(dayFormatted)"
         }
         return dayFormatted
     }
 
     private func formatTime(_ date: Date) -> String {
-        date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))
+        date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(controller.locale))
     }
 }
 
@@ -467,18 +469,23 @@ private enum DashboardPeriod: Int {
 }
 
 enum SessionDuration {
-    static func minutesLabel(_ duration: TimeInterval) -> String {
+    static func minutesLabel(_ duration: TimeInterval, locale: Locale = AppLanguage.currentLocale) -> String {
         let value = max(0, duration)
         if value < 60 {
-            return "<1 dk."
+            return localizedString("dashboard.duration.underMinute", locale: locale)
         }
         let minutes = max(1, Int((value / 60).rounded()))
-        return Measurement(value: Double(minutes), unit: UnitDuration.minutes)
-            .formatted(.measurement(width: .abbreviated, numberFormatStyle: .number.precision(.fractionLength(0))))
+        let format = Measurement<UnitDuration>.FormatStyle(
+            width: .abbreviated,
+            usage: .asProvided
+        ).locale(locale)
+        let isTurkish = locale.language.languageCode?.identifier == "tr" || locale.identifier.hasPrefix("tr")
+        let label = Measurement(value: Double(minutes), unit: UnitDuration.minutes).formatted(format)
+        return isTurkish ? label.replacingOccurrences(of: "dk.", with: "dk") : label
     }
 
-    static func label(_ duration: TimeInterval) -> String {
-        duration < 60 ? "<1 dk." : StatisticsDuration.label(duration)
+    static func label(_ duration: TimeInterval, locale: Locale = AppLanguage.currentLocale) -> String {
+        duration < 60 ? localizedString("dashboard.duration.underMinute", locale: locale) : StatisticsDuration.label(duration, locale: locale)
     }
 }
 
@@ -501,7 +508,7 @@ private struct BlinkingDotView: View {
 private extension View {
     func dashboardPanel(_ scheme: ColorScheme) -> some View {
         self
-            .padding(16)
+            .padding(SettingsPageLayout.cardInset)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(StatisticsStyle.panelFill(for: scheme), in: RoundedRectangle(cornerRadius: 12))
             .overlay {

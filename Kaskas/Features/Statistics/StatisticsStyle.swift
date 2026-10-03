@@ -83,13 +83,16 @@ enum HourlyPeriod: Int, CaseIterable, Identifiable {
 }
 
 enum StatisticsDuration {
-    static func label(_ seconds: TimeInterval) -> String {
+    static func label(_ seconds: TimeInterval, locale: Locale = AppLanguage.currentLocale) -> String {
         let value = max(0, seconds)
+        let isTurkish = locale.language.languageCode?.identifier == "tr" || locale.identifier.hasPrefix("tr")
         if value < 3600 {
-            return Measurement(value: value / 60, unit: UnitDuration.minutes)
-                .formatted(.measurement(width: .abbreviated, numberFormatStyle: .number.precision(.fractionLength(0))))
+            let label = Measurement(value: value / 60, unit: UnitDuration.minutes)
+                .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))).locale(locale))
+            return isTurkish ? label.replacingOccurrences(of: "dk.", with: "dk") : label
         }
-        return Measurement(value: value / 3600, unit: UnitDuration.hours)
-            .formatted(.measurement(width: .abbreviated, numberFormatStyle: .number.precision(.fractionLength(1))))
+        let label = Measurement(value: value / 3600, unit: UnitDuration.hours)
+            .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(1))).locale(locale))
+        return isTurkish ? label.replacingOccurrences(of: "sa.", with: "sa") : label
     }
 }

@@ -22,12 +22,15 @@ struct StatisticsView: View {
     @State private var loadedStart: Date?
     @State private var loadedEnd: Date?
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     private let refreshClock = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                SettingsPaneHeader(title: "settings.sidebar.statistics")
+
                 VStack(alignment: .leading, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("stats.today.title")
@@ -83,7 +86,7 @@ struct StatisticsView: View {
                     subtitle: "stats.hourly.subtitle",
                     legend: hourlyPeriod == .day
                         ? [(StatisticsStyle.computerInactive, "stats.kind.studying")]
-                        : hourlyDays.map { (hourlyColor(for: $0.date), $0.date.formatted(.dateTime.weekday(.abbreviated).day())) }
+                        : hourlyDays.map { (hourlyColor(for: $0.date), $0.date.formatted(.dateTime.weekday(.abbreviated).day().locale(locale))) }
                 ) {
                     HourlyRangeControls(
                         period: $hourlyPeriod,
@@ -109,8 +112,7 @@ struct StatisticsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .settingsPageContent()
         }
         .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
@@ -137,17 +139,38 @@ struct StatisticsView: View {
         chartSnapshot.today
     }
 
-    private var summaryCards: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 135), spacing: 10)], spacing: 10) {
-            ForEach(ActivityKind.allCases, id: \.self) { kind in
-                summaryCard(for: kind)
-            }
-        }
+    private var summaryKinds: [ActivityKind] {
+        [.studying, .breakTime, .kaskasPaused, .computerInactive]
     }
 
-    private func summaryCard(for kind: ActivityKind) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+    private func summaryDuration(for kind: ActivityKind) -> TimeInterval {
+        if kind == .kaskasPaused {
+            return today.duration(for: .kaskasPaused) + today.duration(for: .meeting)
+        }
+        return today.duration(for: kind)
+    }
+
+    private var summaryCards: some View {
+        HStack(spacing: 0) {
+            ForEach(summaryKinds, id: \.self) { kind in
+                summaryItem(for: kind)
+                if kind != summaryKinds.last {
+                    Divider()
+                        .frame(height: 26)
+                        .opacity(0.6)
+                }
+            }
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity)
+        .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
+    }
+
+    private func summaryItem(for kind: ActivityKind) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 5) {
                 Circle()
                     .fill(kind.color)
                     .frame(width: 7, height: 7)
@@ -155,19 +178,18 @@ struct StatisticsView: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
 
-            Text(StatisticsDuration.label(today.duration(for: kind)))
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+            Text(StatisticsDuration.label(summaryDuration(for: kind)))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.primary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.85)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.08)))
     }
 
     private var trendWindow: (start: Date, end: Date) {
@@ -228,7 +250,7 @@ struct StatisticsView: View {
                                 .allowsHitTesting(false)
                         }
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(selected.date.formatted(date: .abbreviated, time: .omitted))
+                            Text(selected.date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
                                 .font(.subheadline.weight(.semibold))
                             ForEach(ActivityKind.allCases, id: \.self) { kind in
                                 tooltipRow(kind.labelKey, value: StatisticsDuration.label(selected.duration(for: kind)), color: kind.color)
@@ -358,8 +380,8 @@ struct StatisticsView: View {
                             } else {
                                 ForEach(activePoints) { point in
                                     tooltipRow(
-                                        hourlyPeriod == .day ? "stats.kind.studying" : point.date.formatted(.dateTime.weekday(.abbreviated).day()),
-                                        value: StatisticsDuration.label(point.minutes * 60),
+                                        hourlyPeriod == .day ? "stats.kind.studying" : point.date.formatted(.dateTime.weekday(.abbreviated).day().locale(locale)),
+                                        value: StatisticsDuration.label(point.minutes * 60, locale: locale),
                                         color: hourlyColor(for: point.date),
                                         localized: hourlyPeriod == .day
                                     )
@@ -474,7 +496,7 @@ struct StatisticsView: View {
                     }
                 }
             }
-            .padding(16)
+            .padding(SettingsPageLayout.cardInset)
             .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.09)))
         }
@@ -520,6 +542,7 @@ private struct StatisticsDateNavigator: View {
     let startDate: Date
     let stepDays: Int
     let now: Date
+    @Environment(\.locale) private var locale
     @State private var showingCalendar = false
 
     var body: some View {
@@ -559,8 +582,8 @@ private struct StatisticsDateNavigator: View {
     }
 
     private var rangeLabel: String {
-        let start = startDate.formatted(.dateTime.day().month(.abbreviated))
-        let end = endDate.formatted(.dateTime.day().month(.abbreviated))
+        let start = startDate.formatted(.dateTime.day().month(.abbreviated).locale(locale))
+        let end = endDate.formatted(.dateTime.day().month(.abbreviated).locale(locale))
         return stepDays == 1 ? end : "\(start)–\(end)"
     }
 }

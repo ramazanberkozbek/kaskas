@@ -36,8 +36,8 @@ struct SessionDetailView: View {
                     .font(.title2.weight(.semibold))
                 Spacer(minLength: 0)
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(session.startedAt.formatted(date: .abbreviated, time: .omitted))
-                    Text("\(session.startedAt.formatted(date: .omitted, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))")
+                    Text(session.startedAt.formatted(.dateTime.day().month(.abbreviated).locale(controller.locale)))
+                    Text("\(session.startedAt.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(controller.locale))) – \(session.endedAt.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(controller.locale)))")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -97,15 +97,16 @@ struct SessionDetailView: View {
         let isOngoing = session.isOngoing(startedAt: controller.activeStudyingStartedAt)
         let presentation = SessionCategoryPresentation(selection: categorySelection, summary: categorySummary,
             registry: controller.categoryRegistry,
-            isOngoing: isOngoing)
+            isOngoing: isOngoing,
+            locale: controller.locale)
         let detectedCategory = SessionCategoryPresentation(selection: .automatic, summary: categorySummary,
-            registry: controller.categoryRegistry, isOngoing: isOngoing)
+            registry: controller.categoryRegistry, isOngoing: isOngoing, locale: controller.locale)
         return VStack(alignment: .leading, spacing: 8) {
             Picker("dashboard.session.category", selection: $categorySelection) {
                 Label(detectedCategory.title, systemImage: detectedCategory.symbol)
                     .tag(SessionCategorySelection.automatic)
                 ForEach(controller.categoryRegistry.categories) { category in
-                    Label(category.localizedName, systemImage: category.iconName)
+                    Label(category.localizedName(for: controller.locale), systemImage: category.iconName)
                         .tag(SessionCategorySelection.category(id: category.id))
                 }
                 // Keep a saved hidden/deleted category selectable without reviving it for app rules.

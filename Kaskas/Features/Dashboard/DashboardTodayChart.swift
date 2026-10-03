@@ -6,6 +6,7 @@ struct DashboardTodayChart: View {
     private var date: Date { data.date }
 
     @State private var hoveredHour: Int?
+    @Environment(\.locale) private var locale
 
     private var currentLabel: LocalizedStringKey {
         Calendar.current.isDateInToday(date) ? "dashboard.today" : "dashboard.day.selected"
@@ -60,7 +61,7 @@ struct DashboardTodayChart: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let hours = value.as(Double.self) {
-                        Text(StatisticsDuration.label(hours * 3600))
+                        Text(StatisticsDuration.label(hours * 3600, locale: locale))
                     }
                 }
             }
@@ -97,8 +98,8 @@ struct DashboardTodayChart: View {
                             Text(String(format: "%02d:00–%02d:00", hoveredHour, hoveredHour + 1))
                                 .font(.subheadline.weight(.semibold))
                             Divider()
-                            tooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600), color: StatisticsStyle.studying)
-                            tooltipRow(previousLabel, value: StatisticsDuration.label(previous[hoveredHour] * 3600), color: StatisticsStyle.average)
+                            tooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
+                            tooltipRow(previousLabel, value: StatisticsDuration.label(previous[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.average)
                         }
                         .font(.subheadline)
                         .padding(12)

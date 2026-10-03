@@ -8,6 +8,7 @@ struct CategoryUsageView: View {
     var subtitle: LocalizedStringKey = "categories.usage.subtitle"
     var showsAppSegments = true
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -29,12 +30,12 @@ struct CategoryUsageView: View {
                 } else {
                     ForEach(summary.entries) { entry in
                         let category = registry.historicalCategory(for: entry.categoryID)
-                        row(name: category?.localizedName ?? String(localized: "categories.usage.deleted"),
+                        row(name: category?.localizedName(for: locale) ?? localizedString("categories.usage.deleted", locale: locale),
                             symbol: category?.iconName ?? "tag", color: category?.color ?? .secondary,
                             duration: entry.duration, apps: showsAppSegments ? entry.apps : [])
                     }
                     if summary.undetected > 0 {
-                        row(name: String(localized: "categories.usage.undetected"), symbol: "questionmark.circle",
+                        row(name: localizedString("categories.usage.undetected", locale: locale), symbol: "questionmark.circle",
                             color: .secondary, duration: summary.undetected,
                             apps: showsAppSegments ? summary.undetectedApps : [],
                             unrecordedDuration: showsAppSegments ? summary.unrecordedDuration : 0)
@@ -46,7 +47,7 @@ struct CategoryUsageView: View {
                         .foregroundStyle(.orange)
                 }
             }
-            .padding(16)
+            .padding(SettingsPageLayout.cardInset)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
@@ -60,8 +61,8 @@ struct CategoryUsageView: View {
                 Image(systemName: symbol).foregroundStyle(color)
                 Text(name)
                 Spacer()
-                Text(StatisticsDuration.label(duration)).monospacedDigit()
-                Text((duration / summary.total).formatted(.percent.precision(.fractionLength(0))))
+                Text(StatisticsDuration.label(duration, locale: locale)).monospacedDigit()
+                Text((duration / summary.total).formatted(.percent.precision(.fractionLength(0)).locale(locale)))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
                     .frame(minWidth: 38, alignment: .trailing)
@@ -127,10 +128,10 @@ private struct CategoryUsageSegment: View {
     let title: String
     let seconds: TimeInterval
     @State private var isHovered = false
+    @Environment(\.locale) private var locale
 
     private var duration: String {
-        Duration.seconds(seconds).formatted(.units(
-            allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2))
+        StatisticsDuration.label(seconds, locale: locale)
     }
 
     var body: some View {

@@ -5,6 +5,7 @@ struct StudyTrendChart: View {
     let data: StudyTrendData
 
     @State private var hoveredDate: Date?
+    @Environment(\.locale) private var locale
 
     var body: some View {
         let chartPoints = data.points
@@ -70,11 +71,11 @@ struct StudyTrendChart: View {
                                 .allowsHitTesting(false)
                         }
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(selected.date.formatted(date: .abbreviated, time: .omitted))
+                            Text(selected.date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
                                 .font(.subheadline.weight(.semibold))
                             Divider()
-                            tooltipRow("stats.kind.studying", value: StatisticsDuration.label(selected.hours * 3600), color: StatisticsStyle.studying)
-                            tooltipRow("stats.trend.average", value: StatisticsDuration.label(selected.averageHours * 3600), color: StatisticsStyle.average)
+                            tooltipRow("stats.kind.studying", value: StatisticsDuration.label(selected.hours * 3600, locale: locale), color: StatisticsStyle.studying)
+                            tooltipRow("stats.trend.average", value: StatisticsDuration.label(selected.averageHours * 3600, locale: locale), color: StatisticsStyle.average)
                         }
                         .font(.subheadline)
                         .padding(12)
