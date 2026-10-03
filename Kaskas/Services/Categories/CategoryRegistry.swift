@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import Observation
 
+/// Resolves application categories and manages custom user rules.
 @MainActor
 @Observable
 public final class CategoryRegistry {

@@ -19,6 +19,7 @@ private struct MainAppLoginService: LaunchAtLoginService {
     func openSystemSettings() { SMAppService.openSystemSettingsLoginItems() }
 }
 
+/// Manages automatic app launch at macOS login using SMAppService.
 @MainActor
 @Observable
 final class LaunchAtLoginController {

@@ -36,6 +36,7 @@ protocol AppUsageRecording {
     func segments(from start: Date, to end: Date) throws -> [AppUsageSegment]
 }
 
+/// Stores and fetches per-app usage segments using SwiftData.
 @MainActor
 final class AppUsageStore: AppUsageRecording {
     private let context: ModelContext

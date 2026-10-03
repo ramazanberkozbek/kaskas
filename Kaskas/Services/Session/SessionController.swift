@@ -2,6 +2,19 @@ import AppKit
 import Foundation
 import Observation
 
+/// The puppet master and central brain of Kaskas.
+///
+/// If this class breaks, the entire app has an existential crisis. It sits between
+/// pure mathematical state (`SessionEngine`) and the messy real world coordinating
+/// timers, spying on hardware, and ultimately deciding when you need to touch grass.
+///
+/// What the maestro actually does:
+/// - Dictates the focus & break lifecycle (and tolerates your desperate snooze clicks).
+/// - Keeps an eye on your camera and mic so it doesn't embarrass you during Zoom calls.
+/// - Detects when you abandon your Mac for coffee and counts it as a natural break.
+/// - Tracks which apps steal your focus and silently logs them to SwiftData.
+/// - Hijacks your screen when it's break time and locks it if you asked for tough love.
+/// - Survives system sleep, restarts, and random macOS panics without losing a second.
 @MainActor
 @Observable
 final class SessionController {

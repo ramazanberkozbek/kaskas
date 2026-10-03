@@ -41,6 +41,7 @@ protocol BreakHistoryRecording {
     func insert(_ entry: BreakHistoryEntry) throws
 }
 
+/// Stores completed and skipped break history records using SwiftData.
 @MainActor
 final class BreakHistoryStore: BreakHistoryRecording {
     private let context: ModelContext

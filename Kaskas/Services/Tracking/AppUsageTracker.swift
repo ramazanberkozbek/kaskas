@@ -1,5 +1,6 @@
 import Foundation
 
+/// Tracks active application usage segments and resolves their categories.
 @MainActor
 final class AppUsageTracker {
     private let sessionStore: SessionStore

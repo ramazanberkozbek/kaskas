@@ -2,6 +2,7 @@ import AVFoundation
 import CoreAudio
 import Foundation
 
+/// Detects active video calls and meetings by monitoring microphone input and camera usage.
 @MainActor
 final class MeetingActivityMonitor {
     private var timer: Timer?

@@ -1,5 +1,6 @@
 import Foundation
 
+/// Persists session state, active configurations, and pending history entries in UserDefaults.
 @MainActor
 final class SessionStore {
     private enum Key {

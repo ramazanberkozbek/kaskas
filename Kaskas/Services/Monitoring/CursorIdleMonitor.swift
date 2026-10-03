@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 
+/// Monitors user input events to detect inactivity and return.
 @MainActor
 final class CursorIdleMonitor {
     private var timer: Timer?

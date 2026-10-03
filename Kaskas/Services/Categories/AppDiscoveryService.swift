@@ -2,6 +2,7 @@ import AppKit
 import CoreServices
 import Foundation
 
+/// Scans disk directories and Spotlight metadata to find installed applications.
 enum AppDiscoveryService: Sendable {
     nonisolated static func performDiskDiscovery() -> [CategoryRegistry.DiscoveredApp] {
         var map: [String: CategoryRegistry.DiscoveredApp] = [:]

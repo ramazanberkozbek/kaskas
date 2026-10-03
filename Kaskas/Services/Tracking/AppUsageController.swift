@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 
+/// Manages foreground application tracking and records usage during active focus sessions.
 @MainActor
 @Observable
 final class AppUsageController {

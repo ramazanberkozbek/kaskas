@@ -1,5 +1,6 @@
 import AppKit
 
+/// Plays audio alerts for breaks and settings previews.
 @MainActor
 enum BreakSoundPlayer {
     private static var previewSound: NSSound?

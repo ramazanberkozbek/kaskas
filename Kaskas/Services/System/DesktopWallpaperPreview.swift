@@ -2,6 +2,7 @@ import AppKit
 import ImageIO
 import Observation
 
+/// Loads a thumbnail of the default macOS desktop wallpaper for break previews.
 @MainActor
 @Observable
 final class DesktopWallpaperPreview {

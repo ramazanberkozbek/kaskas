@@ -1,5 +1,6 @@
 import Foundation
 
+/// Tracks continuous focus and break intervals, buffering changes in memory before saving.
 @MainActor
 final class ActivityTracker {
     private let sessionStore: SessionStore

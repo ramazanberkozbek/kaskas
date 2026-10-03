@@ -27,6 +27,7 @@ protocol ActivityRecording {
     func intervals(from start: Date, to end: Date) throws -> [ActivityInterval]
 }
 
+/// Stores and fetches activity intervals using SwiftData.
 @MainActor
 final class ActivityStore: ActivityRecording {
     private let context: ModelContext

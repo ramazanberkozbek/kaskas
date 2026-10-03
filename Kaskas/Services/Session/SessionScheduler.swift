@@ -1,5 +1,6 @@
 import Foundation
 
+/// Schedules delayed background tasks for session transitions.
 @MainActor
 final class SessionScheduler {
     private var scheduledTask: Task<Void, Never>?

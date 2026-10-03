@@ -1,5 +1,6 @@
 import Foundation
 
+/// Saves active session state and flushes completed break history entries.
 @MainActor
 final class SessionPersistence {
     private(set) var historySaveFailed = false
