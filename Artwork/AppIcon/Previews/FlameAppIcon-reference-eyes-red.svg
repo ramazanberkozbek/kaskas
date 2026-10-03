@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="icon-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F85757"/>
+      <stop offset="100%" stop-color="#D92535"/>
+    </linearGradient>
+    <filter id="flame-depth" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#9E1625" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="228" fill="url(#icon-blue)"/>
+  <rect x="0.5" y="0.5" width="1023" height="1023" rx="227.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="2"/>
+
+  <g transform="translate(94, 76) scale(6.95)">
+    <path fill="#FFFFFF" fill-rule="evenodd" filter="url(#flame-depth)"
+          d="M60 114C35.2 114 19.2 101.5 18.6 82C18.1 68.2 24 57.4 35.6 44.5C44.9 34.1 49.1 22.6 46.7 5.5C62.8 14.7 69.8 27.6 68.4 42.6C73.8 33 81.8 25.7 90.5 22.3C87.7 34.3 91.7 41 98.1 49.2C105.1 58.2 106.2 69.5 102.7 81.6C96.9 101.5 81.7 114 60 114Z M33 81C34 76.5 37 74 41 74C45 74 48 76.5 49 81C47 83 44 78.5 41 78.5C38 78.5 35 83 33 81Z M71 81C72 76.5 75 74 79 74C83 74 86 76.5 87 81C85 83 82 78.5 79 78.5C76 78.5 73 83 71 81Z"/>
+  </g>
+</svg>
