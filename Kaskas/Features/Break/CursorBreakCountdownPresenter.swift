@@ -4,7 +4,9 @@ import SwiftUI
 @MainActor
 final class CursorBreakCountdownPresenter {
     private var panel: NSPanel?
-    private var trackingTimer: Timer?
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
+    private var autoDismissTask: Task<Void, Never>?
 
     func show(endsAt: Date, leadTime: TimeInterval) {
         dismiss()
@@ -33,23 +35,44 @@ final class CursorBreakCountdownPresenter {
         movePanelToCursor()
         panel.orderFrontRegardless()
 
-        let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+        // Event-driven mouse monitoring: zero CPU wakeup when mouse is stationary
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+        ) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self else { return }
-                if Date.now >= endsAt {
-                    self.dismiss()
-                } else {
-                    self.movePanelToCursor()
-                }
+                self?.movePanelToCursor()
             }
         }
-        RunLoop.main.add(timer, forMode: .common)
-        trackingTimer = timer
+
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+        ) { [weak self] event in
+            self?.movePanelToCursor()
+            return event
+        }
+
+        // Exact sleep until endsAt instead of polling every frame
+        let timeRemaining = max(0, endsAt.timeIntervalSinceNow)
+        autoDismissTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(timeRemaining))
+            guard !Task.isCancelled else { return }
+            self?.dismiss()
+        }
     }
 
     func dismiss() {
-        trackingTimer?.invalidate()
-        trackingTimer = nil
+        autoDismissTask?.cancel()
+        autoDismissTask = nil
+
+        if let globalMouseMonitor {
+            NSEvent.removeMonitor(globalMouseMonitor)
+            self.globalMouseMonitor = nil
+        }
+        if let localMouseMonitor {
+            NSEvent.removeMonitor(localMouseMonitor)
+            self.localMouseMonitor = nil
+        }
+
         panel?.orderOut(nil)
         panel = nil
     }
@@ -68,7 +91,11 @@ final class CursorBreakCountdownPresenter {
         let y = pointer.y + size.height + gap <= screen.frame.maxY
             ? pointer.y + gap
             : pointer.y - size.height - gap
-        panel.setFrameOrigin(NSPoint(x: x, y: y))
+
+        let newOrigin = NSPoint(x: x, y: y)
+        if panel.frame.origin != newOrigin {
+            panel.setFrameOrigin(newOrigin)
+        }
         if !panel.isVisible { panel.orderFrontRegardless() }
     }
 }

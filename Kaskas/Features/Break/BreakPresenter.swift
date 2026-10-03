@@ -102,7 +102,10 @@ final class BreakPresenter {
         panels.removeAll()
         screenLayout = screens.map(ScreenLayout.init)
 
-        for (index, screen) in screens.enumerated() {
+        let primaryScreen = NSScreen.main ?? screens.first
+        var primaryAssigned = false
+
+        for screen in screens {
             let panel = BreakPanel(
                 contentRect: screen.frame,
                 styleMask: [.borderless, .nonactivatingPanel],
@@ -111,7 +114,8 @@ final class BreakPresenter {
                 screen: screen
             )
             panel.onEscape = presentation.onSkip
-            if index == 0 {
+            if !primaryAssigned && (screen == primaryScreen || screen == screens.first) {
+                primaryAssigned = true
                 panel.contentViewController = NSHostingController(rootView: BreakView(
                     endsAt: presentation.endsAt,
                     configuration: presentation.configuration,
