@@ -104,4 +104,35 @@ struct LanguageSettingsTests {
         #expect(controller.sessionSnapshot.endsAt > initialEndsAt)
         #expect(controller.sessionSnapshot.phase == .focusing)
     }
+
+    @Test
+    func dynamicLocalizationHelpersResolveCorrectLanguages() {
+        let trLocale = Locale(identifier: "tr")
+        let enLocale = Locale(identifier: "en")
+
+        // 1. Categories
+        #expect(AppCategory.coding.localizedName(for: trLocale) == "Yazılım")
+        #expect(AppCategory.coding.localizedName(for: enLocale) == "Coding")
+        #expect(AppCategory.browsing.localizedName(for: trLocale) == "İnternet")
+        #expect(AppCategory.browsing.localizedName(for: enLocale) == "Browsing")
+        #expect(AppCategory.productivity.localizedName(for: trLocale) == "Üretkenlik")
+        #expect(AppCategory.productivity.localizedName(for: enLocale) == "Productivity")
+
+        // 2. Break layout names
+        #expect(localizedString("settings.breakLayout.horizon", locale: trLocale) == "Ufuk")
+        #expect(localizedString("settings.breakLayout.horizon", locale: enLocale) == "Horizon")
+        #expect(localizedString("settings.breakLayout.gentleBar", locale: trLocale) == "Zarif Çubuk")
+        #expect(localizedString("settings.breakLayout.gentleBar", locale: enLocale) == "Gentle Bar")
+
+        // 3. Durations
+        let trMinutes = SessionDuration.minutesLabel(47 * 60, locale: trLocale)
+        let enMinutes = SessionDuration.minutesLabel(47 * 60, locale: enLocale)
+        #expect(trMinutes.contains("47") && trMinutes.contains("dk") && !trMinutes.contains("dk."))
+        #expect(enMinutes.contains("47") && enMinutes.contains("min"))
+
+        let trHours = StatisticsDuration.label(2 * 3600, locale: trLocale)
+        let enHours = StatisticsDuration.label(2 * 3600, locale: enLocale)
+        #expect(trHours.contains("2,0") && trHours.contains("sa") && !trHours.contains("sa."))
+        #expect(enHours.contains("2.0") && enHours.contains("hr"))
+    }
 }

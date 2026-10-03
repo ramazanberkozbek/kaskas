@@ -79,7 +79,7 @@ public final class CategoryRegistry {
 
         let category = AppCategory(
             id: categoryId,
-            name: cleanName.isEmpty ? "Yeni Kategori" : cleanName,
+            name: cleanName.isEmpty ? String(localized: "categories.newCategoryFallback") : cleanName,
             iconName: iconName.isEmpty ? "folder.fill" : iconName,
             colorName: colorName.isEmpty ? "blue" : colorName,
             isBuiltIn: false
@@ -465,7 +465,7 @@ public final class CategoryRegistry {
         // İletişim
         CategoryRule(appIdentifier: "com.tinyspeck.slackmacgap", displayName: "Slack", categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "com.microsoft.teams", displayName: "Microsoft Teams", categoryId: "communication", isDefault: true),
-        CategoryRule(appIdentifier: "com.microsoft.teams2", displayName: "Microsoft Teams (Yeni)", categoryId: "communication", isDefault: true),
+        CategoryRule(appIdentifier: "com.microsoft.teams2", displayName: String(localized: "categories.rule.teamsNew"), categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "com.hnc.Discord", displayName: "Discord", categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "us.zoom.xos", displayName: "Zoom", categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.mail", displayName: "Mail", categoryId: "communication", isDefault: true),
@@ -481,7 +481,7 @@ public final class CategoryRegistry {
 
         // Eğlence
         CategoryRule(appIdentifier: "com.spotify.client", displayName: "Spotify", categoryId: "entertainment", isDefault: true),
-        CategoryRule(appIdentifier: "com.apple.Music", displayName: "Müzik", categoryId: "entertainment", isDefault: true),
+        CategoryRule(appIdentifier: "com.apple.Music", displayName: String(localized: "categories.rule.music"), categoryId: "entertainment", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.TV", displayName: "TV", categoryId: "entertainment", isDefault: true)
     ]
 }

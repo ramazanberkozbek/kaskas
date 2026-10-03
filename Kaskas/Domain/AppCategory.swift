@@ -32,19 +32,15 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         }
     }
 
-    public var localizedName: String {
+    public func localizedName(for locale: Locale? = nil) -> String {
         guard isBuiltIn else { return name }
-        switch id {
-        case "coding": return String(localized: "category.coding", defaultValue: "Yazılım")
-        case "design": return String(localized: "category.design", defaultValue: "Tasarım")
-        case "writing": return String(localized: "category.writing", defaultValue: "Yazı")
-        case "communication": return String(localized: "category.communication", defaultValue: "İletişim")
-        case "browsing": return String(localized: "category.browsing", defaultValue: "İnternet")
-        case "entertainment": return String(localized: "category.entertainment", defaultValue: "Eğlence")
-        case "productivity": return String(localized: "category.productivity", defaultValue: "Üretkenlik")
-        case "other": return String(localized: "category.other", defaultValue: "Diğer")
-        default: return name
-        }
+        let targetLocale = locale ?? AppLanguage.currentLocale
+        let key = "category.\(id)"
+        return localizedString(key, locale: targetLocale, defaultValue: name)
+    }
+
+    public var localizedName: String {
+        localizedName(for: nil)
     }
 
     public static let coding = AppCategory(

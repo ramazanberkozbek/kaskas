@@ -50,6 +50,7 @@ final class SessionController {
     ) {
         let configuration = store.loadConfiguration()
         self.configuration = configuration
+        AppLanguage.currentLocale = configuration.appLanguage.locale
         if UserDefaults.standard.array(forKey: "AppleLanguages") == nil, configuration.appLanguage != .system {
             UserDefaults.standard.set([configuration.appLanguage.rawValue], forKey: "AppleLanguages")
         }
@@ -306,6 +307,7 @@ final class SessionController {
             case .turkish:
                 UserDefaults.standard.set(["tr"], forKey: "AppleLanguages")
             }
+            AppLanguage.currentLocale = configuration.appLanguage.locale
         }
         self.configuration = configuration
         if !configuration.pauseDuringMeetings {

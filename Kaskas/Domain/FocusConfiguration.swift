@@ -122,14 +122,51 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable, Sendable {
     var displayName: String {
         switch self {
         case .system:
-            return String(localized: "settings.language.system")
+            return AppLanguage.localizedString("settings.language.system", locale: locale)
         case .english:
             return "English"
         case .turkish:
             return "Türkçe"
         }
     }
+
+    private static let lock = NSLock()
+    private static var _currentLocale: Locale = FocusConfiguration.defaultLanguage.locale
+
+    public static var currentLocale: Locale {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _currentLocale
+        }
+        set {
+            lock.lock()
+            defer { lock.unlock() }
+            _currentLocale = newValue
+        }
+    }
+
+    public static func localizedBundle(for locale: Locale) -> Bundle {
+        let code = locale.language.languageCode?.identifier ?? (locale.identifier.hasPrefix("tr") ? "tr" : "en")
+        let lang = code.hasPrefix("tr") ? "tr" : "en"
+        if let path = Bundle.main.path(forResource: lang, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle
+        }
+        return .main
+    }
+
+    public static func localizedString(_ key: String, locale: Locale? = nil, defaultValue: String? = nil) -> String {
+        let targetLocale = locale ?? currentLocale
+        let bundle = localizedBundle(for: targetLocale)
+        return bundle.localizedString(forKey: key, value: defaultValue ?? key, table: nil)
+    }
 }
+
+public func localizedString(_ key: String, locale: Locale? = nil, defaultValue: String? = nil) -> String {
+    AppLanguage.localizedString(key, locale: locale, defaultValue: defaultValue)
+}
+
 
 struct FocusConfiguration: Codable, Equatable, Sendable {
     static var defaultLanguage: AppLanguage {
