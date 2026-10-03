@@ -56,6 +56,22 @@ struct GeneralSettingsView: View {
                 sectionHeader("settings.startup.section")
                     .settingsFormSectionHeader()
             }
+            Section {
+                Group {
+                    Toggle(isOn: showInDock) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("settings.dock.enabled")
+                            Text("settings.dock.description")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .settingsFormRow()
+            } header: {
+                sectionHeader("settings.dock.section")
+                    .settingsFormSectionHeader()
+            }
             MenuBarAppearanceSettingsView(controller: controller)
             Section {
                 Group {
@@ -128,6 +144,16 @@ struct GeneralSettingsView: View {
         } icon: {
             languageFlagImage(for: language.rawValue)
                 .renderingMode(.original)
+        }
+    }
+
+    private var showInDock: Binding<Bool> {
+        Binding {
+            controller.configuration.showInDock
+        } set: { enabled in
+            var configuration = controller.configuration
+            configuration.showInDock = enabled
+            controller.updateConfiguration(configuration)
         }
     }
 

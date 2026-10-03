@@ -316,11 +316,9 @@ struct CategorySettingsView: View {
                             }
 
                         Text("\(rules.count)")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(Color.primary.opacity(0.06), in: Capsule())
+
 
                         Spacer()
 
@@ -379,11 +377,9 @@ struct CategorySettingsView: View {
                                     .foregroundStyle(.primary)
 
                                 Text("\(rules.count)")
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 12))
                                     .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 7)
-                                    .padding(.vertical, 2)
-                                    .background(Color.primary.opacity(0.06), in: Capsule())
+
 
                                 Spacer(minLength: 0)
                             }

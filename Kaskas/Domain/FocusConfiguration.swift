@@ -193,6 +193,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var idleDetectionEnabled: Bool
     var idleThreshold: TimeInterval
     var menuBarDisplayMode: MenuBarDisplayMode
+    var showInDock: Bool
     var breakWarningEnabled: Bool
     var breakWarningLeadTime: TimeInterval
     var notificationPosition: NotificationPosition
@@ -219,6 +220,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         idleDetectionEnabled: Bool = true,
         idleThreshold: TimeInterval = 3 * 60,
         menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer,
+        showInDock: Bool = false,
         breakWarningEnabled: Bool = true,
         breakWarningLeadTime: TimeInterval = 20,
         notificationPosition: NotificationPosition = .center,
@@ -244,6 +246,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.idleDetectionEnabled = idleDetectionEnabled
         self.idleThreshold = max(60, idleThreshold)
         self.menuBarDisplayMode = menuBarDisplayMode
+        self.showInDock = showInDock
         self.breakWarningEnabled = breakWarningEnabled
         self.breakWarningLeadTime = min(60, max(5, (breakWarningLeadTime / 5).rounded() * 5))
         self.notificationPosition = notificationPosition
@@ -271,6 +274,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case idleDetectionEnabled
         case idleThreshold
         case menuBarDisplayMode
+        case showInDock
         case breakWarningEnabled
         case breakWarningLeadTime
         case notificationPosition
@@ -339,6 +343,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
                 MenuBarDisplayMode.self,
                 forKey: .menuBarDisplayMode
             ) ?? .iconAndTimer,
+            showInDock: try container.decodeIfPresent(Bool.self, forKey: .showInDock) ?? false,
             breakWarningEnabled: try container.decodeIfPresent(Bool.self, forKey: .breakWarningEnabled) ?? true,
             breakWarningLeadTime: try container.decodeIfPresent(TimeInterval.self, forKey: .breakWarningLeadTime) ?? 20,
             notificationPosition: try container.decodeIfPresent(NotificationPosition.self, forKey: .notificationPosition) ?? .center,

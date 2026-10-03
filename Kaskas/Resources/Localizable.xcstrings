@@ -3614,6 +3614,54 @@
         }
       }
     },
+    "settings.dock.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also show the app in the Dock while it is running. When off, it runs only in the menu bar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama açıkken Dock’ta da göster. Kapalıyken yalnızca menü çubuğunda çalışır."
+          }
+        }
+      }
+    },
+    "settings.dock.enabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show in Dock"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock’ta göster"
+          }
+        }
+      }
+    },
+    "settings.dock.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock"
+          }
+        }
+      }
+    },
     "settings.duration.custom" : {
       "localizations" : {
         "en" : {

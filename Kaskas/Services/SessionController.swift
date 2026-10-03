@@ -216,6 +216,10 @@ final class SessionController {
         return (try? breakHistoryStore.entries(from: start, to: end.addingTimeInterval(0.001))) ?? []
     }
 
+    func applyDockVisibility() {
+        settingsPresenter.setDockVisibility(configuration.showInDock)
+    }
+
     func updateConfiguration(_ configuration: FocusConfiguration) {
         let now = Date()
         let idleSettingsChanged = configuration.idleDetectionEnabled != self.configuration.idleDetectionEnabled
@@ -241,7 +245,9 @@ final class SessionController {
             }
             AppLanguage.currentLocale = configuration.appLanguage.locale
         }
+        let dockVisibilityChanged = configuration.showInDock != self.configuration.showInDock
         self.configuration = configuration
+        if dockVisibilityChanged { applyDockVisibility() }
         if !configuration.pauseDuringMeetings {
             meetingMonitor.stop()
         } else if !self.engine.configuration.pauseDuringMeetings {

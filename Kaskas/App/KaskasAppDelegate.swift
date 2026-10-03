@@ -32,6 +32,7 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         SingleInstanceCoordinator.shared.enforceSingleInstance()
+        sessionController.applyDockVisibility()
 
         #if !DEBUG
         sessionController.launchAtLogin.configureDefaultIfNeeded()
@@ -91,6 +92,11 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidBecomeActive(_ notification: Notification) {
         sessionController.launchAtLogin.refresh()
         sessionController.reconcile()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        sessionController.openSettings()
+        return false
     }
 
     func applicationWillTerminate(_ notification: Notification) {

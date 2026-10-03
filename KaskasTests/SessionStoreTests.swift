@@ -104,6 +104,7 @@ struct SessionStoreTests {
         #expect(configuration.microReminderMascot == .flame)
         #expect(configuration.microReminderColor == .peach)
         #expect(configuration.menuBarDisplayMode == .iconAndTimer)
+        #expect(configuration.showInDock == false)
         #expect(configuration.idleDetectionEnabled == true)
         #expect(configuration.idleThreshold == 3 * 60)
         #expect(configuration.breakWarningEnabled)
@@ -118,6 +119,7 @@ struct SessionStoreTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let store = SessionStore(defaults: defaults)
+        #expect(store.loadConfiguration().showInDock == false)
         let configuration = FocusConfiguration(
             focusDuration: 60 * 60,
             microReminderInterval: 15 * 60,
@@ -136,6 +138,7 @@ struct SessionStoreTests {
             idleDetectionEnabled: true,
             idleThreshold: 5 * 60,
             menuBarDisplayMode: .timerOnly,
+            showInDock: true,
             breakWarningEnabled: false,
             breakWarningLeadTime: 25,
             notificationPosition: .right
@@ -154,6 +157,8 @@ struct SessionStoreTests {
         #expect(savedValues["microReminderMascot"] as? String == "glasses")
         #expect(savedValues["microReminderColor"] as? String == "blue")
         #expect(savedValues["menuBarDisplayMode"] as? String == "timerOnly")
+        #expect(savedValues["showInDock"] as? Bool == true)
+        #expect(SessionStore(defaults: defaults).loadConfiguration().showInDock)
         #expect(savedValues["breakEndSoundEnabled"] as? Bool == true)
         #expect(savedValues["breakEndSound"] as? String == "Tink")
         #expect(store.loadSessionState() == engine.state)

@@ -55,11 +55,9 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
 
     func dismiss() {
         window?.orderOut(nil)
-        NSApp.setActivationPolicy(.accessory)
     }
 
     private func bringToFront(_ window: NSWindow) {
-        NSApp.setActivationPolicy(.regular)
         window.makeKeyAndOrderFront(nil)
 
         DispatchQueue.main.async {
@@ -68,10 +66,9 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
         }
     }
 
-    // MARK: - NSWindowDelegate
-
-    func windowWillClose(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
+    func setDockVisibility(_ visible: Bool) {
+        if visible { ensureMainMenu() }
+        NSApp.setActivationPolicy(visible ? .regular : .accessory)
     }
 
     // MARK: - Main Menu Support
