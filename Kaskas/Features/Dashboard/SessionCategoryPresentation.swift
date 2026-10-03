@@ -10,7 +10,7 @@ struct SessionCategoryPresentation {
     init(selection: SessionCategorySelection, summary: StudySessionCategorySummary,
          registry: CategoryRegistry, isOngoing: Bool, locale: Locale = AppLanguage.currentLocale) {
         mixedBreakdown = {
-            guard selection == .automatic, summary.decision == .mixed else { return nil }
+            guard selection == .automatic, summary.decision == .mixed, summary.usage.total > 0 else { return nil }
             return summary.usage.entries.prefix(2).map { entry in
                 let name = registry.historicalCategory(for: entry.categoryID)?.localizedName(for: locale)
                     ?? localizedString("categories.usage.deleted", locale: locale)
@@ -38,7 +38,8 @@ struct SessionCategoryPresentation {
                 symbol = category?.iconName ?? "tag"
                 color = category?.color ?? .secondary
                 let duration = summary.usage.entries.first { $0.categoryID == id }?.duration ?? 0
-                let percentage = (duration / summary.usage.total).formatted(.percent.precision(.fractionLength(0)).locale(locale))
+                let total = summary.usage.total
+                let percentage = total > 0 ? (duration / total).formatted(.percent.precision(.fractionLength(0)).locale(locale)) : "0%"
                 explanation = String(format: localizedString("dashboard.session.category.share", locale: locale), percentage)
             case .mixed:
                 title = localizedString("dashboard.session.category.mixed", locale: locale)

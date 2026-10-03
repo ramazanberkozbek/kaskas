@@ -7,8 +7,6 @@ struct DashboardView: View {
     @State private var period: DashboardPeriod = .today
     @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var now = Date()
-    @State private var intervals: [ActivityInterval] = []
-    @State private var breakEntries: [BreakHistoryEntry] = []
     @State private var dayCategorySnapshot: DashboardCategorySnapshot = .empty
     @State private var weekCategorySnapshot: DashboardCategorySnapshot = .empty
     @State private var chartSnapshot: DashboardChartSnapshot = .empty
@@ -195,13 +193,12 @@ struct DashboardView: View {
                 session: item.value,
                 controller: controller,
                 summary: item.summary,
-                allIntervals: intervals,
-                nextSession: nextSession(after: item.value),
                 onSave: {
                     annotationsRevision += 1
                     reload()
                 }
             )
+            .environment(\.locale, controller.locale)
         }
         .onChange(of: controller.annotationsRevision) { _, _ in
             annotationsRevision = controller.annotationsRevision
@@ -247,6 +244,7 @@ struct DashboardView: View {
                     DatePicker("stats.chooseDate", selection: $endDate, in: ...today, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                         .padding()
+                        .environment(\.locale, controller.locale)
                 }
 
                 Button {
@@ -381,14 +379,13 @@ struct DashboardView: View {
         let yesterday = calendar.date(byAdding: .day, value: -1, to: selectedDay) ?? selectedDay
         let today = calendar.startOfDay(for: now)
         let start = min(averageStart, yesterday, today, selectedDay)
-        intervals = controller.activityIntervals(from: start, to: now, now: now)
+        let intervals = controller.activityIntervals(from: start, to: now, now: now)
         let appUsage = controller.appUsage.segments(from: start, to: now, now: now)
 
         // Both periods share the same source window. Switching the picker only
         // selects prepared data; it must not fetch history or rebuild charts.
         let sessionEnd = calendar.date(byAdding: .day, value: 1, to: selectedDay) ?? now
         let breakEntries = controller.breakEntries(from: window.start, through: min(sessionEnd, now))
-        self.breakEntries = breakEntries
         let timeline = CategoryUsageSummary.Timeline(usage: appUsage)
         func categories(from start: Date) -> DashboardCategorySnapshot {
             let targetIntervals = intervals.filter {
@@ -403,12 +400,6 @@ struct DashboardView: View {
         dayCategorySnapshot = categories(from: selectedDay)
         weekCategorySnapshot = categories(from: window.start)
         chartSnapshot = .make(intervals: intervals, date: endDate, weekStart: window.start)
-    }
-
-    private func nextSession(after session: StudySession) -> StudySession? {
-        let ordered = sessions
-        guard let index = ordered.firstIndex(where: { $0.id == session.id }), index > 0 else { return nil }
-        return ordered[index - 1].value
     }
 
     private func dayHeader(_ date: Date, totalDuration: TimeInterval, isFirst: Bool) -> some View {

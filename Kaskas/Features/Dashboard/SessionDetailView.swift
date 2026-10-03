@@ -4,22 +4,17 @@ struct SessionDetailView: View {
     let session: StudySession
     let controller: SessionController
     let summary: StudySessionCategorySummary
-    let allIntervals: [ActivityInterval]
-    let nextSession: StudySession?
     let onSave: (() -> Void)?
 
     @State private var categorySelection: SessionCategorySelection
     @State private var note: String
     @Environment(\.dismiss) private var dismiss
 
-
     init(session: StudySession, controller: SessionController, summary: StudySessionCategorySummary,
-         allIntervals: [ActivityInterval], nextSession: StudySession?, onSave: (() -> Void)? = nil) {
+         onSave: (() -> Void)? = nil) {
         self.session = session
         self.controller = controller
         self.summary = summary
-        self.allIntervals = allIntervals
-        self.nextSession = nextSession
         self.onSave = onSave
         let annotation = controller.annotation(for: session)
         _categorySelection = State(initialValue: .init(annotation: annotation))
