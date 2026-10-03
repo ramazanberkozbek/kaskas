@@ -1,14 +1,43 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    " " : {
+    "" : {
 
     },
+    " " : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " "
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " "
+          }
+        }
+      }
+    },
     "\"%@\" kategorisini silmek istiyor musunuz?" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to delete the \"%@\" category?"
+          }
+        }
+      }
     },
     "%@ – %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ – %2$@"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
@@ -18,29 +47,111 @@
       }
     },
     "%@ kategorisinde tanımlı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Defined in %@ category"
+          }
+        }
+      }
     },
     "%lld" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
     },
     "%lld dk" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        }
+      }
     },
     "%lld molada bir" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %lld breaks"
+          }
+        }
+      }
     },
     "%lld uygulama" : {
-
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld app"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld apps"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "•" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "•"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "•"
+          }
+        }
+      }
+    },
+    "0" : {
 
     },
     "00:20" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "00:20"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "00:20"
+          }
+        }
+      }
     },
     "app.name" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -50,7 +161,14 @@
       }
     },
     "Atanacak Kategori" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target Category"
+          }
+        }
+      }
     },
     "break.backgroundHint" : {
       "extractionState" : "manual",
@@ -223,19 +341,54 @@
       }
     },
     "Bu kategoride tanımlı uygulama bulunmuyor." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No applications defined in this category."
+          }
+        }
+      }
     },
     "Bu kategoriye ait tüm uygulamalar 'Diğer' kategorisine aktarılacaktır." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All applications in this category will be moved to the 'Other' category."
+          }
+        }
+      }
     },
     "Bu kategoriye uygulama ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add app to this category"
+          }
+        }
+      }
     },
     "Bu kategoriyi düzenle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit this category"
+          }
+        }
+      }
     },
     "Bu kategoriyi sil" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this category"
+          }
+        }
+      }
     },
     "categories.detection.description" : {
       "extractionState" : "stale",
@@ -415,6 +568,134 @@
         }
       }
     },
+    "category.browsing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browsing"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İnternet"
+          }
+        }
+      }
+    },
+    "category.coding" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coding"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazılım"
+          }
+        }
+      }
+    },
+    "category.communication" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Communication"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İletişim"
+          }
+        }
+      }
+    },
+    "category.design" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasarım"
+          }
+        }
+      }
+    },
+    "category.entertainment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entertainment"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eğlence"
+          }
+        }
+      }
+    },
+    "category.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer"
+          }
+        }
+      }
+    },
+    "category.productivity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Productivity"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üretkenlik"
+          }
+        }
+      }
+    },
+    "category.writing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Writing"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazı"
+          }
+        }
+      }
+    },
     "dashboard.day.previous" : {
       "localizations" : {
         "en" : {
@@ -481,6 +762,12 @@
     },
     "dashboard.session.cancel" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -491,6 +778,12 @@
     },
     "dashboard.session.category" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -705,6 +998,12 @@
     },
     "dashboard.session.detail" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study Session"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -716,6 +1015,12 @@
     "dashboard.session.focused" : {
       "extractionState" : "stale",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "focused"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -727,6 +1032,12 @@
     "dashboard.session.interruptions" : {
       "extractionState" : "stale",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "interruption"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -737,6 +1048,12 @@
     },
     "dashboard.session.note" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -747,6 +1064,12 @@
     },
     "dashboard.session.now" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -758,6 +1081,12 @@
     "dashboard.session.parts" : {
       "extractionState" : "stale",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study segments"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -768,6 +1097,12 @@
     },
     "dashboard.session.save" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -826,6 +1161,12 @@
     },
     "dashboard.sessions.shortOnly" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only short sessions today."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -869,6 +1210,12 @@
     "dashboard.sessions.showShort" : {
       "extractionState" : "stale",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show short sessions"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -947,6 +1294,12 @@
     "dashboard.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A quick look at your study rhythm"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -958,6 +1311,12 @@
     "dashboard.timeline.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today and yesterday, on the same timeline"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -969,6 +1328,12 @@
     "dashboard.timeline.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study hours"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -997,6 +1362,12 @@
     "dashboard.today.subtitle" : {
       "extractionState" : "stale",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hourly study and previous day"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1008,6 +1379,12 @@
     "dashboard.week.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily study time"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1019,6 +1396,12 @@
     "dashboard.week.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1030,6 +1413,12 @@
     "dashboard.week.total" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly total"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1058,6 +1447,12 @@
     "dashboard.yesterdayAtThisTime" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday up to this hour"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1069,6 +1464,12 @@
     "dashboard.yesterdayTotal" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday total"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1078,11 +1479,30 @@
       }
     },
     "Day" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gün"
+          }
+        }
+      }
     },
     "debug.break" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1094,6 +1514,12 @@
     "debug.breaksToday" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breaks today"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1105,6 +1531,12 @@
     "debug.breakWarning" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show break warning"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1116,6 +1548,12 @@
     "debug.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previews do not modify sessions or timers."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1127,6 +1565,12 @@
     "debug.dismissPreviews" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss previews"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1138,6 +1582,12 @@
     "debug.enable" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable debug mode"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1149,6 +1599,12 @@
     "debug.focusing" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focusing"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1160,6 +1616,12 @@
     "debug.microReminder" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show micro-break reminder"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1171,6 +1633,12 @@
     "debug.onBreak" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1182,6 +1650,12 @@
     "debug.session" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session state"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1193,6 +1667,12 @@
     "debug.sessionDetails" : {
       "extractionState" : "stale",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session details (debug)"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1204,6 +1684,12 @@
     "debug.skippedBreakReminder" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show skipped break reminder"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1215,6 +1701,12 @@
     "debug.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1223,36 +1715,183 @@
         }
       }
     },
+    "Diğerlerini Gizle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Others"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğerlerini Gizle"
+          }
+        }
+      }
+    },
+    "Düzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düzen"
+          }
+        }
+      }
+    },
     "Eklediğiniz tüm özel uygulama kuralları kaldırılacak ve sistem varsayılanlarına dönülecektir." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All custom application rules you added will be removed and restored to system defaults."
+          }
+        }
+      }
     },
     "esc" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esc"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esc"
+          }
+        }
+      }
     },
     "Eşleşen uygulama bulunamadı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching applications found"
+          }
+        }
+      }
+    },
+    "Geri Al" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geri Al"
+          }
+        }
+      }
     },
     "Her molada" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every break"
+          }
+        }
+      }
     },
     "Hiçbir uygulama bulunamadı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No applications found"
+          }
+        }
+      }
     },
     "Hour" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hour"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saat"
+          }
+        }
+      }
     },
     "Hour end" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hour end"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş saati"
+          }
+        }
+      }
     },
     "Hour start" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hour start"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlangıç saati"
+          }
+        }
+      }
     },
     "Hours" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hours"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saat"
+          }
+        }
+      }
     },
     "idle.accept" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes, log as break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1264,6 +1903,12 @@
     "idle.decline" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1275,6 +1920,12 @@
     "idle.question" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You were away for %lld minutes. Would you like to log this time as a break?"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1286,6 +1937,12 @@
     "idle.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome back"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1295,50 +1952,224 @@
       }
     },
     "İkon ara" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search icon"
+          }
+        }
+      }
     },
     "İkonu değiştir" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change icon"
+          }
+        }
+      }
     },
     "İptal" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
     },
     "Kapat" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapat"
+          }
+        }
+      }
+    },
+    "Kaskas Hakkında" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About Kaskas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas Hakkında"
+          }
+        }
+      }
+    },
+    "Kaskas'ı Gizle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Kaskas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas'ı Gizle"
+          }
+        }
+      }
     },
     "Kategori" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category"
+          }
+        }
+      }
     },
     "Kategori adı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category name"
+          }
+        }
+      }
     },
     "Kategori Ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Category"
+          }
+        }
+      }
     },
     "Kategoriyi Kaydet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Category"
+          }
+        }
+      }
     },
     "Kategoriyi Sil" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Category"
+          }
+        }
+      }
     },
     "Kaydet (Enter)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save (Enter)"
+          }
+        }
+      }
+    },
+    "Kes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cut"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kes"
+          }
+        }
+      }
+    },
+    "Kopyala" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopyala"
+          }
+        }
+      }
     },
     "Kural Ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Rule"
+          }
+        }
+      }
     },
     "Kuralı Güncelle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Rule"
+          }
+        }
+      }
     },
     "Kuralı Kaydet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Rule"
+          }
+        }
+      }
     },
     "Mac'inizdeki bir uygulamayı seçin ve çalışma kategorisini belirleyin." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an app on your Mac and set its focus category."
+          }
+        }
+      }
     },
     "menu.active" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1367,6 +2198,12 @@
     "menu.badge.idlePause" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IDLE"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1480,6 +2317,12 @@
     "menu.breaksTaken" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "breaks taken"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1508,6 +2351,12 @@
     "menu.historySaveFailed" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save break history. Will retry."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1519,6 +2368,12 @@
     "menu.manualPaused" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas paused"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1530,6 +2385,12 @@
     "menu.meetingPaused" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postponed during meeting"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1575,6 +2436,12 @@
     "menu.quit" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit Kaskas"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1586,6 +2453,12 @@
     "menu.ready" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to focus"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1597,6 +2470,12 @@
     "menu.remaining" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time remaining"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1625,6 +2504,12 @@
     "menu.settings" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1670,6 +2555,12 @@
     "menu.today" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1679,17 +2570,66 @@
       }
     },
     "Mevcut: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current: %@"
+          }
+        }
+      }
     },
     "Minutes" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutes"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dakika"
+          }
+        }
+      }
     },
     "Özel bir çalışma kategorisi oluşturun." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a custom focus category."
+          }
+        }
+      }
+    },
+    "Pencere" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencere"
+          }
+        }
+      }
     },
     "persistence.error.message" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To protect your data, Kaskas was not started. Please reopen the application."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1701,6 +2641,12 @@
     "persistence.error.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not open break history"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1712,6 +2658,12 @@
     "reminder.message" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rest your eyes and relax your shoulders."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1723,6 +2675,12 @@
     "reminder.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a breath"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1731,8 +2689,37 @@
         }
       }
     },
+    "Seç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seç"
+          }
+        }
+      }
+    },
     "Series" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seri"
+          }
+        }
+      }
     },
     "settings.alerts.breakWarning" : {
       "extractionState" : "manual",
@@ -1893,13 +2880,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preview above updates when changed"
+            "value" : "Shows a preview notification when changed"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Değiştirince üstteki önizleme güncellenir"
+            "value" : "Değiştirildiğinde önizleme bildirimini gösterir"
           }
         }
       }
@@ -1975,6 +2962,12 @@
     "settings.breakAppearance.aurora" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Northern Lights"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1986,6 +2979,12 @@
     "settings.breakAppearance.calmGradient" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calm Gradient"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1994,9 +2993,31 @@
         }
       }
     },
+    "settings.breakAppearance.chooseImageMessage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a background image for the break screen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola ekranı için bir arka plan görseli seçin"
+          }
+        }
+      }
+    },
     "settings.breakAppearance.chooseImagePrompt" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose background image"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2008,6 +3029,12 @@
     "settings.breakAppearance.cosmic" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep Space"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2019,6 +3046,12 @@
     "settings.breakAppearance.custom" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Photo"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2030,6 +3063,12 @@
     "settings.breakAppearance.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your selection will be used across all upcoming break screens."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2041,6 +3080,12 @@
     "settings.breakAppearance.desertDunes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desert Dunes"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2052,6 +3097,12 @@
     "settings.breakAppearance.fullscreenPreview" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview Full Screen"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2063,6 +3114,12 @@
     "settings.breakAppearance.livePreview" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Preview"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2074,6 +3131,12 @@
     "settings.breakAppearance.mountainLake" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mountain Lake"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2085,10 +3148,33 @@
     "settings.breakAppearance.none" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimal"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sade"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.ocean" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocean"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deniz"
           }
         }
       }
@@ -2130,6 +3216,12 @@
     "settings.breakAppearance.snowPeaks" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snowy Peaks"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2141,6 +3233,12 @@
     "settings.breakAppearance.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break Screen Background"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2152,6 +3250,12 @@
     "settings.breakAppearance.upload" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Photo..."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2163,6 +3267,12 @@
     "settings.breakDuration" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break duration"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2174,6 +3284,12 @@
     "settings.breakDuration.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long each break lasts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2185,6 +3301,12 @@
     "settings.breakLayout.gentleBar" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentle Bar"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2196,6 +3318,12 @@
     "settings.breakLayout.gentleBarDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title on bottom-left, timer and controls on bottom-right."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2207,6 +3335,12 @@
     "settings.breakLayout.horizon" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horizon"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2218,6 +3352,12 @@
     "settings.breakLayout.horizonDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title and timer displayed in the center of the screen."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2229,6 +3369,12 @@
     "settings.breakLayout.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the appearance of the break screen"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2257,6 +3403,12 @@
     "settings.breakSound.choice" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2268,6 +3420,12 @@
     "settings.breakSound.enabled" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play sound when break starts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2279,6 +3437,12 @@
     "settings.breakSound.enabledDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play the selected sound once when the break screen appears"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2290,6 +3454,12 @@
     "settings.breakSound.endChoice" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End sound"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2301,6 +3471,12 @@
     "settings.breakSound.endEnabled" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play sound when break ends"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2312,6 +3488,12 @@
     "settings.breakSound.endEnabledDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play the selected sound once when the break is completed"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2323,6 +3505,12 @@
     "settings.breakSound.off" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2331,9 +3519,18 @@
         }
       }
     },
+    "settings.breakSound.preview" : {
+
+    },
     "settings.breakSound.startChoice" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start sound"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2345,6 +3542,12 @@
     "settings.breakSound.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose sounds to play when breaks start and end"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2373,6 +3576,12 @@
     "settings.categories.destination" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Categories"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2384,6 +3593,12 @@
     "settings.categories.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specify which app belongs to which focus category"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2412,10 +3627,217 @@
     "settings.comingSoon" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This setting will be available soon."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu ayar yakında kullanıma açılacak."
+          }
+        }
+      }
+    },
+    "settings.duration.custom" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel"
+          }
+        }
+      }
+    },
+    "settings.duration.customTitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a custom duration"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel bir süre girin"
+          }
+        }
+      }
+    },
+    "settings.duration.hours" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hours"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saat"
+          }
+        }
+      }
+    },
+    "settings.duration.idleMinimum" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimum duration: 1 minute."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En kısa süre: 1 dakika."
+          }
+        }
+      }
+    },
+    "settings.duration.idleRange" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a duration between 1 and 240 minutes."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1–240 dakika arasında bir süre girin."
+          }
+        }
+      }
+    },
+    "settings.duration.invalid" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a valid duration in whole seconds."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam saniye cinsinden geçerli bir süre girin."
+          }
+        }
+      }
+    },
+    "settings.duration.minuteRange" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a duration greater than 0 and up to 240 minutes."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0’dan büyük, en fazla 240 dakika girin."
+          }
+        }
+      }
+    },
+    "settings.duration.minutes" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutes"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dakika"
+          }
+        }
+      }
+    },
+    "settings.duration.seconds" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seconds"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saniye"
+          }
+        }
+      }
+    },
+    "settings.duration.unit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unit"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Birim"
+          }
+        }
+      }
+    },
+    "settings.duration.value" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Süre"
+          }
+        }
+      }
+    },
+    "settings.duration.warningRange" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose 5–30 seconds, in steps of 5."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 saniyelik adımlarla 5–30 saniye arasında seçin."
           }
         }
       }
@@ -2508,6 +3930,12 @@
     "settings.general.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2655,6 +4083,12 @@
     "settings.longBreak.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a longer break after several short breaks"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2666,6 +4100,12 @@
     "settings.longBreak.duration" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long break duration"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2677,6 +4117,12 @@
     "settings.longBreak.duration.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long the long break lasts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2688,6 +4134,12 @@
     "settings.longBreak.enabled" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable long breaks"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2699,6 +4151,12 @@
     "settings.longBreak.frequency" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long break frequency"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2710,6 +4168,12 @@
     "settings.longBreak.frequency.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How many scheduled breaks between long breaks"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2976,6 +4440,12 @@
     "settings.microReminderColor.blue" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blue"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2987,6 +4457,12 @@
     "settings.microReminderColor.lavender" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavender"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2998,6 +4474,12 @@
     "settings.microReminderColor.mint" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mint"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3009,6 +4491,12 @@
     "settings.microReminderColor.peach" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peach"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3020,6 +4508,12 @@
     "settings.microReminderColor.pink" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pink"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3031,6 +4525,12 @@
     "settings.microReminderColor.rainbow" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rainbow"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3042,6 +4542,12 @@
     "settings.microReminderColor.white" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "White"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3053,6 +4559,12 @@
     "settings.microReminderColor.yellow" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yellow"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3064,6 +4576,12 @@
     "settings.microReminderDesign.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose and preview the flame appearance and color"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3092,6 +4610,12 @@
     "settings.microReminderDesign.sectionDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Give your eyes a short break while working"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3120,6 +4644,12 @@
     "settings.microReminderDesign.sidekick" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mascot"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3131,6 +4661,12 @@
     "settings.microReminderDesign.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micro-Break Design"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3142,6 +4678,12 @@
     "settings.microReminderMascot.flame" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flame"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3153,6 +4695,12 @@
     "settings.microReminderMascot.glasses" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flame with Glasses"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3164,6 +4712,12 @@
     "settings.microReminders.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micro-Breaks"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3175,6 +4729,12 @@
     "settings.nextCycle.note" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When focus duration changes, the timer restarts with the new duration. Other changes apply to the next focus cycle."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3186,6 +4746,12 @@
     "settings.reminderInterval" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micro-break interval"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3197,6 +4763,12 @@
     "settings.reminderInterval.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time between micro-break reminders"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3208,6 +4780,12 @@
     "settings.schedule.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break Schedule"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3219,6 +4797,12 @@
     "settings.sidebar.alerts" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerts"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3332,6 +4916,12 @@
     "settings.snoozeDuration" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snooze duration"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3343,6 +4933,12 @@
     "settings.snoozeDuration.description" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How long to wait before reminding again"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3456,6 +5052,12 @@
     "settings.status.label" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3467,6 +5069,12 @@
     "settings.status.ready" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3475,9 +5083,31 @@
         }
       }
     },
+    "Simge Durumuna Küçült" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimize"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simge Durumuna Küçült"
+          }
+        }
+      }
+    },
     "skippedBreak.dismiss" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3489,6 +5119,12 @@
     "skippedBreak.start" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3500,6 +5136,12 @@
     "skippedBreak.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You skipped the last few breaks. A short rest can help you refocus."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3511,6 +5153,12 @@
     "skippedBreak.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a moment to pause"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3522,6 +5170,12 @@
     "stats.axis.day" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3533,6 +5187,12 @@
     "stats.axis.hours" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hours"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3544,6 +5204,12 @@
     "stats.chooseDate" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select date"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3589,6 +5255,12 @@
     "stats.empty" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas started recording time from this version."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3600,6 +5272,12 @@
     "stats.hourly.day" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3611,6 +5289,12 @@
     "stats.hourly.noFocus" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No focus during this hour"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3656,6 +5340,12 @@
     "stats.hourly.week" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 Days"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3667,6 +5357,12 @@
     "stats.kind.breakTime" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3678,6 +5374,12 @@
     "stats.kind.computerInactive" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac off / asleep"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3689,6 +5391,12 @@
     "stats.kind.kaskasPaused" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas paused"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3717,6 +5425,12 @@
     "stats.kind.studying" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Study"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3728,6 +5442,12 @@
     "stats.nextPeriod" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next period"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3739,6 +5459,12 @@
     "stats.nextYear" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next year"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3750,6 +5476,12 @@
     "stats.period" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3761,6 +5493,12 @@
     "stats.period.seven" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7D"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3772,6 +5510,12 @@
     "stats.period.thirty" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30D"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3783,6 +5527,12 @@
     "stats.previousPeriod" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous period"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3794,6 +5544,12 @@
     "stats.previousYear" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous year"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3805,6 +5561,12 @@
     "stats.storageWarning" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity history cannot be read or saved right now."
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3833,6 +5595,12 @@
     "stats.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3861,6 +5629,12 @@
     "stats.total" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3872,6 +5646,12 @@
     "stats.trend.average" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7-day average"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3917,6 +5697,12 @@
     "stats.year.focusHours" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d hours focused"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3928,6 +5714,12 @@
     "stats.year.focusHoursAndMinutes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d hours %2$d minutes focused"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3939,6 +5731,12 @@
     "stats.year.focusMinutes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d minutes focused"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3950,6 +5748,12 @@
     "stats.year.less" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Less"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3961,6 +5765,12 @@
     "stats.year.more" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4004,32 +5814,126 @@
       }
     },
     "Tüm Özel Kuralları Sıfırla" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset All Custom Rules"
+          }
+        }
+      }
     },
     "Tümünü Daralt" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse All"
+          }
+        }
+      }
     },
     "Tümünü Genişlet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand All"
+          }
+        }
+      }
+    },
+    "Tümünü Göster" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show All"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü Göster"
+          }
+        }
+      }
+    },
+    "Tümünü Seç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select All"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü Seç"
+          }
+        }
+      }
     },
     "Uygulama ara" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search apps"
+          }
+        }
+      }
     },
     "Varsayılana Sıfırla" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset to Defaults"
+          }
+        }
+      }
     },
     "Varsayılanlara dönmek istediğinize emin misiniz?" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to reset to defaults?"
+          }
+        }
+      }
     },
     "Vazgeç" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
     },
     "Vazgeç (Esc)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel (Esc)"
+          }
+        }
+      }
     },
     "warning.fiveMinutes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 min"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4041,6 +5945,12 @@
     "warning.oneMinute" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 min"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4052,6 +5962,12 @@
     "warning.skip" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4063,6 +5979,12 @@
     "warning.startNow" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4074,6 +5996,12 @@
     "warning.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step away from the screen and rest your eyes"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4085,6 +6013,12 @@
     "warning.title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break starting soon"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4093,20 +6027,93 @@
         }
       }
     },
+    "Yapıştır" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapıştır"
+          }
+        }
+      }
+    },
     "Yeni Kategori Ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add New Category"
+          }
+        }
+      }
     },
     "Yeni Kural Ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add New Rule"
+          }
+        }
+      }
+    },
+    "Yinele" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yinele"
+          }
+        }
+      }
     },
     "Yüklü uygulamalar taranıyor..." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanning installed apps..."
+          }
+        }
+      }
     },
     "Yüklü Uygulamayı Seçin" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Installed App"
+          }
+        }
+      }
     },
     "Zero minutes" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zero minutes"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıfır dakika"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
