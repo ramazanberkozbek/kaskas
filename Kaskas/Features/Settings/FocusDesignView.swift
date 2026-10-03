@@ -219,7 +219,8 @@ struct FocusDesignView: View {
             in: .userDomainMask
         ).first else { return }
 
-        let kaskasFolder = appSupport.appendingPathComponent("com.ramazanozbek.kaskas", isDirectory: true)
+        let folderName = Bundle.main.bundleIdentifier ?? "Kaskas"
+        let kaskasFolder = appSupport.appendingPathComponent(folderName, isDirectory: true)
         try? FileManager.default.createDirectory(at: kaskasFolder, withIntermediateDirectories: true)
 
         let targetURL = kaskasFolder.appendingPathComponent("custom_wallpaper.\(sourceURL.pathExtension)")

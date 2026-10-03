@@ -16,7 +16,7 @@ struct SingleInstanceCoordinatorTests {
         )
 
         let canProceed = coordinator.enforceSingleInstance(
-            bundleID: "com.ramazanozbek.kaskas",
+            bundleID: "app.kaskas",
             currentPID: 100,
             isTestEnvironment: false
         )
@@ -38,7 +38,7 @@ struct SingleInstanceCoordinatorTests {
         )
 
         let canProceed = coordinator.enforceSingleInstance(
-            bundleID: "com.ramazanozbek.kaskas",
+            bundleID: "app.kaskas",
             currentPID: 200,
             isTestEnvironment: false
         )
@@ -59,7 +59,7 @@ struct SingleInstanceCoordinatorTests {
         )
 
         let canProceed = coordinator.enforceSingleInstance(
-            bundleID: "com.ramazanozbek.kaskas",
+            bundleID: "app.kaskas",
             currentPID: 200,
             isTestEnvironment: true
         )

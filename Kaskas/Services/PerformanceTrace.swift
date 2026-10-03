@@ -12,8 +12,9 @@ nonisolated enum PerformanceTrace {
 #endif
     }()
 
-    private static let logger = Logger(subsystem: "com.ramazanozbek.kaskas", category: "Performance")
-    private static let signposter = OSSignposter(subsystem: "com.ramazanozbek.kaskas", category: .pointsOfInterest)
+    private static let subsystem = Bundle.main.bundleIdentifier ?? "app.kaskas"
+    private static let logger = Logger(subsystem: subsystem, category: "Performance")
+    private static let signposter = OSSignposter(subsystem: subsystem, category: .pointsOfInterest)
 
     struct Interval {
         let name: StaticString

@@ -427,9 +427,11 @@ public final class CategoryRegistry {
 
     // MARK: - Default Rules
 
+    public static let mainAppBundleIdentifier: String = Bundle.main.bundleIdentifier ?? "app.kaskas"
+
     public static let defaultRules: [CategoryRule] = [
         // Productivity
-        CategoryRule(appIdentifier: "com.ramazanozbek.kaskas", displayName: "Kaskas", categoryId: "productivity", isDefault: true),
+        CategoryRule(appIdentifier: mainAppBundleIdentifier, displayName: "Kaskas", categoryId: "productivity", isDefault: true),
 
         // Coding
         CategoryRule(appIdentifier: "com.apple.dt.Xcode", displayName: "Xcode", categoryId: "coding", isDefault: true),

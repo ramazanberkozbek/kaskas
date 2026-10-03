@@ -35,10 +35,10 @@ struct CategoryRegistryTests {
         #expect(registry.resolveCategory(bundleId: "com.spotify.client", appName: "Spotify").id == "entertainment")
 
         // Kaskas is assigned automatically, with user overrides still taking precedence.
-        #expect(registry.resolveCategory(bundleId: "com.ramazanozbek.kaskas", appName: "Kaskas").id == "productivity")
+        #expect(registry.resolveCategory(bundleId: CategoryRegistry.mainAppBundleIdentifier, appName: "Kaskas").id == "productivity")
         #expect(registry.resolveCategory(bundleId: nil, appName: "Kaskas").id == "productivity")
-        registry.addOrUpdateRule(appIdentifier: "com.ramazanozbek.kaskas", displayName: "Kaskas", categoryId: "coding")
-        #expect(registry.resolveCategory(bundleId: "com.ramazanozbek.kaskas", appName: "Kaskas").id == "coding")
+        registry.addOrUpdateRule(appIdentifier: CategoryRegistry.mainAppBundleIdentifier, displayName: "Kaskas", categoryId: "coding")
+        #expect(registry.resolveCategory(bundleId: CategoryRegistry.mainAppBundleIdentifier, appName: "Kaskas").id == "coding")
 
         // Unknown defaults to other
         #expect(registry.resolveCategory(bundleId: "com.unknown.randomapp", appName: "RandomApp").id == "other")
