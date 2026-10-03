@@ -2,9 +2,16 @@ import AVFoundation
 import CoreAudio
 import Foundation
 
+@MainActor
+protocol MeetingActivityMonitoring {
+    func start(onChange: @escaping (Bool) -> Void)
+    func stop()
+    func sample() -> Bool
+}
+
 /// Detects active video calls and meetings by monitoring microphone input and camera usage.
 @MainActor
-final class MeetingActivityMonitor {
+final class MeetingActivityMonitor: MeetingActivityMonitoring {
     private var timer: Timer?
     private var lastSample = false
     private var onChange: ((Bool) -> Void)?

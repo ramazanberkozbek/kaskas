@@ -31,7 +31,10 @@ private struct MenuBarStatusLabel: View {
     private let clock = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        let remaining = controller.snapshot(at: now).remaining
+        let snapshot = controller.sessionSnapshot
+        let remaining = snapshot.status.isPaused
+            ? snapshot.remaining
+            : max(0, snapshot.endsAt.timeIntervalSince(now))
         let displayMode = controller.configuration.menuBarDisplayMode
 
         HStack(spacing: 4) {
@@ -48,5 +51,6 @@ private struct MenuBarStatusLabel: View {
             }
         }
         .onReceive(clock) { now = $0 }
+        .onChange(of: controller.sessionSnapshot) { _, _ in now = .now }
     }
 }

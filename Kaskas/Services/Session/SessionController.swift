@@ -2,19 +2,8 @@ import AppKit
 import Foundation
 import Observation
 
-/// The puppet master and central brain of Kaskas.
-///
-/// If this class breaks, the entire app has an existential crisis. It sits between
-/// pure mathematical state (`SessionEngine`) and the messy real world coordinating
-/// timers, spying on hardware, and ultimately deciding when you need to touch grass.
-///
-/// What the maestro actually does:
-/// - Dictates the focus & break lifecycle (and tolerates your desperate snooze clicks).
-/// - Keeps an eye on your camera and mic so it doesn't embarrass you during Zoom calls.
-/// - Detects when you abandon your Mac for coffee and counts it as a natural break.
-/// - Tracks which apps steal your focus and silently logs them to SwiftData.
-/// - Hijacks your screen when it's break time and locks it if you asked for tough love.
-/// - Survives system sleep, restarts, and random macOS panics without losing a second.
+/// Coordinates session transitions, monitoring, persistence, and presentation.
+/// SessionEngine owns the state; this controller applies its effects to macOS services.
 @MainActor
 @Observable
 final class SessionController {
@@ -44,7 +33,7 @@ final class SessionController {
     @ObservationIgnored private let skippedBreakNotifier = SkippedBreakNotifier()
     @ObservationIgnored private let idleBreakNotifier = IdleBreakNotifier()
     @ObservationIgnored private let cursorIdleMonitor = CursorIdleMonitor()
-    @ObservationIgnored private let meetingMonitor = MeetingActivityMonitor()
+    @ObservationIgnored private let meetingMonitor: any MeetingActivityMonitoring
     @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
 
@@ -59,6 +48,7 @@ final class SessionController {
         breakWarningPresenter: BreakWarningPresenter = BreakWarningPresenter(),
         breakPresenter: BreakPresenter = BreakPresenter(),
         settingsPresenter: SettingsPresenter = SettingsPresenter(),
+        meetingMonitor: any MeetingActivityMonitoring = MeetingActivityMonitor(),
         now: Date = Date()
     ) {
         let configuration = store.loadConfiguration()
@@ -68,6 +58,7 @@ final class SessionController {
             UserDefaults.standard.set([configuration.appLanguage.rawValue], forKey: "AppleLanguages")
         }
         self.store = store
+        self.meetingMonitor = meetingMonitor
         self.categoryRegistry = categoryRegistry
         appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore)
         persistence = SessionPersistence(store: store, historyStore: historyStore)
@@ -258,6 +249,7 @@ final class SessionController {
             }
             AppLanguage.currentLocale = configuration.appLanguage.locale
         }
+        let meetingDetectionEnabled = configuration.pauseDuringMeetings && !self.configuration.pauseDuringMeetings
         let dockVisibilityChanged = configuration.showInDock != self.configuration.showInDock
         self.configuration = configuration
         if dockVisibilityChanged { applyDockVisibility() }
@@ -272,6 +264,10 @@ final class SessionController {
         let effects = engine.send(.updateConfiguration(configuration), at: now)
         store.save(configuration: configuration)
         apply(effects, at: now, showsBreakWarning: !warningSettingsChanged)
+        if meetingDetectionEnabled {
+            let meetingEffects = engine.send(.setMeeting(active: meetingMonitor.sample()), at: now)
+            apply(meetingEffects, at: now)
+        }
         if idleSettingsChanged { startIdleMonitoringIfNeeded() }
         if warningSettingsChanged,
            engine.status.phase == .focusing,

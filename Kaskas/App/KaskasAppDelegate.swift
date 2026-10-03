@@ -1,4 +1,5 @@
 import AppKit
+import CoreGraphics
 import SwiftData
 
 @MainActor
@@ -80,14 +81,26 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
             name: NSWorkspace.sessionDidBecomeActiveNotification,
             object: nil
         )
+        let distributed = DistributedNotificationCenter.default()
+        // macOS broadcasts screen lock separately from display sleep and user switching.
+        distributed.addObserver(self, selector: #selector(screenDidLock(_:)),
+                                name: Notification.Name("com.apple.screenIsLocked"), object: nil)
+        distributed.addObserver(self, selector: #selector(screenDidUnlock(_:)),
+                                name: Notification.Name("com.apple.screenIsUnlocked"), object: nil)
         sessionController.start()
+        if CGDisplayIsAsleep(CGMainDisplayID()) != 0 {
+            updateAvailability(.screenSlept)
+        }
+        if let session = CGSessionCopyCurrentDictionary() as? [String: Any],
+           session[kCGSessionOnConsoleKey as String] as? Bool == false {
+            updateAvailability(.sessionResigned)
+        }
         if ProcessInfo.processInfo.environment["KASKAS_OPEN_SETTINGS"] == "1" {
             sessionController.openSettings()
         }
     }
 
-    private var isScreenAwake = true
-    private var isSessionActive = true
+    private var availability = SessionAvailability()
 
     func applicationDidBecomeActive(_ notification: Notification) {
         sessionController.launchAtLogin.refresh()
@@ -100,6 +113,9 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        NotificationCenter.default.removeObserver(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+        DistributedNotificationCenter.default().removeObserver(self)
         sessionController.stop()
     }
 
@@ -108,37 +124,81 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
         sessionController.reconcile()
     }
 
+    private func updateAvailability(_ event: SessionAvailability.Event) {
+        switch availability.receive(event) {
+        case .suspend:
+            sessionController.systemWillSleep()
+        case .resume:
+            sessionController.systemDidWake()
+        case nil:
+            break
+        }
+    }
+
     @objc private func workspaceWillSleep(_ notification: Notification) {
-        sessionController.systemWillSleep()
+        updateAvailability(.systemSlept)
     }
 
     @objc private func workspaceDidWake(_ notification: Notification) {
-        isScreenAwake = true
-        isSessionActive = true
-        sessionController.systemDidWake()
+        // Sample the display before allowing a system wake to resume tracking.
+        updateAvailability(CGDisplayIsAsleep(CGMainDisplayID()) != 0 ? .screenSlept : .screenWoke)
+        updateAvailability(.systemWoke)
     }
 
     @objc private func screensDidSleep(_ notification: Notification) {
-        isScreenAwake = false
-        sessionController.screenOrSessionDidLock()
+        updateAvailability(.screenSlept)
     }
 
     @objc private func screensDidWake(_ notification: Notification) {
-        isScreenAwake = true
-        if isScreenAwake && isSessionActive {
-            sessionController.screenOrSessionDidUnlock()
-        }
+        updateAvailability(.screenWoke)
     }
 
     @objc private func sessionDidResignActive(_ notification: Notification) {
-        isSessionActive = false
-        sessionController.screenOrSessionDidLock()
+        updateAvailability(.sessionResigned)
     }
 
     @objc private func sessionDidBecomeActive(_ notification: Notification) {
-        isSessionActive = true
-        if isScreenAwake && isSessionActive {
-            sessionController.screenOrSessionDidUnlock()
+        updateAvailability(.sessionActivated)
+    }
+
+    @objc private func screenDidLock(_ notification: Notification) {
+        updateAvailability(.screenLocked)
+    }
+
+    @objc private func screenDidUnlock(_ notification: Notification) {
+        updateAvailability(.screenUnlocked)
+    }
+}
+
+/// Resumes tracking only when the system, display, and unlocked user session are available.
+struct SessionAvailability {
+    enum Event {
+        case systemSlept, systemWoke, screenSlept, screenWoke
+        case sessionResigned, sessionActivated, screenLocked, screenUnlocked
+    }
+
+    enum Action: Equatable { case suspend, resume }
+
+    private var systemAwake = true
+    private var screenAwake = true
+    private var sessionActive = true
+    private var screenLocked = false
+
+    var isAvailable: Bool { systemAwake && screenAwake && sessionActive && !screenLocked }
+
+    mutating func receive(_ event: Event) -> Action? {
+        let wasAvailable = isAvailable
+        switch event {
+        case .systemSlept: systemAwake = false
+        case .systemWoke: systemAwake = true
+        case .screenSlept: screenAwake = false
+        case .screenWoke: screenAwake = true
+        case .sessionResigned: sessionActive = false
+        case .sessionActivated: sessionActive = true
+        case .screenLocked: screenLocked = true
+        case .screenUnlocked: screenLocked = false
         }
+        guard wasAvailable != isAvailable else { return nil }
+        return isAvailable ? .resume : .suspend
     }
 }
