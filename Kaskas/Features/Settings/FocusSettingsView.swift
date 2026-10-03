@@ -311,28 +311,8 @@ struct FocusSettingsView: View {
         panel.message = String(localized: "settings.breakAppearance.chooseImageMessage", defaultValue: "Mola ekranı için bir arka plan görseli seçin")
 
         if panel.runModal() == .OK, let url = panel.url {
-            saveCustomWallpaper(from: url)
+            controller.setCustomWallpaper(from: url)
         }
-    }
-
-    private func saveCustomWallpaper(from sourceURL: URL) {
-        guard let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        ).first else { return }
-
-        let folderName = Bundle.main.bundleIdentifier ?? "Kaskas"
-        let kaskasFolder = appSupport.appendingPathComponent(folderName, isDirectory: true)
-        try? FileManager.default.createDirectory(at: kaskasFolder, withIntermediateDirectories: true)
-
-        let targetURL = kaskasFolder.appendingPathComponent("custom_wallpaper.\(sourceURL.pathExtension)")
-        try? FileManager.default.removeItem(at: targetURL)
-        try? FileManager.default.copyItem(at: sourceURL, to: targetURL)
-
-        var config = controller.configuration
-        config.customWallpaperPath = targetURL.path
-        config.breakBackground = .custom
-        controller.updateConfiguration(config)
     }
 
     // MARK: - Formatters & Bindings

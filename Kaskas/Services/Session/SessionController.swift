@@ -280,6 +280,27 @@ final class SessionController {
         }
     }
 
+    /// Copies a chosen image file to the application support directory and activates it as the custom break wallpaper.
+    func setCustomWallpaper(from sourceURL: URL) {
+        guard let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else { return }
+
+        let folderName = Bundle.main.bundleIdentifier ?? "Kaskas"
+        let kaskasFolder = appSupport.appendingPathComponent(folderName, isDirectory: true)
+        try? FileManager.default.createDirectory(at: kaskasFolder, withIntermediateDirectories: true)
+
+        let targetURL = kaskasFolder.appendingPathComponent("custom_wallpaper.\(sourceURL.pathExtension)")
+        try? FileManager.default.removeItem(at: targetURL)
+        try? FileManager.default.copyItem(at: sourceURL, to: targetURL)
+
+        var config = configuration
+        config.customWallpaperPath = targetURL.path
+        config.breakBackground = .custom
+        updateConfiguration(config)
+    }
+
     func startBreakNow() {
         let effects = engine.send(.startBreakNow, at: Date())
         apply(effects)
