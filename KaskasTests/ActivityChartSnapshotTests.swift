@@ -19,7 +19,7 @@ struct ActivityChartSnapshotTests {
                 startedAt: window.start.addingTimeInterval(-3600), endedAt: window.start.addingTimeInterval(3600)),
                 ActivityInterval(kind: .studying, startedAt: exclusiveEnd.addingTimeInterval(-1800),
                                  endedAt: exclusiveEnd.addingTimeInterval(1800))]
-            let snapshot = StatisticsChartSnapshot.make(intervals: intervals, now: end,
+            let snapshot = StatisticsChartSnapshot.make(intervals: intervals,
                 trendWindow: window, distributionWindow: window, hourlyWindow: window,
                 year: 2026, calendar: calendar)
             let categories = CategoryUsageSummary.make(intervals: intervals, usage: [], from: window.start, to: exclusiveEnd)
@@ -37,7 +37,7 @@ struct ActivityChartSnapshotTests {
         let window = StatisticsPeriod.thirty.window(endingAt: end, calendar: calendar)
         let start = window.start.addingTimeInterval(9 * 3600)
         let intervals = [ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(3600))]
-        let snapshot = StatisticsChartSnapshot.make(intervals: intervals, now: end,
+        let snapshot = StatisticsChartSnapshot.make(intervals: intervals,
             trendWindow: window, distributionWindow: window, hourlyWindow: window, year: 2026, calendar: calendar)
         #expect(snapshot.averageHourlyPoints.count == 24)
         #expect(snapshot.averageHourlyPoints.first { $0.hour == 9 }?.minutes == 2)
@@ -93,11 +93,9 @@ struct ActivityChartSnapshotTests {
             ActivityInterval(kind: .breakTime, startedAt: a, endedAt: a.addingTimeInterval(600)),
             ActivityInterval(kind: .meeting, startedAt: tomorrow, endedAt: tomorrow.addingTimeInterval(900)),
             ActivityInterval(kind: .studying, startedAt: nextYear, endedAt: nextYear.addingTimeInterval(3600))]
-        let snapshot = StatisticsChartSnapshot.make(intervals: intervals, now: day,
+        let snapshot = StatisticsChartSnapshot.make(intervals: intervals,
             trendWindow: (day, tomorrow), distributionWindow: (tomorrow, tomorrow),
             hourlyWindow: (day, day), year: 2026, calendar: calendar)
-        #expect(snapshot.today.studying == 5400)
-        #expect(snapshot.today.breakTime == 600)
         #expect(snapshot.trend.points.map(\.hours) == [1.5, 0])
         #expect(snapshot.distributionDays.count == 1)
         #expect(snapshot.distributionDays[0].meeting == 900)
@@ -119,13 +117,11 @@ struct ActivityChartSnapshotTests {
         let end = try #require(calendar.date(byAdding: .day, value: 1, to: start))
         #expect(end.timeIntervalSince(start) == Double(hours) * 3600)
         let intervals = [ActivityInterval(kind: .studying, startedAt: start, endedAt: end)]
-        let snapshot = StatisticsChartSnapshot.make(intervals: intervals, now: start,
+        let snapshot = StatisticsChartSnapshot.make(intervals: intervals,
             trendWindow: (start, start), distributionWindow: (start, start), hourlyWindow: (start, start), year: 2026, calendar: calendar)
-        #expect(snapshot.today.studying == Double(hours) * 3600)
         #expect(snapshot.hourlyPoints.reduce(0) { $0 + $1.minutes } == Double(hours) * 60)
         if hours == 23 { #expect(snapshot.hourlyPoints.first { $0.hour == 2 }?.minutes == repeatedHour) }
         else { #expect(snapshot.hourlyPoints.first { $0.hour == 1 }?.minutes == repeatedHour) }
-        #expect(snapshot.hourlyUpperBound == (hours == 25 ? 120 : 60))
         let daily = DashboardTodayChartData.make(date: start, intervals: intervals, calendar: calendar)
         #expect(daily.todayHours.reduce(0, +) == Double(hours))
         #expect(daily.yesterdayHours.reduce(0, +) == 0)

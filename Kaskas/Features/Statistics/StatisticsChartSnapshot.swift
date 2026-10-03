@@ -15,13 +15,11 @@ struct StatisticsChartSnapshot {
         var id: String { "\(date.timeIntervalSinceReferenceDate)-\(hour)" }
     }
 
-    let today: DailyActivity
     let trend: StudyTrendData
     let distributionDays: [DailyActivity]
     let distributionPoints: [DistributionPoint]
     let hourlyDays: [DailyActivity]
     let hourlyPoints: [HourlyPoint]
-    let hourlyUpperBound: Double
     let year: YearHeatmapData
 
     /// Includes empty days so the monthly view shows a daily average, not a total.
@@ -34,14 +32,12 @@ struct StatisticsChartSnapshot {
         }
     }
 
-    static let empty = Self(today: .init(date: .distantPast), trend: .empty, distributionDays: [],
-                            distributionPoints: [], hourlyDays: [], hourlyPoints: [], hourlyUpperBound: 60, year: .empty)
+    static let empty = Self(trend: .empty, distributionDays: [], distributionPoints: [],
+                            hourlyDays: [], hourlyPoints: [], year: .empty)
 
-    static func make(intervals: [ActivityInterval], now: Date, trendWindow: (start: Date, end: Date),
+    static func make(intervals: [ActivityInterval], trendWindow: (start: Date, end: Date),
                      distributionWindow: (start: Date, end: Date), hourlyWindow: (start: Date, end: Date),
                      year: Int, calendar: Calendar = .current) -> Self {
-        let today = ActivityStatistics.days(from: now, through: now, intervals: intervals, calendar: calendar).first
-            ?? DailyActivity(date: calendar.startOfDay(for: now))
         let trendDays = ActivityStatistics.days(from: trendWindow.start, through: trendWindow.end, intervals: intervals, calendar: calendar)
         let distributionDays = ActivityStatistics.days(from: distributionWindow.start, through: distributionWindow.end, intervals: intervals, calendar: calendar)
         let hourlyDays = ActivityStatistics.days(from: hourlyWindow.start, through: hourlyWindow.end, intervals: intervals, calendar: calendar)
@@ -55,12 +51,11 @@ struct StatisticsChartSnapshot {
            let end = calendar.date(from: DateComponents(year: year, month: 12, day: 31)) {
             yearDays = ActivityStatistics.days(from: start, through: end, intervals: intervals, calendar: calendar)
         } else { yearDays = [] }
-        return Self(today: today, trend: .make(days: trendDays, intervals: intervals, calendar: calendar),
+        return Self(trend: .make(days: trendDays, intervals: intervals, calendar: calendar),
                     distributionDays: distributionDays,
                     distributionPoints: distributionDays.flatMap { day in
                         ActivityKind.allCases.map { DistributionPoint(date: day.date, kind: $0, hours: day.duration(for: $0) / 3600) }
                     }, hourlyDays: hourlyDays, hourlyPoints: hourlyPoints,
-                    hourlyUpperBound: max(60, (hourlyPoints.map(\.minutes).max() ?? 0).rounded(.up)),
                     year: .make(year: year, days: yearDays, calendar: calendar))
     }
 }
