@@ -60,9 +60,12 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
 
     private func bringToFront(_ window: NSWindow) {
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
+
+        DispatchQueue.main.async {
+            NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 
     // MARK: - NSWindowDelegate

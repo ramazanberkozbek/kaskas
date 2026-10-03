@@ -14,7 +14,9 @@ struct AlertsSettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                SettingsPaneHeader(title: "settings.sidebar.notifications")
+
                 // Önizleme ve mola uyarısı anahtarı
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
@@ -27,7 +29,6 @@ struct AlertsSettingsView: View {
                             .toggleStyle(.switch)
                             .accessibilityLabel(Text("settings.alerts.breakWarning"))
                     }
-                    .padding(.horizontal, 4)
 
                     NotificationDesktopPreview(
                         leadTime: controller.configuration.breakWarningLeadTime,
@@ -48,7 +49,6 @@ struct AlertsSettingsView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
                         settingRow(
@@ -68,7 +68,7 @@ struct AlertsSettingsView: View {
                         .disabled(!controller.configuration.breakWarningEnabled)
 
                         Divider()
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, SettingsPageLayout.cardInset)
 
                         settingRow(
                             title: "settings.alerts.position",
@@ -99,7 +99,6 @@ struct AlertsSettingsView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
                         soundPickerRow(
@@ -111,7 +110,7 @@ struct AlertsSettingsView: View {
                             )
                         )
 
-                        Divider().padding(.horizontal, 16)
+                        Divider().padding(.horizontal, SettingsPageLayout.cardInset)
 
                         soundPickerRow(
                             title: "settings.breakSound.endChoice",
@@ -135,7 +134,6 @@ struct AlertsSettingsView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
                         // Üst Alan: Sanatsal Arka Plan ve Maskot Önizlemesi
@@ -190,7 +188,7 @@ struct AlertsSettingsView: View {
                             )
                         }
 
-                        Divider().padding(.horizontal, 16)
+                        Divider().padding(.horizontal, SettingsPageLayout.cardInset)
 
                         // 2. Satır: Maskot Seçimi
                         settingRow(
@@ -231,11 +229,7 @@ struct AlertsSettingsView: View {
                     }
                 }
             }
-            .frame(maxWidth: 600, alignment: .leading)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 28)
-            .padding(.top, 28)
-            .padding(.bottom, 36)
+            .settingsPageContent()
         }
         .scrollIndicators(.hidden)
         .background(colorScheme == .dark
@@ -297,7 +291,7 @@ struct AlertsSettingsView: View {
             control()
         }
         .frame(minHeight: 66)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, SettingsPageLayout.cardInset)
     }
 
     private func soundPickerRow(
@@ -421,7 +415,7 @@ private struct NotificationDesktopPreview: View {
             }
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.white)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, SettingsPageLayout.cardInset)
             .frame(height: 24)
             .background(.black.opacity(0.40))
 
@@ -487,50 +481,51 @@ private struct MiniBreakWarningView: View {
                     }
 
                 VStack(alignment: .leading, spacing: 1) {
-                    (Text("warning.title") + Text(" ") + Text(timeString))
-                        .font(.system(size: 10.5, weight: .semibold, design: .rounded))
+                    Text(timeString)
+                        .font(NotificationTypography.title(scale: 0.62))
                         .monospacedDigit()
                         .foregroundStyle(.white)
 
                     Text("warning.subtitle")
-                        .font(.system(size: 8.5, weight: .regular))
+                        .font(NotificationTypography.message(scale: 0.65))
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
                 }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "xmark")
+                    .font(.system(size: 7, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.35))
+                    .frame(width: 14, height: 14)
+                    .background(Color.white.opacity(0.04), in: Circle())
             }
 
             HStack(spacing: 3) {
                 miniButton("warning.startNow", prominent: true)
                 miniButton("warning.oneMinute")
                 miniButton("warning.fiveMinutes")
-                miniButton("warning.skip")
+                miniButton("warning.fifteenMinutes")
             }
         }
         .padding(9)
         .frame(width: 236)
-        .background(
-            Color(red: 0.12, green: 0.13, blue: 0.15).opacity(0.88),
-            in: RoundedRectangle(cornerRadius: 12)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.14), lineWidth: 0.75)
-        }
+        .modifier(NotificationGlassBackground(cornerRadius: 12))
         .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
     }
 
     private func miniButton(_ title: LocalizedStringKey, prominent: Bool = false) -> some View {
         Text(title)
-            .font(.system(size: 8, weight: prominent ? .semibold : .medium))
+            .font(NotificationTypography.action(scale: 0.62))
             .foregroundStyle(.white.opacity(prominent ? 1.0 : 0.85))
             .padding(.horizontal, 6)
             .frame(height: 18)
             .background(
-                prominent ? Color.white.opacity(0.2) : Color.white.opacity(0.06),
+                prominent ? Color.white.opacity(0.12) : Color.white.opacity(0.04),
                 in: Capsule()
             )
             .overlay {
-                Capsule().stroke(Color.white.opacity(prominent ? 0.35 : 0.15), lineWidth: 0.5)
+                Capsule().stroke(Color.white.opacity(prominent ? 0.24 : 0.15), lineWidth: 0.5)
             }
     }
 }

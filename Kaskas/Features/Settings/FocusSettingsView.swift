@@ -12,7 +12,9 @@ struct FocusSettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                SettingsPaneHeader(title: "settings.sidebar.focus")
+
                 // 1. Mola Programı (BREAK SCHEDULE)
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading(
@@ -193,7 +195,7 @@ struct FocusSettingsView: View {
                                     onPickNew: { chooseCustomWallpaper() }
                                 )
                             }
-                            .padding(14)
+                            .padding(SettingsPageLayout.cardInset)
                         }
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
@@ -214,11 +216,7 @@ struct FocusSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
             }
-            .frame(maxWidth: 600, alignment: .leading)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 28)
-            .padding(.top, 28)
-            .padding(.bottom, 36)
+            .settingsPageContent()
         }
         .scrollIndicators(.hidden)
         .background(colorScheme == .dark
@@ -240,7 +238,6 @@ struct FocusSettingsView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, 4)
     }
 
     private var cardBackground: Color {
@@ -250,7 +247,7 @@ struct FocusSettingsView: View {
     }
 
     private var rowDivider: some View {
-        Divider().padding(.horizontal, 16)
+        Divider().padding(.horizontal, SettingsPageLayout.cardInset)
     }
 
     private func settingRow<Control: View>(
@@ -277,7 +274,7 @@ struct FocusSettingsView: View {
             control()
         }
         .frame(minHeight: 56)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, SettingsPageLayout.cardInset)
         .padding(.vertical, 6)
     }
 
@@ -438,40 +435,41 @@ struct BreakMiniPreviewCard: View {
             // Önizleme içeriği
             VStack(spacing: 0) {
                 // Üst Bar: "Live preview", Tarih, Tam Ekran Butonu
-                HStack(alignment: .center) {
-                    Text("settings.breakAppearance.livePreview")
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 6)
-                                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-                        }
-
-                    Spacer()
-
-                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                ZStack {
+                    Text(Date.now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
                         .font(.system(size: 10.5, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
 
-                    Spacer()
-
-                    Button(action: onFullscreen) {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(6)
+                    HStack(alignment: .center) {
+                        Text("settings.breakAppearance.livePreview")
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.92))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
                             .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
                             .overlay {
                                 RoundedRectangle(cornerRadius: 6)
                                     .strokeBorder(.white.opacity(0.12), lineWidth: 1)
                             }
+
+                        Spacer()
+
+                        Button(action: onFullscreen) {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(6)
+                                .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                                }
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, SettingsPageLayout.cardInset)
                 .padding(.top, 14)
 
                 if configuration.breakLayout == .gentleBar {

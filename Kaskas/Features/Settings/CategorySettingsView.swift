@@ -58,8 +58,10 @@ struct CategorySettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                // Top Action Toolbar (No large title header)
+            VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                SettingsPaneHeader(title: "settings.sidebar.categories")
+
+                // Search and category actions
                 HStack(spacing: 12) {
                     // Search bar
                     HStack {
@@ -144,7 +146,6 @@ struct CategorySettingsView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 2)
 
                 // Folder-like Expandable Category Sections
                 VStack(spacing: 12) {
@@ -178,11 +179,7 @@ struct CategorySettingsView: View {
                 }
                 .padding(.top, 4)
             }
-            .frame(maxWidth: 760, alignment: .leading)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 28)
-            .padding(.top, 20)
-            .padding(.bottom, 36)
+            .settingsPageContent()
         }
         .scrollIndicators(.hidden)
         .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
@@ -356,7 +353,7 @@ struct CategorySettingsView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Vazgeç")
                     }
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, SettingsPageLayout.cardInset)
                     .padding(.vertical, 10)
                 } else {
                     HStack(spacing: 0) {
@@ -377,7 +374,7 @@ struct CategorySettingsView: View {
                                     .foregroundStyle(.primary)
                                     .frame(width: 18)
 
-                                Text(category.localizedName)
+                                Text(category.localizedName(for: controller.locale))
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(.primary)
 
@@ -390,7 +387,7 @@ struct CategorySettingsView: View {
 
                                 Spacer(minLength: 0)
                             }
-                            .padding(.leading, 14)
+                            .padding(.leading, SettingsPageLayout.cardInset)
                             .padding(.trailing, 8)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -441,7 +438,7 @@ struct CategorySettingsView: View {
             // Content when folder is expanded
             if isExpanded {
                 Divider()
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, SettingsPageLayout.cardInset)
 
                 if rules.isEmpty {
                     HStack {
@@ -458,7 +455,7 @@ struct CategorySettingsView: View {
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, SettingsPageLayout.cardInset)
                     .padding(.vertical, 10)
                 } else {
                     LazyVStack(spacing: 0) {
@@ -518,7 +515,7 @@ struct CategorySettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: cat.iconName)
-                            Text(cat.localizedName)
+                            Text(cat.localizedName(for: controller.locale))
                             if cat.id == rule.categoryId {
                                 Image(systemName: "checkmark")
                             }
@@ -530,7 +527,7 @@ struct CategorySettingsView: View {
                     Image(systemName: currentCategory.iconName)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                    Text(currentCategory.localizedName)
+                    Text(currentCategory.localizedName(for: controller.locale))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.up.chevron.down")
@@ -558,7 +555,7 @@ struct CategorySettingsView: View {
             .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
             .accessibilityLabel(rule.isDefault ? String(localized: "categories.rules.removeRule") : String(localized: "categories.rules.removeOverride"))
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, SettingsPageLayout.cardInset)
         .padding(.vertical, 9)
     }
 
@@ -640,7 +637,7 @@ struct CategorySettingsView: View {
 
     private func startEditing(_ category: AppCategory) {
         editingCategoryId = category.id
-        editingCategoryName = category.name
+        editingCategoryName = category.localizedName
         editingCategoryIcon = category.iconName
         editIconSearchText = ""
         showingEditIconPopover = false
@@ -662,7 +659,7 @@ struct CategorySettingsView: View {
         guard !cleanName.isEmpty else { return }
 
         registry.addOrUpdateCategory(
-            name: cleanName,
+            name: cleanName == category.localizedName ? category.name : cleanName,
             iconName: editingCategoryIcon.isEmpty ? category.iconName : editingCategoryIcon,
             colorName: category.colorName,
             id: category.id

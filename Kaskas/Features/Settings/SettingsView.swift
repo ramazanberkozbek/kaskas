@@ -27,6 +27,10 @@ struct SettingsView: View {
             detailContent
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .scrollIndicators(.hidden)
+                .toolbar(removing: .title)
+                // The detail has no toolbar items; let its scrolling content
+                // use that space while the sidebar keeps its window controls.
+                .ignoresSafeArea(.container, edges: .top)
         }
         .navigationSplitViewStyle(.balanced)
         .scrollIndicators(.hidden)

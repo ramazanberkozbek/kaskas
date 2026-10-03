@@ -14,7 +14,7 @@ struct MenuBarAppearanceSettingsView: View {
     var body: some View {
         Section {
             preview
-                .padding(4)
+                .settingsFormRow()
         } header: {
             VStack(alignment: .leading, spacing: 2) {
                 Text("settings.menuBar.title")
@@ -26,6 +26,7 @@ struct MenuBarAppearanceSettingsView: View {
                     .foregroundStyle(.secondary)
                     .textCase(nil)
             }
+            .settingsFormSectionHeader()
         }
         .onReceive(clock) { now = $0 }
     }

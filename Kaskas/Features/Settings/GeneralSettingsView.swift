@@ -6,82 +6,101 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("settings.language.title") {
-                    SettingsMenuPicker(
-                        title: "settings.language.title",
-                        selection: appLanguage,
-                        selectedLabel: Text(controller.configuration.appLanguage.displayName)
-                    ) {
-                        ForEach(AppLanguage.allCases) { language in
-                            languageOptionRow(for: language).tag(language)
+                Group {
+                    LabeledContent("settings.language.title") {
+                        SettingsMenuPicker(
+                            title: "settings.language.title",
+                            selection: appLanguage,
+                            selectedLabel: Text(controller.configuration.appLanguage.displayName)
+                        ) {
+                            ForEach(AppLanguage.allCases) { language in
+                                languageOptionRow(for: language).tag(language)
+                            }
                         }
                     }
                 }
+                .settingsFormRow()
             } header: {
-                sectionHeader("settings.language.section")
+                VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsPaneHeader(title: "settings.sidebar.general")
+                    sectionHeader("settings.language.section")
+                }
+                .settingsFormSectionHeader()
             }
             Section {
-                Toggle(isOn: launchAtLogin) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("settings.startup.enabled")
-                        Text("settings.startup.description")
+                Group {
+                    Toggle(isOn: launchAtLogin) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("settings.startup.enabled")
+                            Text("settings.startup.description")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if controller.launchAtLogin.requiresApproval {
+                        Text("settings.startup.approval")
                             .font(.callout)
                             .foregroundStyle(.secondary)
+                        Button("settings.startup.openSystemSettings") {
+                            controller.launchAtLogin.openSystemSettings()
+                        }
+                    }
+                    if controller.launchAtLogin.updateFailed {
+                        Text("settings.startup.error")
+                            .font(.callout)
+                            .foregroundStyle(.red)
                     }
                 }
-                if controller.launchAtLogin.requiresApproval {
-                    Text("settings.startup.approval")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    Button("settings.startup.openSystemSettings") {
-                        controller.launchAtLogin.openSystemSettings()
-                    }
-                }
-                if controller.launchAtLogin.updateFailed {
-                    Text("settings.startup.error")
-                        .font(.callout)
-                        .foregroundStyle(.red)
-                }
+                .settingsFormRow()
             } header: {
                 sectionHeader("settings.startup.section")
+                    .settingsFormSectionHeader()
             }
             MenuBarAppearanceSettingsView(controller: controller)
             Section {
-                Toggle(isOn: pauseDuringMeetings) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("settings.meetings.enabled")
-                        Text("settings.meetings.description")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
+                Group {
+                    Toggle(isOn: pauseDuringMeetings) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("settings.meetings.enabled")
+                            Text("settings.meetings.description")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
+                .settingsFormRow()
             } header: {
                 sectionHeader("settings.meetings.section")
+                    .settingsFormSectionHeader()
             }
             Section {
-                Toggle(isOn: idleDetectionEnabled) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("settings.idle.enabled")
-                        Text("settings.idle.description")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
+                Group {
+                    Toggle(isOn: idleDetectionEnabled) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("settings.idle.enabled")
+                            Text("settings.idle.description")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
                     }
+                    SettingsDurationRow(
+                        title: "settings.idle.threshold",
+                        subtitle: "settings.idle.threshold.description",
+                        selection: idleThreshold,
+                        options: [1, 3, 5, 10].map { TimeInterval($0 * 60) }
+                    )
+                    .disabled(!controller.configuration.idleDetectionEnabled)
                 }
-                SettingsDurationRow(
-                    title: "settings.idle.threshold",
-                    subtitle: "settings.idle.threshold.description",
-                    selection: idleThreshold,
-                    options: [1, 3, 5, 10].map { TimeInterval($0 * 60) }
-                )
-                .disabled(!controller.configuration.idleDetectionEnabled)
+                .settingsFormRow()
             } header: {
                 sectionHeader("settings.idle.section")
+                    .settingsFormSectionHeader()
             }
 #if DEBUG
             DebugSettingsView(controller: controller)
 #endif
         }
-        .formStyle(.grouped)
+        .settingsGroupedFormLayout()
         .scrollIndicators(.hidden)
         .onAppear { controller.launchAtLogin.refresh() }
     }

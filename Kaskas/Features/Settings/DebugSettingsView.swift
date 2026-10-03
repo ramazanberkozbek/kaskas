@@ -10,52 +10,56 @@ struct DebugSettingsView: View {
 
     var body: some View {
         Section {
-            Toggle("debug.enable", isOn: $isEnabled)
+            Group {
+                Toggle("debug.enable", isOn: $isEnabled)
 
-            if isEnabled {
-                Toggle("debug.sessionDetails", isOn: $sessionDetailsEnabled)
+                if isEnabled {
+                    Toggle("debug.sessionDetails", isOn: $sessionDetailsEnabled)
 
-                Text("debug.description")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    Text("debug.description")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
 
-                Button("debug.microReminder") {
-                    controller.previewMicroReminder()
-                }
+                    Button("debug.microReminder") {
+                        controller.previewMicroReminder()
+                    }
 
-                Button("debug.breakWarning") {
-                    controller.previewBreakWarning()
-                }
+                    Button("debug.breakWarning") {
+                        controller.previewBreakWarning()
+                    }
 
-                Button("debug.skippedBreakReminder") {
-                    controller.previewSkippedBreakReminder()
-                }
+                    Button("debug.skippedBreakReminder") {
+                        controller.previewSkippedBreakReminder()
+                    }
 
-                Button("debug.break") {
-                    controller.previewBreak()
-                }
+                    Button("debug.break") {
+                        controller.previewBreak()
+                    }
 
-                Button("debug.dismissPreviews") {
-                    controller.dismissPreviews()
-                }
+                    Button("debug.dismissPreviews") {
+                        controller.dismissPreviews()
+                    }
 
-                LabeledContent("debug.session") {
-                    if controller.sessionSnapshot.phase == .focusing {
-                        Text("debug.focusing")
-                    } else {
-                        Text("debug.onBreak")
+                    LabeledContent("debug.session") {
+                        if controller.sessionSnapshot.phase == .focusing {
+                            Text("debug.focusing")
+                        } else {
+                            Text("debug.onBreak")
+                        }
+                    }
+
+                    LabeledContent("debug.breaksToday") {
+                        Text(controller.breaksTakenToday().formatted())
                     }
                 }
-
-                LabeledContent("debug.breaksToday") {
-                    Text(controller.breaksTakenToday().formatted())
-                }
             }
+            .settingsFormRow()
         } header: {
             Text("debug.title")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.primary)
                 .textCase(nil)
+                .settingsFormSectionHeader()
         }
         .onChange(of: isEnabled) { _, enabled in
             if !enabled {

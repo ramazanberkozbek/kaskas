@@ -20,7 +20,7 @@ struct AddCategoryRuleSheet: View {
         self.registry = registry
         self.initialCategory = initialCategory
         self.onSave = onSave
-        _categoryName = State(initialValue: initialCategory?.name ?? "")
+        _categoryName = State(initialValue: initialCategory?.localizedName ?? "")
         _categoryIcon = State(initialValue: initialCategory?.iconName ?? "folder.fill")
     }
 
@@ -139,7 +139,7 @@ struct AddCategoryRuleSheet: View {
                                     Button {
                                         selectedApp = app
                                         if initialCategory == nil, let currentCategory {
-                                            categoryName = currentCategory.name
+                                            categoryName = currentCategory.localizedName
                                             categoryIcon = currentCategory.iconName
                                         }
                                     } label: {
@@ -271,7 +271,7 @@ struct AddCategoryRuleSheet: View {
                         HStack(spacing: 6) {
                             ForEach(registry.categories) { cat in
                                 Button {
-                                    categoryName = cat.name
+                                    categoryName = cat.localizedName
                                     categoryIcon = cat.iconName
                                 } label: {
                                     HStack(spacing: 5) {
@@ -281,12 +281,12 @@ struct AddCategoryRuleSheet: View {
                                             .font(.system(size: 12, weight: .medium))
                                     }
                                     .foregroundStyle(
-                                        categoryName == cat.name ? Color.accentColor : .secondary
+                                        categoryName == cat.localizedName ? Color.accentColor : .secondary
                                     )
                                     .padding(.horizontal, 11)
                                     .padding(.vertical, 6)
                                     .background(
-                                        categoryName == cat.name
+                                        categoryName == cat.localizedName
                                             ? Color.accentColor.opacity(0.12)
                                             : Color.primary.opacity(0.04),
                                         in: Capsule()
@@ -294,7 +294,7 @@ struct AddCategoryRuleSheet: View {
                                     .overlay(
                                         Capsule()
                                             .strokeBorder(
-                                                categoryName == cat.name
+                                                categoryName == cat.localizedName
                                                     ? Color.accentColor.opacity(0.3)
                                                     : Color.primary.opacity(0.08),
                                                 lineWidth: 1
@@ -369,7 +369,10 @@ struct AddCategoryRuleSheet: View {
 
         // Check if this matches an existing category by name
         var targetCategoryId: String
-        if let existingCategory = registry.categories.first(where: { $0.name.caseInsensitiveCompare(cleanCategoryName) == .orderedSame }) {
+        if let existingCategory = registry.categories.first(where: {
+            $0.localizedName.caseInsensitiveCompare(cleanCategoryName) == .orderedSame
+                || $0.name.caseInsensitiveCompare(cleanCategoryName) == .orderedSame
+        }) {
             targetCategoryId = existingCategory.id
             // If the user changed the icon, update the category's icon too
             if categoryIcon != existingCategory.iconName {
