@@ -12,7 +12,6 @@ struct AddCategoryRuleSheet: View {
     @State private var categoryName: String
     @State private var categoryIcon: String
     @State private var showingIconPickerPopover: Bool = false
-    @State private var iconSearchText: String = ""
     @State private var installedApps: [CategoryRegistry.DiscoveredApp] = []
     @State private var isLoadingApps: Bool = false
 
@@ -165,7 +164,7 @@ struct AddCategoryRuleSheet: View {
                                                     .foregroundStyle(.secondary)
                                                     .frame(width: 22, height: 22)
                                                     .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                                                    .accessibilityLabel("\(currentCategory.localizedName) kategorisinde tanımlı")
+                                                    .accessibilityLabel(String(format: String(localized: "%@ kategorisinde tanımlı"), currentCategory.localizedName))
                                             }
 
                                             if isSelected {
@@ -211,7 +210,7 @@ struct AddCategoryRuleSheet: View {
                             HStack(spacing: 4) {
                                 Image(systemName: curCat.iconName)
                                     .font(.caption2)
-                                Text("Mevcut: \(curCat.localizedName)")
+                                Text(String(format: String(localized: "Mevcut: %@"), curCat.localizedName))
                                     .font(.caption2)
                             }
                             .foregroundStyle(.secondary)
@@ -235,7 +234,9 @@ struct AddCategoryRuleSheet: View {
                         }
                         .buttonStyle(.plain)
                         .popover(isPresented: $showingIconPickerPopover, arrowEdge: .bottom) {
-                            iconPickerPopover
+                            CategoryIconPickerPopover(selectedIcon: $categoryIcon) {
+                                showingIconPickerPopover = false
+                            }
                         }
 
                         // Category name text field
@@ -400,77 +401,5 @@ struct AddCategoryRuleSheet: View {
         )
         onSave()
         dismiss()
-    }
-
-    private var filteredIcons: [String] {
-        let query = iconSearchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !query.isEmpty else { return AppCategory.suggestedIcons }
-        return AppCategory.suggestedIcons.filter { $0.lowercased().contains(query) }
-    }
-
-    private var iconPickerPopover: some View {
-        VStack(spacing: 8) {
-            // Search field
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                TextField("İkon ara", text: $iconSearchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12))
-                if !iconSearchText.isEmpty {
-                    Button {
-                        iconSearchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                            .frame(width: 22, height: 22)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 6))
-
-            // Grid of icons
-            ScrollView {
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(34), spacing: 6), count: 6), spacing: 6) {
-                    ForEach(filteredIcons, id: \.self) { icon in
-                        Button {
-                            categoryIcon = icon
-                            showingIconPickerPopover = false
-                        } label: {
-                            Image(systemName: icon)
-                                .font(.system(size: 15))
-                                .frame(width: 34, height: 34)
-                                .foregroundStyle(categoryIcon == icon ? Color.accentColor : .primary)
-                                .background(
-                                    categoryIcon == icon
-                                        ? Color.accentColor.opacity(0.15)
-                                        : Color.primary.opacity(0.03),
-                                    in: RoundedRectangle(cornerRadius: 6)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .strokeBorder(
-                                            categoryIcon == icon ? Color.accentColor.opacity(0.4) : Color.clear,
-                                            lineWidth: 1
-                                        )
-                                )
-                                .contentShape(RoundedRectangle(cornerRadius: 6))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(4)
-            }
-            .scrollIndicators(.hidden)
-            .frame(height: 190)
-        }
-        .padding(10)
-        .frame(width: 270, height: 250)
     }
 }
