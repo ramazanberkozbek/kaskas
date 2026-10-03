@@ -26,34 +26,21 @@ struct BreakHistoryEntry: Codable, Equatable, Sendable {
 
     static func transition(
         from session: FocusSession,
+        startedAt: Date? = nil,
         at date: Date,
         outcome: Outcome,
         source: Source
     ) -> Self {
+        let effectiveStartedAt = startedAt ?? (session.phase == .onBreak ? session.startedAt : nil)
         let startBits = String(session.startedAt.timeIntervalSinceReferenceDate.bitPattern, radix: 16)
         return Self(
             id: "break-\(outcome.rawValue)-\(session.phase.rawValue)-\(startBits)",
             occurredAt: date,
-            startedAt: session.phase == .onBreak ? session.startedAt : nil,
+            startedAt: effectiveStartedAt,
             focusStartedAt: session.phase == .focusing ? session.startedAt : nil,
             focusedDuration: nil,
             outcome: outcome,
             source: source
-        )
-    }
-
-    static func legacySmartPause(_ record: LegacySmartPauseRecord) -> Self {
-        let startBits = String(record.focusStartedAt.timeIntervalSinceReferenceDate.bitPattern, radix: 16)
-        let stopBits = String(record.focusStoppedAt.timeIntervalSinceReferenceDate.bitPattern, radix: 16)
-        let returnBits = String(record.returnedAt.timeIntervalSinceReferenceDate.bitPattern, radix: 16)
-        return Self(
-            id: "smart-pause-\(startBits)-\(stopBits)-\(returnBits)",
-            occurredAt: record.returnedAt,
-            startedAt: nil,
-            focusStartedAt: record.focusStartedAt,
-            focusedDuration: record.focusedDuration,
-            outcome: .completed,
-            source: .smartPause
         )
     }
 
@@ -70,11 +57,4 @@ struct BreakHistoryEntry: Codable, Equatable, Sendable {
             source: .smartPause
         )
     }
-}
-
-struct LegacySmartPauseRecord: Decodable, Sendable {
-    let focusStartedAt: Date
-    let focusStoppedAt: Date
-    let returnedAt: Date
-    let focusedDuration: TimeInterval
 }

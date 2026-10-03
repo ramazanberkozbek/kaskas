@@ -142,8 +142,8 @@ struct SessionStoreTests {
         )
         let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
         var engine = SessionEngine(configuration: configuration, now: startDate)
-        _ = engine.skipBreak(at: startDate)
-        _ = engine.skipBreak(at: startDate.addingTimeInterval(1))
+        _ = engine.send(.skipBreak, at: startDate)
+        _ = engine.send(.skipBreak, at: startDate.addingTimeInterval(1))
 
         store.save(configuration: configuration)
         store.save(state: engine.state)
@@ -186,7 +186,7 @@ struct SessionStoreTests {
         let store = SessionStore(defaults: defaults)
         let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
         let checkpoint = start.addingTimeInterval(25 * 60)
-        let relaunch = checkpoint.addingTimeInterval(3 * 60 * 60)
+        let relaunch = checkpoint.addingTimeInterval(2 * 60)
         let original = SessionEngine(now: start)
         store.save(state: original.state, observedAt: checkpoint)
 

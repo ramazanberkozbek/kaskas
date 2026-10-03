@@ -26,14 +26,14 @@ struct SessionPersistenceTests {
         let history = RecordingHistory()
         let date = Date(timeIntervalSinceReferenceDate: 1_000_000)
         var engine = SessionEngine(now: date)
-        engine.startBreak(at: date)
+        engine.send(.startBreakNow, at: date)
         let record = BreakHistoryEntry.transition(
             from: engine.session,
             at: date.addingTimeInterval(60),
             outcome: .completed,
             source: .manual
         )
-        engine.completeBreak(at: date.addingTimeInterval(60))
+        engine.send(.completeBreak, at: date.addingTimeInterval(60))
 
         let firstPersistence = SessionPersistence(store: store, historyStore: history)
         firstPersistence.save(state: engine.state, record: record)

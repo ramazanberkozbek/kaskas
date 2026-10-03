@@ -21,13 +21,6 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
             activityStore = nil
             appUsageStore = nil
         }
-        if let historyStore {
-            do {
-                try historyStore.importLegacyRecords(from: sessionStore)
-            } catch {
-                NSLog("Kaskas: Failed to import old break history: %@", String(describing: error))
-            }
-        }
         sessionController = SessionController(
             store: sessionStore,
             historyStore: historyStore,

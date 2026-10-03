@@ -2,6 +2,100 @@ import Foundation
 import Testing
 @testable import Kaskas
 
+extension SessionEngine {
+    @discardableResult
+    mutating func process(at now: Date = Date()) -> [SessionEvent] {
+        let effects = send(.tick, at: now)
+        var events: [SessionEvent] = []
+        for effect in effects {
+            switch effect {
+            case .showMicroReminder:
+                events.append(.microReminderDue)
+            case .showBreakWarning:
+                events.append(.breakApproaching)
+            case .playBreakStartSound:
+                events.append(.fullBreakDue)
+            case .playBreakEndSound:
+                events.append(.breakEnded)
+            default:
+                break
+            }
+        }
+        return events
+    }
+
+    mutating func startBreak(at now: Date = Date(), scheduled: Bool = true) {
+        send(.startBreak(scheduled: scheduled), at: now)
+    }
+
+    mutating func completeBreak(at now: Date = Date()) {
+        send(.completeBreak, at: now)
+    }
+
+    @discardableResult
+    mutating func skipBreak(at now: Date = Date()) -> Bool {
+        let effects = send(.skipBreak, at: now)
+        return effects.contains(.showSkippedBreakReminder)
+    }
+
+    mutating func snooze() {
+        send(.snooze)
+    }
+
+    mutating func postponeBreak(by duration: TimeInterval) {
+        send(.postponeBreak(by: duration))
+    }
+
+    mutating func snoozeBreak(at now: Date = Date()) {
+        send(.snoozeBreak, at: now)
+    }
+
+    mutating func beginMeetingPause(at now: Date) {
+        send(.setMeeting(active: true), at: now)
+    }
+
+    mutating func endMeetingPause(at now: Date) {
+        send(.setMeeting(active: false), at: now)
+    }
+
+    mutating func beginManualPause(at now: Date) {
+        send(.setManualPause(active: true), at: now)
+    }
+
+    mutating func endManualPause(at now: Date) {
+        send(.setManualPause(active: false), at: now)
+    }
+
+    mutating func beginSystemPause(at now: Date) {
+        send(.sleep, at: now)
+    }
+
+    mutating func endSystemPause(at now: Date, meetingActive: Bool) {
+        send(.systemResumed(meetingActive: meetingActive), at: now)
+    }
+
+    mutating func beginIdlePause(at now: Date) {
+        send(.beginIdle(startedAt: now), at: now)
+    }
+
+    mutating func declineIdleBreak(at now: Date) {
+        send(.resolveIdle(acceptedAsBreak: false, returnedAt: now), at: now)
+    }
+
+    mutating func acceptIdleBreak(at now: Date) {
+        send(.resolveIdle(acceptedAsBreak: true, returnedAt: now), at: now)
+    }
+
+    mutating func prepareForLaunch(at now: Date = Date()) {
+        guard !status.isPaused else { return }
+        _ = send(.launch(meetingActive: false), at: now)
+    }
+
+    mutating func updateConfiguration(_ configuration: FocusConfiguration, at now: Date = Date()) {
+        send(.updateConfiguration(configuration), at: now)
+    }
+}
+
 struct SessionEngineTests {
     private let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
     private let configuration = FocusConfiguration(
@@ -258,7 +352,7 @@ struct SessionEngineTests {
     func wakingAfterFocusDeadlineKeepsRemainingTimeAndDoesNotOpenBreak() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let sleepAt = startDate.addingTimeInterval(44 * 60 + 50)
-        let wakeAt = sleepAt.addingTimeInterval(8 * 60 * 60)
+        let wakeAt = sleepAt.addingTimeInterval(2 * 60)
 
         engine.beginSystemPause(at: sleepAt)
         #expect(engine.nextEventDate == nil)
@@ -276,15 +370,15 @@ struct SessionEngineTests {
     func repeatedSleepAndWakeNotificationsDoNotExtendTheSessionTwice() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let sleepAt = startDate.addingTimeInterval(10 * 60)
-        let wakeAt = sleepAt.addingTimeInterval(60 * 60)
+        let wakeAt = sleepAt.addingTimeInterval(2 * 60)
 
         engine.beginSystemPause(at: sleepAt)
-        engine.beginSystemPause(at: sleepAt.addingTimeInterval(60))
+        engine.beginSystemPause(at: sleepAt.addingTimeInterval(30))
         engine.endSystemPause(at: wakeAt, meetingActive: false)
         let deadline = engine.session.endsAt
-        engine.endSystemPause(at: wakeAt.addingTimeInterval(60), meetingActive: false)
+        engine.endSystemPause(at: wakeAt.addingTimeInterval(30), meetingActive: false)
 
-        #expect(deadline == startDate.addingTimeInterval(105 * 60))
+        #expect(deadline == startDate.addingTimeInterval(47 * 60))
         #expect(engine.session.endsAt == deadline)
         #expect(engine.snapshot(at: wakeAt).remaining == 35 * 60)
     }
@@ -293,7 +387,7 @@ struct SessionEngineTests {
     func reopeningAfterQuitPreservesWorkAlreadyDone() throws {
         var original = SessionEngine(configuration: configuration, now: startDate)
         let quitAt = startDate.addingTimeInterval(25 * 60)
-        let reopenAt = quitAt.addingTimeInterval(3 * 60 * 60)
+        let reopenAt = quitAt.addingTimeInterval(2 * 60)
         original.beginSystemPause(at: quitAt)
 
         let saved = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(original.state))
@@ -312,7 +406,7 @@ struct SessionEngineTests {
         let breakAt = startDate.addingTimeInterval(45 * 60)
         _ = engine.process(at: breakAt)
         let sleepAt = breakAt.addingTimeInterval(60)
-        let wakeAt = sleepAt.addingTimeInterval(2 * 60 * 60)
+        let wakeAt = sleepAt.addingTimeInterval(60)
 
         engine.beginSystemPause(at: sleepAt)
         engine.endSystemPause(at: wakeAt, meetingActive: false)
@@ -375,7 +469,8 @@ struct SessionEngineTests {
         restored.endSystemPause(at: reopenAt, meetingActive: false)
 
         #expect(restored.meetingPauseStartedAt == nil)
-        #expect(restored.snapshot(at: reopenAt).remaining == 36 * 60)
+        #expect(restored.snapshot(at: reopenAt).remaining == configuration.focusDuration)
+        #expect(restored.breaksTakenToday(at: reopenAt) == 1)
         #expect(restored.process(at: reopenAt).isEmpty)
     }
 

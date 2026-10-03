@@ -31,15 +31,19 @@ struct MenuBarView: View {
         case onBreak
 
         init(snapshot: SessionSnapshot) {
-            if snapshot.manualPauseStartedAt != nil {
-                self = .manualPause
-            } else if snapshot.idlePauseStartedAt != nil {
-                self = .idlePause
-            } else if snapshot.meetingPauseStartedAt != nil {
-                self = .meetingPause
-            } else if snapshot.phase == .onBreak {
+            switch snapshot.status {
+            case .suspended(let suspension):
+                switch suspension.reason {
+                case .manual, .system:
+                    self = .manualPause
+                case .idle:
+                    self = .idlePause
+                case .meeting:
+                    self = .meetingPause
+                }
+            case .onBreak:
                 self = .onBreak
-            } else {
+            case .focusing:
                 self = snapshot.nextBreakKind == .long ? .longBreak : .shortBreak
             }
         }
@@ -91,7 +95,7 @@ struct MenuBarView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 11)
 
-            if snapshot.manualPauseStartedAt == nil {
+            if !snapshot.status.isManualPaused {
                 actions(for: snapshot)
 
                 Divider()
@@ -124,9 +128,7 @@ struct MenuBarView: View {
 
             // The scheduler owns background transitions. This foreground check
             // also keeps the popover correct after sleep or a large clock jump.
-            if controller.sessionSnapshot.meetingPauseStartedAt == nil,
-               controller.sessionSnapshot.manualPauseStartedAt == nil,
-               controller.sessionSnapshot.idlePauseStartedAt == nil,
+            if !controller.sessionSnapshot.status.isPaused,
                currentDate >= controller.sessionSnapshot.endsAt {
                 controller.reconcile(at: currentDate)
             }
@@ -172,15 +174,13 @@ struct MenuBarView: View {
             .buttonStyle(.plain)
             .onHover { isBadgeHovered = $0 }
             .animation(.easeOut(duration: 0.15), value: isBadgeHovered)
-            .accessibilityLabel(snapshot.manualPauseStartedAt == nil ? "menu.pause" : "menu.resume")
+            .accessibilityLabel(snapshot.status.isManualPaused ? "menu.resume" : "menu.pause")
         }
     }
 
     private func countdown(for snapshot: SessionSnapshot) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            if snapshot.manualPauseStartedAt != nil
-                || snapshot.meetingPauseStartedAt != nil
-                || snapshot.idlePauseStartedAt != nil {
+            if snapshot.status.isPaused {
                 Text(Self.pausedCountdownString(for: snapshot.remaining))
                     .font(.system(size: 30, weight: .bold))
                     .monospacedDigit()
@@ -197,9 +197,7 @@ struct MenuBarView: View {
                 .accessibilityLabel("menu.remaining")
             }
 
-            if snapshot.manualPauseStartedAt == nil,
-               snapshot.meetingPauseStartedAt == nil,
-               snapshot.idlePauseStartedAt == nil {
+            if !snapshot.status.isPaused {
                 (Text("menu.atTime") + Text(" ") + Text(snapshot.endsAt, style: .time))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
@@ -227,12 +225,14 @@ struct MenuBarView: View {
                     action: controller.startBreakNow
                 )
 
-                actionButton(
-                    "menu.snooze",
-                    item: .snooze,
-                    systemImage: "alarm",
-                    action: controller.snooze
-                )
+                if !snapshot.status.isMeetingPaused {
+                    actionButton(
+                        "menu.snooze",
+                        item: .snooze,
+                        systemImage: "alarm",
+                        action: controller.snooze
+                    )
+                }
             } else {
                 actionButton(
                     "menu.completeBreak",

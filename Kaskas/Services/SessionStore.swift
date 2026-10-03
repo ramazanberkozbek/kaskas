@@ -64,11 +64,6 @@ final class SessionStore {
         return try? decoder.decode(SessionState.self, from: data)
     }
 
-    func loadLegacySmartPauseRecords() throws -> [LegacySmartPauseRecord] {
-        guard let data = defaults.data(forKey: Key.sessionState) else { return [] }
-        return try decoder.decode(LegacySessionState.self, from: data).smartPauseRecords ?? []
-    }
-
     func save(state: SessionState, observedAt: Date = Date()) {
         guard let data = try? encoder.encode(state) else {
             return
@@ -195,9 +190,5 @@ final class SessionStore {
         if first.isEmpty { annotations.removeValue(forKey: session.id) }
         else { annotations[session.id] = first }
         saveAnnotations(annotations)
-    }
-
-    private struct LegacySessionState: Decodable {
-        let smartPauseRecords: [LegacySmartPauseRecord]?
     }
 }

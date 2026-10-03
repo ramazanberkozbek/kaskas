@@ -69,12 +69,6 @@ final class BreakHistoryStore: BreakHistoryRecording {
         }
     }
 
-    func importLegacyRecords(from store: SessionStore) throws {
-        for record in try store.loadLegacySmartPauseRecords() {
-            try insert(.legacySmartPause(record))
-        }
-    }
-
     func entries(from start: Date, to end: Date) throws -> [BreakHistoryEntry] {
         let descriptor = FetchDescriptor<BreakRecord>(
             predicate: #Predicate { $0.occurredAt >= start && $0.occurredAt < end },
