@@ -112,9 +112,6 @@ struct GeneralSettingsView: View {
                 sectionHeader("settings.idle.section")
                     .settingsFormSectionHeader()
             }
-#if DEBUG
-            DebugSettingsView(controller: controller)
-#endif
         }
         .settingsGroupedFormLayout()
         .scrollIndicators(.hidden)

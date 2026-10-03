@@ -320,42 +320,6 @@ final class SessionController {
         )
     }
 
-    func previewBreakWarning() {
-        if engine.status.phase == .focusing,
-           engine.hasShownBreakWarning,
-           Date.now < engine.session.endsAt {
-            return
-        }
-        breakWarningPresenter.show(
-            endsAt: Date.now.addingTimeInterval(configuration.breakWarningLeadTime),
-            leadTime: configuration.breakWarningLeadTime,
-            position: configuration.notificationPosition,
-            isPreview: true,
-            onStart: { [weak self] in
-                self?.breakWarningPresenter.dismissPreview()
-                self?.previewBreak()
-            },
-            onPostpone: { [weak self] _ in
-                self?.breakWarningPresenter.dismissPreview()
-            },
-            onSkip: { [weak self] in
-                self?.breakWarningPresenter.dismissPreview()
-            }
-        )
-    }
-
-#if DEBUG
-    func previewSkippedBreakReminder() {
-        skippedBreakNotifier.show(onStart: { [weak self] in self?.previewBreak() })
-    }
-
-    func dismissPreviews() {
-        microReminderPresenter.dismissPreview()
-        breakWarningPresenter.dismissPreview()
-        breakPresenter.dismissPreview()
-        skippedBreakNotifier.dismiss()
-    }
-#endif
 
     func skipCurrentBreak() {
         let effects = engine.send(.skipBreak, at: Date())

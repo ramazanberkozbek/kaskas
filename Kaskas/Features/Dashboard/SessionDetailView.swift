@@ -11,10 +11,7 @@ struct SessionDetailView: View {
     @State private var categorySelection: SessionCategorySelection
     @State private var note: String
     @Environment(\.dismiss) private var dismiss
-#if DEBUG
-    @AppStorage(DebugPreferences.Key.modeEnabled, store: DebugPreferences.store) private var debugModeEnabled = false
-    @AppStorage(DebugPreferences.Key.sessionDetailsEnabled, store: DebugPreferences.store) private var debugSessionDetailsEnabled = false
-#endif
+
 
     init(session: StudySession, controller: SessionController, summary: StudySessionCategorySummary,
          allIntervals: [ActivityInterval], nextSession: StudySession?, onSave: (() -> Void)? = nil) {
@@ -83,12 +80,7 @@ struct SessionDetailView: View {
                 subtitle: "dashboard.session.category.distributionExplanation",
                 showsAppSegments: true)
             noteEditor
-#if DEBUG
-            if debugModeEnabled && debugSessionDetailsEnabled {
-                SessionDebugDetailView(session: session, allIntervals: allIntervals,
-                    nextSession: nextSession, controller: controller)
-            }
-#endif
+
         }
     }
 
@@ -142,10 +134,6 @@ struct SessionDetailView: View {
     }
 
     private var detailWidth: CGFloat {
-#if DEBUG
-        debugModeEnabled && debugSessionDetailsEnabled ? 620 : 480
-#else
         480
-#endif
     }
 }

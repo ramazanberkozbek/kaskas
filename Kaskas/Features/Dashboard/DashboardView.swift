@@ -15,12 +15,7 @@ struct DashboardView: View {
     @State private var selectedSession: DashboardCategorySnapshot.Session?
     @State private var showingCalendar = false
     @State private var annotationsRevision = 0
-#if DEBUG
-    @AppStorage(DebugPreferences.Key.modeEnabled, store: DebugPreferences.store) private var debugModeEnabled = false
-    @AppStorage(DebugPreferences.Key.sessionDetailsEnabled, store: DebugPreferences.store) private var debugSessionDetailsEnabled = false
 
-    private var showsSessionDebug: Bool { debugModeEnabled && debugSessionDetailsEnabled }
-#endif
     @Environment(\.colorScheme) private var colorScheme
 
     private let clock = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -36,9 +31,7 @@ struct DashboardView: View {
     }
     private var sessions: [DashboardCategorySnapshot.Session] { categorySnapshot.sessions }
     private var visibleSessions: [DashboardCategorySnapshot.Session] {
-#if DEBUG
-        if showsSessionDebug { return sessions }
-#endif
+
         _ = annotationsRevision
         _ = controller.annotationsRevision
         return sessions.filter { item in
@@ -365,19 +358,7 @@ struct DashboardView: View {
                 .lineLimit(1)
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
             }
-#if DEBUG
-            if showsSessionDebug {
-                DashboardSessionDebugRow(
-                    session: session,
-                    allIntervals: intervals,
-                    nextSession: nextSession(after: session),
-                    isHiddenByShortFilter: session.focusedDuration < StudySessionGrouping.minimumDefaultDuration
-                        && annotation.note.isEmpty
-                        && !annotation.hasManualCategory,
-                    breakEntries: breakEntries
-                )
-            }
-#endif
+
             if !annotation.note.isEmpty {
                 Text(annotation.note)
                     .font(.caption)
