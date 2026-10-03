@@ -15,7 +15,12 @@ struct DashboardCategorySnapshot {
 
     static func make(intervals: [ActivityInterval], appUsage: [AppUsageSegment], sessions: [StudySession],
                      from start: Date, to end: Date) -> Self {
-        let timeline = CategoryUsageSummary.Timeline(usage: appUsage)
+        make(intervals: intervals, timeline: CategoryUsageSummary.Timeline(usage: appUsage),
+             sessions: sessions, from: start, to: end)
+    }
+
+    static func make(intervals: [ActivityInterval], timeline: CategoryUsageSummary.Timeline, sessions: [StudySession],
+                     from start: Date, to end: Date) -> Self {
         return Self(usage: timeline.summary(intervals: intervals, from: start, to: end),
                     sessions: sessions.map { session in
                         Session(value: session, summary: .init(usage: timeline.summary(

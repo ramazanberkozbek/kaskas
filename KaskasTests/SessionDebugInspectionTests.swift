@@ -41,6 +41,19 @@ struct SessionDebugInspectionTests {
     }
 
     @Test
+    func actualBreakDecisionIncludesFormattedSecondsBelowTheGapThreshold() {
+        let gap = SessionDebugGap(start: time(10), end: time(12, 0.015))
+        let entry = BreakHistoryEntry(
+            id: "debug-break", occurredAt: gap.end, startedAt: gap.start,
+            focusStartedAt: nil, focusedDuration: nil,
+            outcome: .completed, source: .scheduled
+        )
+
+        #expect(!gap.splitsSession)
+        #expect(gap.decisionText(breakEntries: [entry]) == "120,015 sn · gerçek mola → böldü")
+    }
+
+    @Test
     func boundaryExplainsWhyNearFiveMinuteBreakSplitSessions() throws {
         let first = ActivityInterval(kind: .studying, startedAt: time(0), endedAt: time(10))
         let second = ActivityInterval(kind: .studying, startedAt: time(14, 15.3), endedAt: time(20))

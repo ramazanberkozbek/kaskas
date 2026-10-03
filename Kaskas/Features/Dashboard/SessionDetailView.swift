@@ -12,8 +12,8 @@ struct SessionDetailView: View {
     @State private var note: String
     @Environment(\.dismiss) private var dismiss
 #if DEBUG
-    @AppStorage("debugModeEnabled") private var debugModeEnabled = false
-    @AppStorage("debugSessionDetailsEnabled") private var debugSessionDetailsEnabled = false
+    @AppStorage(DebugPreferences.Key.modeEnabled, store: DebugPreferences.store) private var debugModeEnabled = false
+    @AppStorage(DebugPreferences.Key.sessionDetailsEnabled, store: DebugPreferences.store) private var debugSessionDetailsEnabled = false
 #endif
 
     init(session: StudySession, controller: SessionController, summary: StudySessionCategorySummary,
@@ -105,7 +105,7 @@ struct SessionDetailView: View {
                 Label(detectedCategory.title, systemImage: detectedCategory.symbol)
                     .tag(SessionCategorySelection.automatic)
                 ForEach(controller.categoryRegistry.categories) { category in
-                    Label(category.name, systemImage: category.iconName)
+                    Label(category.localizedName, systemImage: category.iconName)
                         .tag(SessionCategorySelection.category(id: category.id))
                 }
                 // Keep a saved hidden/deleted category selectable without reviving it for app rules.

@@ -2,19 +2,28 @@
 import SwiftUI
 
 enum SessionDebugFormat {
-    static func clock(_ date: Date) -> String {
+    // Keep the existing diagnostic notation, with one formatter per process.
+    private static let clockFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "HH:mm:ss"
-        return formatter.string(from: date)
-    }
+        return formatter
+    }()
 
-    static func rawSeconds(_ duration: TimeInterval) -> String {
+    private static let secondsFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "tr_TR")
         formatter.minimumFractionDigits = 3
         formatter.maximumFractionDigits = 3
-        return formatter.string(from: NSNumber(value: duration)) ?? duration.description
+        return formatter
+    }()
+
+    static func clock(_ date: Date) -> String {
+        clockFormatter.string(from: date)
+    }
+
+    static func rawSeconds(_ duration: TimeInterval) -> String {
+        secondsFormatter.string(from: NSNumber(value: duration)) ?? duration.description
     }
 
     static func minutesAndSeconds(_ duration: TimeInterval) -> String {
@@ -46,7 +55,7 @@ struct SessionDebugGap {
             guard entry.isSessionBoundary, let breakStart = entry.startedAt else { return false }
             return breakStart >= start && entry.occurredAt <= end
         }) {
-            return "(SessionDebugFormat.rawSeconds(duration)) sn · gerçek mola → böldü"
+            return "\(SessionDebugFormat.rawSeconds(duration)) sn · gerçek mola → böldü"
         }
         let sign = splitsSession ? "≥" : "<"
         let decision = splitsSession ? "böldü" : "birleşti"
@@ -103,7 +112,7 @@ struct DashboardSessionDebugRow: View {
     let allIntervals: [ActivityInterval]
     let nextSession: StudySession?
     let isHiddenByShortFilter: Bool
-    let controller: SessionController
+    let breakEntries: [BreakHistoryEntry]
 
     var body: some View {
         let elapsed = session.endedAt.timeIntervalSince(session.startedAt)
@@ -114,11 +123,11 @@ struct DashboardSessionDebugRow: View {
             Text("ham parça \(session.intervals.count) · kesinti \(session.interruptionCount)")
             if let gap = SessionDebugInspection.boundary(after: session, next: nextSession) {
                 let kinds = gap.fillers(in: allIntervals).map { $0.kind.rawValue }
-                let entries = controller.breakEntries(from: gap.start, through: gap.end)
+                let entries = entries(in: gap)
                 Text("bitiş: boşluk \(SessionDebugFormat.rawSeconds(gap.duration)) sn · \(kinds.isEmpty ? "tür: bilgi yok" : kinds.joined(separator: ", "))")
-                Text("karar: \(gap.decisionText(breakEntries: entries)) · mola: \(breakSummary(for: gap))")
-            } else {
-                let ending = SessionDebugInspection.endingKind(of: session.intervals.last!, in: allIntervals)
+                Text("karar: \(gap.decisionText(breakEntries: entries)) · mola: \(breakSummary(entries))")
+            } else if let lastInterval = session.intervals.last {
+                let ending = SessionDebugInspection.endingKind(of: lastInterval, in: allIntervals)
                 Text("bitiş: sonraki seans yok · bitiş sonrası kayıt: \(ending)")
             }
             if isHiddenByShortFilter {
@@ -131,8 +140,11 @@ struct DashboardSessionDebugRow: View {
         .textSelection(.enabled)
     }
 
-    private func breakSummary(for gap: SessionDebugGap) -> String {
-        let entries = controller.breakEntries(from: gap.start, through: gap.end)
+    private func entries(in gap: SessionDebugGap) -> [BreakHistoryEntry] {
+        breakEntries.filter { $0.occurredAt >= gap.start && $0.occurredAt < gap.end.addingTimeInterval(0.001) }
+    }
+
+    private func breakSummary(_ entries: [BreakHistoryEntry]) -> String {
         return entries.isEmpty ? "bilgi yok" : entries.map(\.debugDescription).joined(separator: "; ")
     }
 }
@@ -164,6 +176,7 @@ struct SessionDebugDetailView: View {
                     }
                 }
             }
+            .scrollIndicators(.hidden)
             .frame(maxHeight: 300)
         }
         .font(.system(size: 10, design: .monospaced))

@@ -8,14 +8,16 @@ struct DashboardView: View {
     @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var now = Date()
     @State private var intervals: [ActivityInterval] = []
-    @State private var categorySnapshot: DashboardCategorySnapshot = .empty
+    @State private var breakEntries: [BreakHistoryEntry] = []
+    @State private var dayCategorySnapshot: DashboardCategorySnapshot = .empty
+    @State private var weekCategorySnapshot: DashboardCategorySnapshot = .empty
     @State private var chartSnapshot: DashboardChartSnapshot = .empty
     @State private var selectedSession: DashboardCategorySnapshot.Session?
     @State private var showingCalendar = false
     @State private var annotationsRevision = 0
 #if DEBUG
-    @AppStorage("debugModeEnabled") private var debugModeEnabled = false
-    @AppStorage("debugSessionDetailsEnabled") private var debugSessionDetailsEnabled = false
+    @AppStorage(DebugPreferences.Key.modeEnabled, store: DebugPreferences.store) private var debugModeEnabled = false
+    @AppStorage(DebugPreferences.Key.sessionDetailsEnabled, store: DebugPreferences.store) private var debugSessionDetailsEnabled = false
 
     private var showsSessionDebug: Bool { debugModeEnabled && debugSessionDetailsEnabled }
 #endif
@@ -29,6 +31,9 @@ struct DashboardView: View {
     }
     private var days: [DailyActivity] { chartSnapshot.days }
     private var weekTotal: TimeInterval { days.reduce(0) { $0 + $1.studying } }
+    private var categorySnapshot: DashboardCategorySnapshot {
+        period == .today ? dayCategorySnapshot : weekCategorySnapshot
+    }
     private var sessions: [DashboardCategorySnapshot.Session] { categorySnapshot.sessions }
     private var visibleSessions: [DashboardCategorySnapshot.Session] {
 #if DEBUG
@@ -48,7 +53,7 @@ struct DashboardView: View {
         }
     }
 
-    private var groupedSessions: [(date: Date, sessions: [DashboardCategorySnapshot.Session])] {
+    private func groupedSessions(_ visibleSessions: [DashboardCategorySnapshot.Session]) -> [(date: Date, sessions: [DashboardCategorySnapshot.Session])] {
         let calendar = Calendar.current
         var groups: [(date: Date, sessions: [DashboardCategorySnapshot.Session])] = []
         for item in visibleSessions {
@@ -97,7 +102,9 @@ struct DashboardView: View {
     }
 
     var body: some View {
-        ScrollView {
+        let visibleSessions = visibleSessions
+        let groupedSessions = period == .week ? groupedSessions(visibleSessions) : []
+        return ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(spacing: 14) {
                     rangeControls
@@ -186,6 +193,7 @@ struct DashboardView: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
         .sheet(item: $selectedSession) { selected in
             let item = sessions.first { $0.id == selected.id } ?? selected
@@ -206,7 +214,6 @@ struct DashboardView: View {
             reload()
         }
         .onAppear(perform: reload)
-        .onChange(of: period) { _, _ in reload() }
         .onChange(of: endDate) { _, newDate in
             let normalized = Calendar.current.startOfDay(for: newDate)
             if endDate != normalized {
@@ -265,7 +272,30 @@ struct DashboardView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(width: 112)
+            .background {
+                // The native picker is 24 pt tall. Extend each segment's hit
+                // region vertically without resizing it or intercepting its
+                // own mouse tracking, keyboard navigation or accessibility.
+                HStack(spacing: 0) {
+                    periodHitArea(.today)
+                    periodHitArea(.week)
+                }
+                .frame(height: 44)
+                .accessibilityHidden(true)
+            }
         }
+    }
+
+    private func periodHitArea(_ value: DashboardPeriod) -> some View {
+        Button {
+            period = value
+        } label: {
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
     }
 
     private var rangeLabel: String {
@@ -350,7 +380,7 @@ struct DashboardView: View {
                     isHiddenByShortFilter: session.focusedDuration < StudySessionGrouping.minimumDefaultDuration
                         && annotation.note.isEmpty
                         && !annotation.hasManualCategory,
-                    controller: controller
+                    breakEntries: breakEntries
                 )
                 .padding(.leading, 44)
             }
@@ -370,6 +400,8 @@ struct DashboardView: View {
     }
 
     private func reload() {
+        let trace = PerformanceTrace.begin("Dashboard refresh")
+        defer { PerformanceTrace.end(trace) }
         let calendar = Calendar.current
         let selectedDay = calendar.startOfDay(for: endDate)
         let averageStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
@@ -379,17 +411,24 @@ struct DashboardView: View {
         intervals = controller.activityIntervals(from: start, to: now, now: now)
         let appUsage = controller.appUsage.segments(from: start, to: now, now: now)
 
-        let sessionStart = period == .today ? selectedDay : window.start
-        let sessionEnd = calendar.date(byAdding: .day, value: 1, to: period == .today ? selectedDay : window.end) ?? now
-        let breakEnd = min(sessionEnd, now)
-        let breakEntries = controller.breakEntries(from: sessionStart, through: breakEnd)
-        let targetIntervals = intervals.filter {
-            $0.kind == .studying && $0.startedAt >= sessionStart && $0.startedAt < sessionEnd
+        // Both periods share the same source window. Switching the picker only
+        // selects prepared data; it must not fetch history or rebuild charts.
+        let sessionEnd = calendar.date(byAdding: .day, value: 1, to: selectedDay) ?? now
+        let breakEntries = controller.breakEntries(from: window.start, through: min(sessionEnd, now))
+        self.breakEntries = breakEntries
+        let timeline = CategoryUsageSummary.Timeline(usage: appUsage)
+        func categories(from start: Date) -> DashboardCategorySnapshot {
+            let targetIntervals = intervals.filter {
+                $0.kind == .studying && $0.startedAt >= start && $0.startedAt < sessionEnd
+            }
+            // Group each period independently: a session spanning midnight may
+            // have different source intervals in the day and week views.
+            let sessions = Array(StudySessionGrouping.group(targetIntervals, breakEntries: breakEntries).reversed())
+            return .make(intervals: intervals, timeline: timeline, sessions: sessions,
+                         from: start, to: sessionEnd)
         }
-        let sessions = Array(StudySessionGrouping.group(targetIntervals, breakEntries: breakEntries).reversed())
-
-        categorySnapshot = .make(intervals: intervals, appUsage: appUsage, sessions: sessions,
-                                 from: sessionStart, to: sessionEnd)
+        dayCategorySnapshot = categories(from: selectedDay)
+        weekCategorySnapshot = categories(from: window.start)
         chartSnapshot = .make(intervals: intervals, date: endDate, weekStart: window.start)
     }
 
@@ -474,6 +513,10 @@ private extension View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(StatisticsStyle.panelFill(for: scheme), in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.08)))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(.primary.opacity(0.08))
+                    .allowsHitTesting(false)
+            }
     }
 }

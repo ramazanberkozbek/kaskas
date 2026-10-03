@@ -100,5 +100,37 @@ struct DashboardCategorySnapshotTests {
         #expect(session.summary.usage.total == 3600)
         #expect(session.summary.decision == .dominant(categoryID: "coding"))
     }
+
+    @Test func sharedTimelineKeepsDayAndWeekSessionsIndependentAcrossMidnight() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let day = calendar.startOfDay(for: Date(timeIntervalSinceReferenceDate: 1_000_000))
+        let previousDay = day.addingTimeInterval(-86400)
+        let end = day.addingTimeInterval(86400)
+        let intervals = [
+            ActivityInterval(kind: .studying, startedAt: day.addingTimeInterval(-600), endedAt: day),
+            ActivityInterval(kind: .studying, startedAt: day.addingTimeInterval(60), endedAt: day.addingTimeInterval(660))
+        ]
+        let usage = [AppUsageSegment(id: UUID(), app: .init(bundleID: "xcode", name: "Xcode"),
+            resolution: .init(categoryID: "coding", source: .builtInRule, ruleKey: nil),
+            startedAt: intervals[0].startedAt, endedAt: intervals[1].endedAt)]
+        let timeline = CategoryUsageSummary.Timeline(usage: usage)
+        let daySessions = StudySessionGrouping.group(intervals.filter { $0.startedAt >= day })
+        let weekSessions = StudySessionGrouping.group(intervals)
+        let daily = DashboardCategorySnapshot.make(intervals: intervals, timeline: timeline,
+            sessions: daySessions, from: day, to: end)
+        let weekly = DashboardCategorySnapshot.make(intervals: intervals, timeline: timeline,
+            sessions: weekSessions, from: previousDay, to: end)
+        #expect(daily.usage.total == 600)
+        #expect(weekly.usage.total == 1200)
+        #expect(daily.sessions.first?.value.startedAt == intervals[1].startedAt)
+        #expect(weekly.sessions.first?.value.startedAt == intervals[0].startedAt)
+        #expect(daily.sessions.first?.summary.usage.total == 600)
+        #expect(weekly.sessions.first?.summary.usage.total == 1200)
+        #expect(daily.usage == DashboardCategorySnapshot.make(intervals: intervals, appUsage: usage,
+            sessions: daySessions, from: day, to: end).usage)
+        #expect(weekly.usage == DashboardCategorySnapshot.make(intervals: intervals, appUsage: usage,
+            sessions: weekSessions, from: previousDay, to: end).usage)
+    }
 }
 
