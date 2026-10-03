@@ -22,7 +22,7 @@ final class CursorBreakCountdownPresenter {
         panel.contentView = contentView
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = false
+        panel.hasShadow = true
         panel.ignoresMouseEvents = true
         panel.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()) + 1)
         panel.hidesOnDeactivate = false
@@ -112,7 +112,7 @@ private struct CursorBreakCountdownView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .frame(width: Self.panelSize.width, height: Self.panelSize.height)
-            .background(Color(red: 0.11, green: 0.11, blue: 0.11), in: Capsule())
+            .modifier(NotificationGlassBackground(cornerRadius: Self.panelSize.height / 2))
         }
     }
 }

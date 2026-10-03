@@ -16,17 +16,27 @@ struct BreakWarningView: View {
             countdownHeader
 
             HStack(spacing: 7) {
-                action("warning.skip", action: onSkip)
-                action("warning.oneMinute") { onPostpone(60) }
-                action("warning.fiveMinutes") { onPostpone(5 * 60) }
+                WarningActionButton(
+                    title: "warning.startNow",
+                    prominent: true,
+                    action: onStart
+                )
+                WarningActionButton(title: "warning.oneMinute") {
+                    onPostpone(60)
+                }
+                WarningActionButton(title: "warning.fiveMinutes") {
+                    onPostpone(5 * 60)
+                }
+                WarningActionButton(title: "warning.fifteenMinutes") {
+                    onPostpone(15 * 60)
+                }
                 Spacer(minLength: 0)
-                action("warning.startNow", prominent: true, action: onStart)
             }
         }
         .frame(width: Self.panelSize.width - 32, alignment: .leading)
         .padding(16)
         .frame(width: Self.panelSize.width, height: Self.panelSize.height)
-        .background(Color(red: 0.15, green: 0.15, blue: 0.15), in: RoundedRectangle(cornerRadius: 20))
+        .modifier(NotificationGlassBackground(cornerRadius: 20))
         .overlay {
             CountdownBorder(
                 endsAt: endsAt,
@@ -35,7 +45,6 @@ struct BreakWarningView: View {
                 color: accent
             )
         }
-        .shadow(color: .black.opacity(0.35), radius: 14, y: 6)
     }
 
     private var countdownHeader: some View {
@@ -56,39 +65,93 @@ struct BreakWarningView: View {
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    (Text("warning.title") + Text(" ") + Text(String(format: "%02d:%02d", seconds / 60, seconds % 60)))
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                    Text(String(format: "%02d:%02d", seconds / 60, seconds % 60))
+                        .font(NotificationTypography.title())
                         .monospacedDigit()
                         .foregroundStyle(.white)
 
                     Text("warning.subtitle")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(NotificationTypography.message())
                         .foregroundStyle(.white.opacity(0.65))
                 }
+
+                Spacer(minLength: 0)
+
+                WarningCloseButton(action: onSkip)
             }
         }
     }
+}
 
-    private func action(
-        _ title: LocalizedStringKey,
-        prominent: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
+private struct WarningCloseButton: View {
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white.opacity(isHovered ? 0.85 : 0.35))
+                .frame(width: 24, height: 24)
+                .background(
+                    Color.white.opacity(isHovered ? 0.12 : 0.04),
+                    in: Circle()
+                )
+                .overlay {
+                    Circle()
+                        .stroke(Color.white.opacity(isHovered ? 0.25 : 0.10), lineWidth: 0.5)
+                }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .help(Text("warning.skip"))
+    }
+}
+
+private struct WarningActionButton: View {
+    let title: LocalizedStringKey
+    var prominent: Bool = false
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(NotificationTypography.action())
+                .foregroundStyle(.white.opacity(prominent ? 1.0 : (isHovered ? 0.95 : 0.85)))
                 .padding(.horizontal, 14)
                 .frame(height: 34)
                 .background(
-                    prominent ? Color.white.opacity(0.18) : Color.clear,
+                    backgroundColor,
                     in: Capsule()
                 )
                 .overlay {
-                    Capsule().stroke(Color.white.opacity(prominent ? 0 : 0.22))
+                    Capsule()
+                        .stroke(borderColor, lineWidth: 1)
                 }
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .animation(.easeInOut(duration: 0.15), value: isHovered)
+    }
+
+    private var backgroundColor: Color {
+        if prominent {
+            return Color.white.opacity(isHovered ? 0.18 : 0.11)
+        } else {
+            return Color.white.opacity(isHovered ? 0.08 : 0.03)
+        }
+    }
+
+    private var borderColor: Color {
+        if prominent {
+            return Color.white.opacity(isHovered ? 0.38 : 0.22)
+        } else {
+            return Color.white.opacity(isHovered ? 0.28 : 0.16)
+        }
     }
 }

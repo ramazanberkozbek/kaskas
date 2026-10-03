@@ -39,7 +39,7 @@ final class SkippedBreakNotifier {
         ))
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = false
+        panel.hasShadow = true
         panel.level = .statusBar
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
@@ -89,11 +89,11 @@ private struct SkippedBreakNotificationView: View {
 
                 VStack(alignment: .leading, spacing: 5) {
                     Text("skippedBreak.title")
-                        .font(.system(size: 19, weight: .bold, design: .rounded))
+                        .font(NotificationTypography.title())
                         .foregroundStyle(.white)
                     Text("skippedBreak.subtitle")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(0.68))
+                        .font(NotificationTypography.message())
+                        .foregroundStyle(.white.opacity(0.65))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -101,7 +101,7 @@ private struct SkippedBreakNotificationView: View {
             HStack(spacing: 8) {
                 Button(action: onStart) {
                     Text("skippedBreak.start")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(NotificationTypography.action())
                         .padding(.horizontal, 17)
                         .frame(height: 36)
                         .background(.white.opacity(0.2), in: Capsule())
@@ -109,7 +109,7 @@ private struct SkippedBreakNotificationView: View {
                 }
                 Button(action: onDismiss) {
                     Text("skippedBreak.dismiss")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(NotificationTypography.action())
                         .padding(.horizontal, 17)
                         .frame(height: 36)
                         .overlay { Capsule().stroke(.white.opacity(0.25)) }
@@ -121,15 +121,14 @@ private struct SkippedBreakNotificationView: View {
         }
         .padding(20)
         .frame(width: Self.panelSize.width, height: Self.panelSize.height, alignment: .leading)
-        .background(Color(red: 0.17, green: 0.16, blue: 0.17), in: RoundedRectangle(cornerRadius: 24))
+        .modifier(NotificationGlassBackground(cornerRadius: 20))
         .overlay {
             CountdownBorder(
                 endsAt: expiresAt,
                 duration: displayDuration,
-                cornerRadius: 24,
+                cornerRadius: 20,
                 color: accent
             )
         }
-        .shadow(color: .black.opacity(0.35), radius: 16, y: 8)
     }
 }

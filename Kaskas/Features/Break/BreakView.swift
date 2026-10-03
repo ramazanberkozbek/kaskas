@@ -41,7 +41,7 @@ struct BreakView: View {
                 } else {
                     VStack(spacing: 0) {
                         // Top localized date (e.g., "Perşembe, 24 Eyl")
-                        Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+                        Text(context.date, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.85))
                             .tracking(0.5)
@@ -113,7 +113,7 @@ struct BreakView: View {
 
     private func gentleBarLayout(now: Date) -> some View {
         VStack(spacing: 0) {
-            Text(now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
+            Text(now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
                 .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85))
                 .padding(.top, 48)

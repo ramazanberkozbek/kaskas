@@ -58,7 +58,7 @@ final class BreakWarningPresenter {
         panel.contentView = contentView
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = false
+        panel.hasShadow = true
         panel.level = .statusBar
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
