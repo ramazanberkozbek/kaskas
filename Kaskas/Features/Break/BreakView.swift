@@ -40,7 +40,7 @@ struct BreakView: View {
                     gentleBarLayout(now: context.date)
                 } else {
                     VStack(spacing: 0) {
-                        // Top localized date (e.g., "Perşembe, 24 Eyl")
+                        // Top localized date (e.g., "Thursday, Sep 24")
                         Text(context.date, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.85))

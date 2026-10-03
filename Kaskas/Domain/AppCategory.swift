@@ -134,7 +134,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
     ]
 
     public static let suggestedIcons: [String] = [
-        // Geliştirme & Teknoloji
+        // Development & Technology
         "terminal.fill",
         "chevron.left.forwardslash.chevron.right",
         "cpu.fill",
@@ -145,7 +145,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "network",
         "command",
 
-        // Tasarım & Sanat
+        // Design & Art
         "paintpalette.fill",
         "paintbrush.fill",
         "pencil.tip.crop.circle.fill",
@@ -157,7 +157,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "photo.fill",
         "camera.fill",
 
-        // Okuma & Öğrenme
+        // Reading & Learning
         "book.fill",
         "books.vertical.fill",
         "graduationcap.fill",
@@ -167,7 +167,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "text.book.closed.fill",
         "magnifyingglass",
 
-        // Yazı & Ofis
+        // Writing & Office
         "doc.text.fill",
         "note.text",
         "pencil.and.outline",
@@ -179,7 +179,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "calendar",
         "clock.fill",
 
-        // İletişim
+        // Communication
         "bubble.left.and.bubble.right.fill",
         "message.fill",
         "envelope.fill",
@@ -188,7 +188,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "person.2.fill",
         "bell.fill",
 
-        // Medya & Eğlence
+        // Media & Entertainment
         "play.tv.fill",
         "film.fill",
         "music.note",
@@ -199,7 +199,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "dice.fill",
         "puzzlepiece.fill",
 
-        // Finans & Ticaret
+        // Finance & Commerce
         "dollarsign.circle.fill",
         "chart.bar.xaxis",
         "chart.line.uptrend.xyaxis",
@@ -209,7 +209,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "cart.fill",
         "bag.fill",
 
-        // Yaşam, Sağlık & Spor
+        // Life, Health & Sports
         "figure.run",
         "dumbbell.fill",
         "heart.fill",
@@ -219,7 +219,7 @@ public struct AppCategory: Codable, Hashable, Identifiable, Sendable {
         "sun.max.fill",
         "leaf.fill",
 
-        // Araçlar & Genel
+        // Tools & General
         "hammer.fill",
         "wrench.and.screwdriver.fill",
         "gearshape.fill",

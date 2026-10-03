@@ -428,10 +428,10 @@ public final class CategoryRegistry {
     // MARK: - Default Rules
 
     public static let defaultRules: [CategoryRule] = [
-        // Üretkenlik
+        // Productivity
         CategoryRule(appIdentifier: "com.ramazanozbek.kaskas", displayName: "Kaskas", categoryId: "productivity", isDefault: true),
 
-        // Yazılım
+        // Coding
         CategoryRule(appIdentifier: "com.apple.dt.Xcode", displayName: "Xcode", categoryId: "coding", isDefault: true),
         CategoryRule(appIdentifier: "com.microsoft.VSCode", displayName: "Visual Studio Code", categoryId: "coding", isDefault: true),
         CategoryRule(appIdentifier: "com.todesktop.230313mzl4w4u92", displayName: "Cursor", categoryId: "coding", isDefault: true),
@@ -445,7 +445,7 @@ public final class CategoryRegistry {
         CategoryRule(appIdentifier: "dev.warp.Warp-Stable", displayName: "Warp", categoryId: "coding", isDefault: true),
         CategoryRule(appIdentifier: "com.github.GitHubClient", displayName: "GitHub Desktop", categoryId: "coding", isDefault: true),
 
-        // Tasarım
+        // Design
         CategoryRule(appIdentifier: "com.figma.Desktop", displayName: "Figma", categoryId: "design", isDefault: true),
         CategoryRule(appIdentifier: "com.bohemiancoding.sketch3", displayName: "Sketch", categoryId: "design", isDefault: true),
         CategoryRule(appIdentifier: "com.adobe.Photoshop", displayName: "Adobe Photoshop", categoryId: "design", isDefault: true),
@@ -453,7 +453,7 @@ public final class CategoryRegistry {
         CategoryRule(appIdentifier: "com.canva.CanvaDesktop", displayName: "Canva", categoryId: "design", isDefault: true),
         CategoryRule(appIdentifier: "org.blenderfoundation.blender", displayName: "Blender", categoryId: "design", isDefault: true),
 
-        // Yazı
+        // Writing
         CategoryRule(appIdentifier: "md.obsidian", displayName: "Obsidian", categoryId: "writing", isDefault: true),
         CategoryRule(appIdentifier: "notion.id", displayName: "Notion", categoryId: "writing", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.Notes", displayName: "Notlar", categoryId: "writing", isDefault: true),
@@ -462,7 +462,7 @@ public final class CategoryRegistry {
         CategoryRule(appIdentifier: "net.shinyfrog.bear", displayName: "Bear", categoryId: "writing", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.TextEdit", displayName: "TextEdit", categoryId: "writing", isDefault: true),
 
-        // İletişim
+        // Communication
         CategoryRule(appIdentifier: "com.tinyspeck.slackmacgap", displayName: "Slack", categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "com.microsoft.teams", displayName: "Microsoft Teams", categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "com.microsoft.teams2", displayName: String(localized: "categories.rule.teamsNew"), categoryId: "communication", isDefault: true),
@@ -472,14 +472,14 @@ public final class CategoryRegistry {
         CategoryRule(appIdentifier: "ru.keepcoder.Telegram", displayName: "Telegram", categoryId: "communication", isDefault: true),
         CategoryRule(appIdentifier: "net.whatsapp.WhatsApp", displayName: "WhatsApp", categoryId: "communication", isDefault: true),
 
-        // İnternet
+        // Browsing
         CategoryRule(appIdentifier: "com.apple.Safari", displayName: "Safari", categoryId: "browsing", isDefault: true),
         CategoryRule(appIdentifier: "com.google.Chrome", displayName: "Google Chrome", categoryId: "browsing", isDefault: true),
         CategoryRule(appIdentifier: "company.thebrowser.Browser", displayName: "Arc", categoryId: "browsing", isDefault: true),
         CategoryRule(appIdentifier: "org.mozilla.firefox", displayName: "Firefox", categoryId: "browsing", isDefault: true),
         CategoryRule(appIdentifier: "com.brave.Browser", displayName: "Brave", categoryId: "browsing", isDefault: true),
 
-        // Eğlence
+        // Entertainment
         CategoryRule(appIdentifier: "com.spotify.client", displayName: "Spotify", categoryId: "entertainment", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.Music", displayName: String(localized: "categories.rule.music"), categoryId: "entertainment", isDefault: true),
         CategoryRule(appIdentifier: "com.apple.TV", displayName: "TV", categoryId: "entertainment", isDefault: true)

@@ -17,7 +17,7 @@ struct AlertsSettingsView: View {
             VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
                 SettingsPaneHeader(title: "settings.sidebar.notifications")
 
-                // Önizleme ve mola uyarısı anahtarı
+                // Preview and break warning toggle
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("settings.alerts.preview")
@@ -39,7 +39,7 @@ struct AlertsSettingsView: View {
                     )
                 }
 
-                // Bildirim ayarları
+                // Notification settings
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("settings.alerts.notificationSettings")
@@ -89,7 +89,7 @@ struct AlertsSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                // Mola Sesleri Bölümü
+                // Break Sounds Section
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("settings.breakSound.title")
@@ -124,7 +124,7 @@ struct AlertsSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                // Mikro Hatırlatıcılar & Maskot Bölümü
+                // Micro Reminders & Mascot Section
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("settings.microReminders.title")
@@ -136,7 +136,7 @@ struct AlertsSettingsView: View {
                     }
 
                     VStack(spacing: 0) {
-                        // Üst Alan: Sanatsal Arka Plan ve Maskot Önizlemesi
+                        // Header Area: Artwork Background and Mascot Preview
                         ZStack {
                             MicroReminderArtwork()
 
@@ -176,7 +176,7 @@ struct AlertsSettingsView: View {
 
                         Divider()
 
-                        // 1. Satır: Hatırlatma Aralığı
+                        // Row 1: Reminder Interval
                         settingRow(
                             title: "settings.reminderInterval",
                             subtitle: "settings.reminderInterval.description"
@@ -190,7 +190,7 @@ struct AlertsSettingsView: View {
 
                         Divider().padding(.horizontal, SettingsPageLayout.cardInset)
 
-                        // 2. Satır: Maskot Seçimi
+                        // Row 2: Mascot Selection
                         settingRow(
                             title: "settings.microReminderDesign.sidekick",
                             subtitle: LocalizedStringKey(controller.configuration.microReminderMascot.titleKey)

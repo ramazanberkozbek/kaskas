@@ -393,7 +393,7 @@ struct CategorySettingsView: View {
 
                         // Action buttons (delete, edit, add)
                         HStack(spacing: 4) {
-                            // Allow deleting any category except "Diğer" (fallback)
+                            // Allow deleting any category except "Other" (fallback)
                             if category.id != "other" {
                                 Button {
                                     categoryToDelete = category

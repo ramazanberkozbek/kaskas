@@ -15,7 +15,7 @@ struct FocusSettingsView: View {
             VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
                 SettingsPaneHeader(title: "settings.sidebar.focus")
 
-                // 1. Mola Programı (BREAK SCHEDULE)
+                // 1. Break Schedule
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading(
                         "settings.schedule.title",
@@ -96,7 +96,7 @@ struct FocusSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                // 2. Canlı Mola Önizleme (Hero Kartı)
+                // 2. Live Break Preview (Hero Card)
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading("settings.alerts.preview")
 
@@ -106,7 +106,7 @@ struct FocusSettingsView: View {
                     )
                 }
 
-                // 3. Duvar Kağıdı Bölümü (BACKGROUND)
+                // 3. Background / Wallpaper Section
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading(
                         "settings.breakAppearance.sectionTitle",
@@ -201,7 +201,7 @@ struct FocusSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                // 4. Mola Düzeni Bölümü (LAYOUT)
+                // 4. Break Layout Section
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading(
                         "settings.breakLayout.title",
@@ -224,7 +224,7 @@ struct FocusSettingsView: View {
             : Color(nsColor: .windowBackgroundColor))
     }
 
-    // MARK: - Yardımcı Satır ve Başlık Görünümleri
+    // MARK: - Helper Row and Header Views
 
     private func sectionHeading(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil) -> some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -293,7 +293,7 @@ struct FocusSettingsView: View {
         }
     }
 
-    // MARK: - Arka Plan & Duvar Kağıdı İşlemleri
+    // MARK: - Background & Wallpaper Operations
 
     private func updateBackground(_ background: BreakBackground) {
         var configuration = controller.configuration
@@ -334,7 +334,7 @@ struct FocusSettingsView: View {
         controller.updateConfiguration(config)
     }
 
-    // MARK: - Formatlayıcılar & Bağlantılar
+    // MARK: - Formatters & Bindings
 
 
     private var breakLayoutBinding: Binding<BreakLayout> {
@@ -362,7 +362,7 @@ struct FocusSettingsView: View {
     }
 }
 
-// MARK: - Mola Düzeni Seçici (İkonlu Segmented Picker)
+// MARK: - Break Layout Segmented Picker
 
 struct BreakLayoutSegmentedPicker: View {
     @Binding var selection: BreakLayout
@@ -418,7 +418,7 @@ struct BreakLayoutSegmentedPicker: View {
     }
 }
 
-// MARK: - Canlı Mola Önizleme Kartı (Fotoğraf 1 Tasarımı - Geniş & Ferah)
+// MARK: - Live Break Preview Card
 
 struct BreakMiniPreviewCard: View {
     let configuration: FocusConfiguration
@@ -426,15 +426,15 @@ struct BreakMiniPreviewCard: View {
 
     var body: some View {
         ZStack {
-            // Canlı arka plan renderı
+            // Live background render
             BreakBackgroundView(
                 background: configuration.breakBackground,
                 customWallpaperPath: configuration.customWallpaperPath
             )
 
-            // Önizleme içeriği
+            // Preview content
             VStack(spacing: 0) {
-                // Üst Bar: "Live preview", Tarih, Tam Ekran Butonu
+                // Top Bar: "Live preview", Date, Fullscreen Button
                 ZStack {
                     Text(Date.now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
                         .font(.system(size: 10.5, weight: .medium, design: .rounded))
@@ -475,7 +475,7 @@ struct BreakMiniPreviewCard: View {
                 if configuration.breakLayout == .gentleBar {
                     Spacer()
 
-                    // Gentle Bar Düzeni (Alt köşelere yerleşmiş ferah yerleşim)
+                    // Gentle Bar Layout
                     VStack(spacing: 10) {
                         HStack(alignment: .bottom, spacing: 16) {
                             VStack(alignment: .leading, spacing: 3) {
@@ -526,10 +526,10 @@ struct BreakMiniPreviewCard: View {
                     }
                     .padding(.bottom, 14)
                 } else {
-                    // Horizon Düzeni: Başlık & Sayaç ekranın TAM ORTASINDA, butonlar ise EN ALTTA!
+                    // Horizon Layout: Title & timer centered, buttons at bottom
                     Spacer(minLength: 10)
 
-                    // Merkez Kahraman İçerik (Başlık, Mesaj, Sayaç)
+                    // Center Hero Content (Title, Message, Timer)
                     VStack(spacing: 12) {
                         VStack(spacing: 4) {
                             Text("break.title")
@@ -554,7 +554,7 @@ struct BreakMiniPreviewCard: View {
 
                     Spacer(minLength: 10)
 
-                    // Alt Aksiyon Butonları & ESC İpucu
+                    // Bottom Action Buttons & ESC Hint
                     VStack(spacing: 8) {
                         HStack(spacing: 5) {
                             miniPill(title: "break.snooze", icon: "clock.arrow.circlepath")
