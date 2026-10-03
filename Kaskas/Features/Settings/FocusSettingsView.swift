@@ -311,7 +311,15 @@ struct FocusSettingsView: View {
         panel.message = String(localized: "settings.breakAppearance.chooseImageMessage", defaultValue: "Mola ekranı için bir arka plan görseli seçin")
 
         if panel.runModal() == .OK, let url = panel.url {
-            controller.setCustomWallpaper(from: url)
+            do {
+                try controller.setCustomWallpaper(from: url)
+            } catch {
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = localizedString("settings.wallpaper.copyFailed", locale: controller.locale)
+                alert.informativeText = localizedString("settings.wallpaper.copyFailed.description", locale: controller.locale)
+                alert.runModal()
+            }
         }
     }
 

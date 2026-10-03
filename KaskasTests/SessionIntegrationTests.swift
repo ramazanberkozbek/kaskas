@@ -48,6 +48,28 @@ struct SessionIntegrationTests {
     }
 
     @Test
+    func wallpaperFailureKeepsPreviousFileAndSuccessReplacesIt() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let source = directory.appendingPathComponent("source.png")
+        let store = CustomWallpaperStore(directory: directory.appendingPathComponent("wallpapers"))
+        try Data("first image".utf8).write(to: source)
+        let saved = try store.save(from: source)
+        #expect(throws: (any Error).self) {
+            try store.save(from: directory.appendingPathComponent("missing.png"))
+        }
+        #expect(try Data(contentsOf: saved) == Data("first image".utf8))
+        try Data("replacement image".utf8).write(to: source)
+        #expect(try store.save(from: source) == saved)
+        #expect(try Data(contentsOf: saved) == Data("replacement image".utf8))
+        // Selecting the existing wallpaper must not delete it before copying.
+        #expect(try store.save(from: saved) == saved)
+        #expect(try Data(contentsOf: saved) == Data("replacement image".utf8))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: store.directory.path) == [saved.lastPathComponent])
+    }
+
+    @Test
     func instanceLockHasOneOwnerAndCanBeAcquiredAfterRelease() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

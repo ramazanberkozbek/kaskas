@@ -1,6 +1,38 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
+    "settings.wallpaper.copyFailed" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save image"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görsel kaydedilemedi"
+          }
+        }
+      }
+    },
+    "settings.wallpaper.copyFailed.description" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your previous background was kept. Make sure the file is readable and there is enough disk space, then try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki arka plan korundu. Dosyanın okunabilir olduğundan ve yeterli disk alanı bulunduğundan emin olup tekrar deneyin."
+          }
+        }
+      }
+    },
     "" : {
 
     },
