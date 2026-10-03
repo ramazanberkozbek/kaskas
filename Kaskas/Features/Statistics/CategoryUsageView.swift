@@ -118,7 +118,7 @@ struct CategoryUsageView: View {
                             .frame(width: geometry.size.width * entry.duration / summary.total)
                     }
                     if unrecordedDuration > 0 {
-                        CategoryUsageSegment(title: String(localized: "categories.usage.appUnknown"),
+                        CategoryUsageSegment(title: localizedString("categories.usage.appUnknown", locale: locale),
                                              seconds: unrecordedDuration)
                             .frame(width: geometry.size.width * unrecordedDuration / summary.total)
                     }
@@ -152,6 +152,7 @@ private struct CategoryUsageSegment: View {
                 }
                 .padding(12)
                 .fixedSize()
+                .environment(\.locale, locale)
             }
             .accessibilityLabel(title)
             .accessibilityValue(duration)

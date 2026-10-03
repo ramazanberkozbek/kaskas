@@ -148,6 +148,7 @@ struct YearActivityHeatmap: View {
                         .foregroundStyle(StatisticsStyle.studying)
                 }
                 .padding(10)
+                .environment(\.locale, locale)
             }
             .accessibilityLabel(date.formatted(.dateTime.month(.wide).day().year().locale(locale)))
             .accessibilityValue(focusText)
@@ -157,11 +158,11 @@ struct YearActivityHeatmap: View {
         let hours = totalMinutes / 60
         let remainingMinutes = totalMinutes % 60
         if hours > 0 && remainingMinutes > 0 {
-            return String(format: String(localized: "stats.year.focusHoursAndMinutes"), hours, remainingMinutes)
+            return String(format: localizedString("stats.year.focusHoursAndMinutes", locale: locale), hours, remainingMinutes)
         } else if hours > 0 {
-            return String(format: String(localized: "stats.year.focusHours"), hours)
+            return String(format: localizedString("stats.year.focusHours", locale: locale), hours)
         } else {
-            return String(format: String(localized: "stats.year.focusMinutes"), totalMinutes)
+            return String(format: localizedString("stats.year.focusMinutes", locale: locale), totalMinutes)
         }
     }
 

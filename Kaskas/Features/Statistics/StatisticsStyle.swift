@@ -35,16 +35,6 @@ extension ActivityKind {
         case .meeting: "stats.kind.meeting"
         }
     }
-
-    var symbol: String {
-        switch self {
-        case .studying: "book.closed.fill"
-        case .breakTime: "cup.and.saucer.fill"
-        case .computerInactive: "moon.zzz.fill"
-        case .kaskasPaused: "pause.circle.fill"
-        case .meeting: "video.fill"
-        }
-    }
 }
 
 enum StatisticsPeriod: Int, CaseIterable, Identifiable {
@@ -67,26 +57,11 @@ enum StatisticsPeriod: Int, CaseIterable, Identifiable {
         let start = calendar.date(byAdding: .day, value: 1 - rawValue, to: end) ?? end
         return (start, end)
     }
-
-    func window(offset: Int, now: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
-        let today = calendar.startOfDay(for: now)
-        let end = calendar.date(byAdding: .day, value: -offset * rawValue, to: today) ?? today
-        return window(endingAt: end, calendar: calendar)
-    }
 }
 
-enum HourlyPeriod: Int, CaseIterable, Identifiable {
-    case day = 1
-    case week = 7
-
-    var id: Self { self }
-    var labelKey: String { self == .day ? "stats.hourly.day" : "stats.hourly.week" }
-
-    func window(endingAt endDate: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
-        let end = calendar.startOfDay(for: endDate)
-        let start = calendar.date(byAdding: .day, value: 1 - rawValue, to: end) ?? end
-        return (start, end)
-    }
+enum HourlyPeriod {
+    case day
+    case week
 }
 
 enum StatisticsDuration {

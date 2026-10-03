@@ -10,22 +10,24 @@ struct StudyTrendChart: View {
     var body: some View {
         let chartPoints = data.points
         let selected = chartPoints.first { $0.date == hoveredDate }
-        Chart {
+        let dayAxisLabel = localizedString("stats.axis.day", locale: locale)
+        let hoursAxisLabel = localizedString("stats.axis.hours", locale: locale)
+        return Chart {
             ForEach(chartPoints) { point in
                 LineMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.hours),
+                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    y: .value(hoursAxisLabel, point.hours),
                     series: .value("Series", "daily")
                 )
                 .foregroundStyle(StatisticsStyle.studying)
                 PointMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.hours)
+                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    y: .value(hoursAxisLabel, point.hours)
                 )
                 .foregroundStyle(StatisticsStyle.studying)
                 LineMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.averageHours),
+                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    y: .value(hoursAxisLabel, point.averageHours),
                     series: .value("Series", "average")
                 )
                 .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))

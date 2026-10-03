@@ -171,7 +171,7 @@ struct StatisticsView: View {
                     .minimumScaleFactor(0.85)
             }
 
-            Text(StatisticsDuration.label(summaryDuration(for: kind)))
+            Text(StatisticsDuration.label(summaryDuration(for: kind), locale: locale))
                 .font(.system(size: 17, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.primary)
@@ -192,11 +192,13 @@ struct StatisticsView: View {
 
     private var distributionChart: some View {
         let selected = distributionDays.first { $0.date == hoveredDistributionDate }
+        let dayAxisLabel = localizedString("stats.axis.day", locale: locale)
+        let hoursAxisLabel = localizedString("stats.axis.hours", locale: locale)
         return Chart {
             ForEach(distributionPoints) { point in
                 BarMark(
-                    x: .value(String(localized: "stats.axis.day"), point.date, unit: .day),
-                    y: .value(String(localized: "stats.axis.hours"), point.hours)
+                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    y: .value(hoursAxisLabel, point.hours)
                 )
                 .foregroundStyle(point.kind.color)
                 .cornerRadius(3)
@@ -235,7 +237,7 @@ struct StatisticsView: View {
                             Text(selected.date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
                                 .font(.subheadline.weight(.semibold))
                             ForEach(ActivityKind.allCases, id: \.self) { kind in
-                                tooltipRow(kind.labelKey, value: StatisticsDuration.label(selected.duration(for: kind)), color: kind.color)
+                                tooltipRow(kind.labelKey, value: StatisticsDuration.label(selected.duration(for: kind), locale: locale), color: kind.color)
                             }
                         }
                         .statisticsTooltip(width: 250)
@@ -355,7 +357,7 @@ struct StatisticsView: View {
                             Text(String(format: "%02d:00–%02d:00", selectedHour, selectedHour + 1))
                                 .font(.subheadline.weight(.semibold))
                             if hourlyPeriod == .week {
-                                tooltipRow("stats.total", value: StatisticsDuration.label(totalMinutes * 60), color: StatisticsStyle.computerInactive)
+                                tooltipRow("stats.total", value: StatisticsDuration.label(totalMinutes * 60, locale: locale), color: StatisticsStyle.computerInactive)
                                 Divider()
                             }
                             if activePoints.isEmpty {
@@ -558,6 +560,7 @@ private struct StatisticsDateNavigator: View {
                 DatePicker("stats.chooseDate", selection: $endDate, in: ...today, displayedComponents: .date)
                     .datePickerStyle(.graphical)
                     .padding()
+                    .environment(\.locale, locale)
             }
 
             Button {
