@@ -88,26 +88,16 @@ struct DashboardTodayChart: View {
                        let position = proxy.position(forX: Double(hoveredHour) + 0.5) {
                         let plot = geometry[plotFrame]
                         let x = plot.minX + position
-                        Path { path in
-                            path.move(to: CGPoint(x: x, y: plot.minY))
-                            path.addLine(to: CGPoint(x: x, y: plot.maxY))
-                        }
-                        .stroke(.primary.opacity(0.55), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                        .allowsHitTesting(false)
+                        ChartHoverGuide(x: x, plot: plot)
                         VStack(alignment: .leading, spacing: 7) {
                             Text(String(format: "%02d:00–%02d:00", hoveredHour, hoveredHour + 1))
                                 .font(.subheadline.weight(.semibold))
                             Divider()
-                            tooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
-                            tooltipRow(previousLabel, value: StatisticsDuration.label(previous[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.average)
+                            ChartTooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
+                            ChartTooltipRow(previousLabel, value: StatisticsDuration.label(previous[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.average)
                         }
-                        .font(.subheadline)
-                        .padding(12)
-                        .frame(width: 230, alignment: .leading)
-                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.17)))
-                        .shadow(color: .black.opacity(0.22), radius: 12, y: 5)
-                        .offset(x: tooltipOriginX(for: x, in: plot), y: plot.minY + 8)
+                        .chartTooltip(width: 230)
+                        .offset(x: ChartTooltipPosition.originX(for: x, in: plot), y: plot.minY + 8)
                         .allowsHitTesting(false)
                     }
                 }
@@ -115,21 +105,5 @@ struct DashboardTodayChart: View {
         }
         .frame(height: 220)
         .onChange(of: date) { _, _ in hoveredHour = nil }
-    }
-
-    private func tooltipOriginX(for x: CGFloat, in plot: CGRect) -> CGFloat {
-        let width: CGFloat = 230
-        let spacing: CGFloat = 14
-        let preferred = x + spacing + width <= plot.maxX ? x + spacing : x - spacing - width
-        return min(max(plot.minX, preferred), max(plot.minX, plot.maxX - width))
-    }
-
-    private func tooltipRow(_ label: LocalizedStringKey, value: String, color: Color) -> some View {
-        HStack(spacing: 7) {
-            Circle().fill(color).frame(width: 7, height: 7)
-            Text(label)
-            Spacer(minLength: 8)
-            Text(value).fontWeight(.semibold).monospacedDigit()
-        }
     }
 }
