@@ -291,7 +291,7 @@ struct CategorySettingsView: View {
                         .popover(isPresented: $showingEditIconPopover, arrowEdge: .bottom) {
                             editIconPickerPopover(for: category)
                         }
-                        .help("İkonu değiştir")
+                        .accessibilityLabel("İkonu değiştir")
 
                         // Category name text field
                         TextField("Kategori adı", text: $editingCategoryName)
@@ -339,7 +339,7 @@ struct CategorySettingsView: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
-                        .help("Kaydet (Enter)")
+                        .accessibilityLabel("Kaydet")
                         .disabled(editingCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                         // Cancel button
@@ -354,7 +354,7 @@ struct CategorySettingsView: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
-                        .help("Vazgeç (Esc)")
+                        .accessibilityLabel("Vazgeç")
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
@@ -408,7 +408,7 @@ struct CategorySettingsView: View {
                                     Image(systemName: "trash")
                                 }
                                 .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
-                                .help("Bu kategoriyi sil")
+                                .accessibilityLabel("Bu kategoriyi sil")
                             }
 
                             // Edit Category button (Pencil)
@@ -418,7 +418,7 @@ struct CategorySettingsView: View {
                                 Image(systemName: "pencil")
                             }
                             .buttonStyle(HeaderActionButtonStyle())
-                            .help("Bu kategoriyi düzenle")
+                            .accessibilityLabel("Bu kategoriyi düzenle")
 
                             // Add app to this category button (Plus)
                             Button {
@@ -430,7 +430,7 @@ struct CategorySettingsView: View {
                                 Image(systemName: "plus")
                             }
                             .buttonStyle(HeaderActionButtonStyle())
-                            .help("Bu kategoriye uygulama ekle")
+                            .accessibilityLabel("Bu kategoriye uygulama ekle")
                         }
                         .padding(.trailing, 10)
                         .padding(.vertical, 8)
@@ -556,7 +556,7 @@ struct CategorySettingsView: View {
                 Image(systemName: "trash")
             }
             .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
-            .help(rule.isDefault ? String(localized: "categories.rules.removeRule") : String(localized: "categories.rules.removeOverride"))
+            .accessibilityLabel(rule.isDefault ? String(localized: "categories.rules.removeRule") : String(localized: "categories.rules.removeOverride"))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)

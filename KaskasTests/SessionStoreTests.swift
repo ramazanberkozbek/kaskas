@@ -161,7 +161,7 @@ struct SessionStoreTests {
     }
 
     @Test
-    func restoresFormerSixtySecondWarningAsThirtySeconds() {
+    func clampsWarningLeadTimeToMaximumSixtySeconds() {
         let suiteName = "SessionStoreTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -170,8 +170,11 @@ struct SessionStoreTests {
         var configuration = FocusConfiguration()
         configuration.breakWarningLeadTime = 60
         store.save(configuration: configuration)
+        #expect(store.loadConfiguration().breakWarningLeadTime == 60)
 
-        #expect(store.loadConfiguration().breakWarningLeadTime == 30)
+        configuration.breakWarningLeadTime = 90
+        store.save(configuration: configuration)
+        #expect(store.loadConfiguration().breakWarningLeadTime == 60)
     }
 
     @Test

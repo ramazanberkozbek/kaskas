@@ -207,23 +207,8 @@ struct FocusSettingsView: View {
                     )
 
                     VStack(spacing: 0) {
-                        settingRow(
-                            "settings.breakLayout.title",
-                            subtitle: controller.configuration.breakLayout == .horizon ? "settings.breakLayout.horizonDescription" : "settings.breakLayout.gentleBarDescription"
-                        ) {
-                            SettingsMenuPicker(title: "settings.breakLayout.title", selection: Binding {
-                                controller.configuration.breakLayout
-                            } set: { newLayout in
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    var configuration = controller.configuration
-                                    configuration.breakLayout = newLayout
-                                    controller.updateConfiguration(configuration)
-                                }
-                            }, selectedLabel: Text(controller.configuration.breakLayout == .horizon
-                                ? "settings.breakLayout.horizon" : "settings.breakLayout.gentleBar")) {
-                                Text("settings.breakLayout.horizon").tag(BreakLayout.horizon)
-                                Text("settings.breakLayout.gentleBar").tag(BreakLayout.gentleBar)
-                            }
+                        settingRow("settings.breakLayout.choice") {
+                            BreakLayoutSegmentedPicker(selection: breakLayoutBinding)
                         }
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
@@ -355,6 +340,18 @@ struct FocusSettingsView: View {
     // MARK: - Formatlayıcılar & Bağlantılar
 
 
+    private var breakLayoutBinding: Binding<BreakLayout> {
+        Binding {
+            controller.configuration.breakLayout
+        } set: { newLayout in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                var configuration = controller.configuration
+                configuration.breakLayout = newLayout
+                controller.updateConfiguration(configuration)
+            }
+        }
+    }
+
     private func binding<Value>(
         for keyPath: WritableKeyPath<FocusConfiguration, Value>
     ) -> Binding<Value> {
@@ -365,6 +362,62 @@ struct FocusSettingsView: View {
             configuration[keyPath: keyPath] = newValue
             controller.updateConfiguration(configuration)
         }
+    }
+}
+
+// MARK: - Mola Düzeni Seçici (İkonlu Segmented Picker)
+
+struct BreakLayoutSegmentedPicker: View {
+    @Binding var selection: BreakLayout
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: 0) {
+            segment(for: .horizon, title: "settings.breakLayout.horizon", icon: "sun.horizon")
+            segment(for: .gentleBar, title: "settings.breakLayout.gentleBar", icon: "dock.rectangle")
+        }
+        .frame(width: 216, height: 44)
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06))
+                .frame(height: 30)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08), lineWidth: 0.5)
+                )
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("settings.breakLayout.choice"))
+    }
+
+    private func segment(for layout: BreakLayout, title: LocalizedStringKey, icon: String) -> some View {
+        let isSelected = selection == layout
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selection = layout
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 11.5, weight: .medium))
+                Text(title)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+            }
+            .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+            .frame(maxWidth: .infinity)
+            .frame(height: 25)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.18) : Color.white)
+                        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.12), radius: 1.5, y: 0.5)
+                }
+            }
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 
@@ -417,7 +470,6 @@ struct BreakMiniPreviewCard: View {
                             }
                     }
                     .buttonStyle(.plain)
-                    .help("settings.breakAppearance.fullscreenPreview")
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 14)

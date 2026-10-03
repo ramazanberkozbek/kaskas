@@ -8,7 +8,6 @@ struct SettingsDurationPicker: View {
     var maximum: TimeInterval = DurationInput.maximumDuration
     var step: TimeInterval = 1
     var inputUnit: DurationInput.Unit = .minutes
-    var validationHint: LocalizedStringKey? = nil
     var placeholder: LocalizedStringKey = "0"
 
     @State private var isEditing = false
@@ -56,25 +55,53 @@ struct SettingsDurationPicker: View {
         }
     }
 
+    private var unitText: String {
+        let key = inputUnit == .seconds ? "settings.duration.seconds" : "settings.duration.minutes"
+        return String(localized: String.LocalizationValue(key), locale: locale).lowercased()
+    }
+
     private var inlineEditor: some View {
-        TextField("", text: $input)
-            .textFieldStyle(.roundedBorder)
-            .multilineTextAlignment(.trailing)
-            .focused($inputFocused)
-            .onSubmit(save)
-            .onExitCommand(perform: save)
-            .labelsHidden()
-            .accessibilityLabel(Text(title))
-            .modifier(ShakeEffect(animatableData: CGFloat(shakeAttempts)))
-            .onChange(of: input) { oldValue, newValue in
-                handleInputChange(oldValue: oldValue, newValue: newValue)
-            }
-            .frame(width: 170, height: 28)
-            .task {
-                // Wait for the native menu to relinquish keyboard focus.
-                await Task.yield()
-                inputFocused = true
-            }
+        HStack(spacing: 4) {
+            TextField("", text: $input)
+                .textFieldStyle(.plain)
+                .multilineTextAlignment(.trailing)
+                .focused($inputFocused)
+                .onSubmit(save)
+                .onExitCommand(perform: save)
+                .labelsHidden()
+                .accessibilityLabel(Text(title))
+                .onChange(of: input) { oldValue, newValue in
+                    handleInputChange(oldValue: oldValue, newValue: newValue)
+                }
+
+            Text(unitText)
+                .font(.system(size: 13))
+                .foregroundStyle(.tertiary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 8)
+        .frame(width: 170, height: 28)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(
+                    inputFocused ? Color.accentColor : Color(nsColor: .separatorColor),
+                    lineWidth: inputFocused ? 2 : 1
+                )
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 6))
+        .onTapGesture {
+            inputFocused = true
+        }
+        .modifier(ShakeEffect(animatableData: CGFloat(shakeAttempts)))
+        .task {
+            // Wait for the native menu to relinquish keyboard focus.
+            await Task.yield()
+            inputFocused = true
+        }
     }
 
     private func handleInputChange(oldValue: String, newValue: String) {

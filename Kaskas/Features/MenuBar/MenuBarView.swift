@@ -173,7 +173,6 @@ struct MenuBarView: View {
             .onHover { isBadgeHovered = $0 }
             .animation(.easeOut(duration: 0.15), value: isBadgeHovered)
             .accessibilityLabel(snapshot.manualPauseStartedAt == nil ? "menu.pause" : "menu.resume")
-            .help(snapshot.manualPauseStartedAt == nil ? "menu.pause" : "menu.resume")
         }
     }
 

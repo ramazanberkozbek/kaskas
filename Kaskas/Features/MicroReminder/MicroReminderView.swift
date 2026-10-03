@@ -38,6 +38,7 @@ struct MicroReminderMascotView: View {
     let color: MicroReminderColor
     let size: CGFloat
     let animated: Bool
+    var looping: Bool = false
     let onFinished: @MainActor () -> Void
 
     init(
@@ -45,12 +46,14 @@ struct MicroReminderMascotView: View {
         color: MicroReminderColor = .peach,
         size: CGFloat,
         animated: Bool,
+        looping: Bool = false,
         onFinished: @escaping @MainActor () -> Void = {}
     ) {
         self.mascot = mascot
         self.color = color
         self.size = size
         self.animated = animated
+        self.looping = looping
         self.onFinished = onFinished
     }
 
@@ -60,6 +63,7 @@ struct MicroReminderMascotView: View {
             color: color,
             size: size,
             animated: animated,
+            looping: looping,
             onFinished: onFinished
         )
     }

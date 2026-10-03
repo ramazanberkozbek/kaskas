@@ -5,22 +5,42 @@ struct FlameMascotView: View {
     let color: MicroReminderColor
     let size: CGFloat
     let animated: Bool
+    var looping: Bool = false
     let onFinished: @MainActor () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var startedAt: Date?
     @State private var didFinish = false
 
+    init(
+        mascot: MicroReminderMascot,
+        color: MicroReminderColor = .peach,
+        size: CGFloat,
+        animated: Bool,
+        looping: Bool = false,
+        onFinished: @escaping @MainActor () -> Void = {}
+    ) {
+        self.mascot = mascot
+        self.color = color
+        self.size = size
+        self.animated = animated
+        self.looping = looping
+        self.onFinished = onFinished
+    }
+
     var body: some View {
         Group {
             if animated {
                 TimelineView(.animation(minimumInterval: reduceMotion ? 0.25 : 1.0 / 60.0)) { context in
                     let elapsed = context.date.timeIntervalSince(startedAt ?? context.date)
-                    let pose = FlameAnimationTimeline.pose(at: elapsed, reduceMotion: reduceMotion)
+                    let cycleDuration = FlameAnimationTimeline.totalDuration + 1.0
+                    let activeElapsed = looping ? elapsed.truncatingRemainder(dividingBy: cycleDuration) : elapsed
+
+                    let pose = FlameAnimationTimeline.pose(at: activeElapsed, reduceMotion: reduceMotion)
 
                     artwork(pose: pose)
                         .onChange(of: pose.finished) { _, finished in
-                            guard finished, !didFinish else { return }
+                            guard !looping, finished, !didFinish else { return }
                             didFinish = true
                             onFinished()
                         }
@@ -38,6 +58,16 @@ struct FlameMascotView: View {
         }
         .frame(width: size, height: size)
         .onAppear {
+            guard animated else { return }
+            didFinish = false
+            startedAt = Date()
+        }
+        .onChange(of: mascot) { _, _ in
+            guard animated else { return }
+            didFinish = false
+            startedAt = Date()
+        }
+        .onChange(of: color) { _, _ in
             guard animated else { return }
             didFinish = false
             startedAt = Date()

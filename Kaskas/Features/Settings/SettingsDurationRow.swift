@@ -12,8 +12,7 @@ struct SettingsDurationRow: View {
                 title: title,
                 selection: $selection,
                 options: options,
-                minimum: 60,
-                validationHint: "settings.duration.idleRange"
+                minimum: 60
             )
         } label: {
             VStack(alignment: .leading, spacing: 3) {

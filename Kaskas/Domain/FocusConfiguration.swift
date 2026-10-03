@@ -208,7 +208,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.idleThreshold = max(60, idleThreshold)
         self.menuBarDisplayMode = menuBarDisplayMode
         self.breakWarningEnabled = breakWarningEnabled
-        self.breakWarningLeadTime = min(30, max(5, (breakWarningLeadTime / 5).rounded() * 5))
+        self.breakWarningLeadTime = min(60, max(5, (breakWarningLeadTime / 5).rounded() * 5))
         self.notificationPosition = notificationPosition
         self.appLanguage = appLanguage
     }

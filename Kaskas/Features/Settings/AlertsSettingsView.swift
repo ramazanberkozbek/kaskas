@@ -6,10 +6,11 @@ struct AlertsSettingsView: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private let leadTimes: [TimeInterval] = [5, 10, 20, 30]
+    private let leadTimes: [TimeInterval] = [5, 10, 20, 30, 60]
 
     private let reminderIntervals: [TimeInterval] = [5, 10, 20, 30].map { $0 * 60 }
     @State private var showingMascotPicker = false
+    @State private var previewMascotKey = UUID()
 
     var body: some View {
         ScrollView {
@@ -31,7 +32,9 @@ struct AlertsSettingsView: View {
                     NotificationDesktopPreview(
                         leadTime: controller.configuration.breakWarningLeadTime,
                         position: controller.configuration.notificationPosition,
-                        isEnabled: controller.configuration.breakWarningEnabled
+                        isEnabled: controller.configuration.breakWarningEnabled,
+                        breakBackground: controller.configuration.breakBackground,
+                        customWallpaperPath: controller.configuration.customWallpaperPath
                     )
                 }
 
@@ -57,10 +60,9 @@ struct AlertsSettingsView: View {
                                 selection: binding(for: \.breakWarningLeadTime),
                                 options: leadTimes,
                                 minimum: 5,
-                                maximum: 30,
+                                maximum: 60,
                                 step: 5,
-                                inputUnit: .seconds,
-                                validationHint: "settings.duration.warningRange"
+                                inputUnit: .seconds
                             )
                         }
                         .disabled(!controller.configuration.breakWarningEnabled)
@@ -136,6 +138,47 @@ struct AlertsSettingsView: View {
                     .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
+                        // Üst Alan: Sanatsal Arka Plan ve Maskot Önizlemesi
+                        ZStack {
+                            MicroReminderArtwork()
+
+                            MicroReminderMascotView(
+                                mascot: controller.configuration.microReminderMascot,
+                                color: controller.configuration.microReminderColor,
+                                size: 110,
+                                animated: true,
+                                looping: true
+                            )
+                            .id(previewMascotKey)
+                        }
+                        .frame(height: 240)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            previewMascotKey = UUID()
+                        }
+                        .overlay(alignment: .topTrailing) {
+                            Button {
+                                controller.previewMicroReminder()
+                            } label: {
+                                Image(systemName: "viewfinder")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(.white.opacity(0.95))
+                                    .frame(width: 32, height: 32)
+                                    .background(.black.opacity(0.50), in: RoundedRectangle(cornerRadius: 8))
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(.white.opacity(0.18), lineWidth: 1)
+                                    }
+                            }
+                            .buttonStyle(.plain)
+                            .padding(12)
+                        }
+
+                        Divider()
+
+                        // 1. Satır: Hatırlatma Aralığı
                         settingRow(
                             title: "settings.reminderInterval",
                             subtitle: "settings.reminderInterval.description"
@@ -149,53 +192,43 @@ struct AlertsSettingsView: View {
 
                         Divider().padding(.horizontal, 16)
 
-                        HStack(spacing: 14) {
-                            MicroReminderMascotView(
-                                mascot: controller.configuration.microReminderMascot,
-                                color: controller.configuration.microReminderColor,
-                                size: 28,
-                                animated: false
-                            )
-                            .frame(width: 32, height: 32)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("settings.microReminderDesign.sidekick")
-                                    .font(.system(size: 14, weight: .medium))
-                                Text(LocalizedStringKey(controller.configuration.microReminderMascot.titleKey))
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer(minLength: 8)
-
-                            HStack(spacing: 8) {
-                                Button {
-                                    controller.previewMicroReminder()
-                                } label: {
-                                    Label("settings.breakAppearance.fullscreenPreview", systemImage: "play.circle")
-                                        .font(.system(size: 12, weight: .medium))
+                        // 2. Satır: Maskot Seçimi
+                        settingRow(
+                            title: "settings.microReminderDesign.sidekick",
+                            subtitle: LocalizedStringKey(controller.configuration.microReminderMascot.titleKey)
+                        ) {
+                            Button {
+                                showingMascotPicker = true
+                            } label: {
+                                MicroReminderMascotView(
+                                    mascot: controller.configuration.microReminderMascot,
+                                    color: controller.configuration.microReminderColor,
+                                    size: 24,
+                                    animated: false
+                                )
+                                .frame(width: 44, height: 34)
+                                .background(
+                                    Color.white.opacity(colorScheme == .dark ? 0.08 : 0.05),
+                                    in: RoundedRectangle(cornerRadius: 8)
+                                )
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
                                 }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-
-                                Button {
-                                    showingMascotPicker = true
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Text("settings.microReminderDesign.mascot")
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption2.weight(.semibold))
-                                    }
-                                    .font(.system(size: 12, weight: .medium))
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
                             }
+                            .buttonStyle(.plain)
                         }
-                        .frame(minHeight: 66)
-                        .padding(.horizontal, 16)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            showingMascotPicker = true
+                        }
                     }
-                    .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
+                    .background(cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(.white.opacity(colorScheme == .dark ? 0.12 : 0.08), lineWidth: 1)
+                    }
                 }
             }
             .frame(maxWidth: 600, alignment: .leading)
@@ -274,18 +307,6 @@ struct AlertsSettingsView: View {
     ) -> some View {
         settingRow(title: title, subtitle: subtitle) {
             HStack(spacing: 8) {
-                SettingsMenuPicker(
-                    title: title,
-                    selection: selection,
-                    selectedLabel: selection.wrappedValue.map { Text($0.rawValue) }
-                        ?? Text("settings.breakSound.off")
-                ) {
-                    Text("settings.breakSound.off").tag(nil as BreakSound?)
-                    ForEach(BreakSound.allCases) { sound in
-                        Text(sound.rawValue).tag(Optional(sound))
-                    }
-                }
-
                 if let currentSound = selection.wrappedValue {
                     Button {
                         BreakSoundPlayer.preview(currentSound)
@@ -297,7 +318,18 @@ struct AlertsSettingsView: View {
                             .background(Color.primary.opacity(0.06), in: Circle())
                     }
                     .buttonStyle(.plain)
-                    .help("settings.breakSound.preview")
+                }
+
+                SettingsMenuPicker(
+                    title: title,
+                    selection: selection,
+                    selectedLabel: selection.wrappedValue.map { Text($0.rawValue) }
+                        ?? Text("settings.breakSound.off")
+                ) {
+                    Text("settings.breakSound.off").tag(nil as BreakSound?)
+                    ForEach(BreakSound.allCases) { sound in
+                        Text(sound.rawValue).tag(Optional(sound))
+                    }
                 }
             }
         }
@@ -334,14 +366,7 @@ struct AlertsSettingsView: View {
     }
 
     private var positionBinding: Binding<NotificationPosition> {
-        Binding {
-            controller.configuration.notificationPosition
-        } set: { newPosition in
-            var configuration = controller.configuration
-            configuration.notificationPosition = newPosition
-            controller.updateConfiguration(configuration)
-            controller.previewBreakWarning()
-        }
+        binding(for: \.notificationPosition)
     }
 
     private func binding<Value>(for keyPath: WritableKeyPath<FocusConfiguration, Value>) -> Binding<Value> {
@@ -359,6 +384,8 @@ private struct NotificationDesktopPreview: View {
     let leadTime: TimeInterval
     let position: NotificationPosition
     let isEnabled: Bool
+    var breakBackground: BreakBackground = .ocean
+    var customWallpaperPath: String? = nil
 
     @State private var wallpaper = DesktopWallpaperPreview.shared
 
@@ -369,10 +396,16 @@ private struct NotificationDesktopPreview: View {
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 200)
+                    .frame(height: 330)
                     .clipped()
             } else {
-                Color(nsColor: .windowBackgroundColor)
+                BreakBackgroundView(
+                    background: breakBackground,
+                    customWallpaperPath: customWallpaperPath
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: 330)
+                .clipped()
             }
 
             HStack {
@@ -388,15 +421,16 @@ private struct NotificationDesktopPreview: View {
             }
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.white)
-            .padding(.horizontal, 14)
-            .frame(height: 22)
-            .background(.black.opacity(0.45))
+            .padding(.horizontal, 16)
+            .frame(height: 24)
+            .background(.black.opacity(0.40))
 
             if isEnabled {
                 MiniBreakWarningView(leadTime: leadTime)
                     .frame(maxWidth: .infinity, alignment: alignment)
-                    .padding(.horizontal, 14)
-                    .padding(.top, 38)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 42)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: position)
             } else {
                 VStack(spacing: 8) {
                     Image(systemName: "bell.slash.fill")
@@ -407,15 +441,17 @@ private struct NotificationDesktopPreview: View {
                         .foregroundStyle(.white.opacity(0.7))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, 22)
+                .padding(.top, 24)
             }
         }
-        .frame(height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(height: 330)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(.white.opacity(0.14), lineWidth: 1)
         }
+        .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .task { await wallpaper.load() }
@@ -438,60 +474,63 @@ private struct MiniBreakWarningView: View {
         let seconds = Int(leadTime)
         let timeString = String(format: "%02d:%02d", seconds / 60, seconds % 60)
 
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(accent)
-                    .frame(width: 30, height: 30)
-                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
+                    .frame(width: 24, height: 24)
+                    .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6))
                     .overlay {
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(accent.opacity(0.7), lineWidth: 1)
                     }
 
                 VStack(alignment: .leading, spacing: 1) {
                     (Text("warning.title") + Text(" ") + Text(timeString))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .font(.system(size: 10.5, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(.white)
 
                     Text("warning.subtitle")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.65))
+                        .font(.system(size: 8.5, weight: .regular))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
                 }
             }
 
-            HStack(spacing: 4) {
-                miniButton("warning.skip")
+            HStack(spacing: 3) {
+                miniButton("warning.startNow", prominent: true)
                 miniButton("warning.oneMinute")
                 miniButton("warning.fiveMinutes")
-                Spacer(minLength: 0)
-                miniButton("warning.startNow", prominent: true)
+                miniButton("warning.skip")
             }
         }
-        .padding(12)
-        .frame(width: 270)
-        .background(Color(red: 0.15, green: 0.15, blue: 0.15), in: RoundedRectangle(cornerRadius: 14))
+        .padding(9)
+        .frame(width: 236)
+        .background(
+            Color(red: 0.12, green: 0.13, blue: 0.15).opacity(0.88),
+            in: RoundedRectangle(cornerRadius: 12)
+        )
         .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(accent, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.14), lineWidth: 0.75)
         }
-        .shadow(color: .black.opacity(0.4), radius: 10, y: 4)
+        .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
     }
 
     private func miniButton(_ title: LocalizedStringKey, prominent: Bool = false) -> some View {
         Text(title)
-            .font(.system(size: 9, weight: .semibold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 7)
-            .frame(height: 22)
+            .font(.system(size: 8, weight: prominent ? .semibold : .medium))
+            .foregroundStyle(.white.opacity(prominent ? 1.0 : 0.85))
+            .padding(.horizontal, 6)
+            .frame(height: 18)
             .background(
-                prominent ? Color.white.opacity(0.2) : Color.clear,
+                prominent ? Color.white.opacity(0.2) : Color.white.opacity(0.06),
                 in: Capsule()
             )
             .overlay {
-                Capsule().stroke(Color.white.opacity(prominent ? 0 : 0.25), lineWidth: 0.75)
+                Capsule().stroke(Color.white.opacity(prominent ? 0.35 : 0.15), lineWidth: 0.5)
             }
     }
 }

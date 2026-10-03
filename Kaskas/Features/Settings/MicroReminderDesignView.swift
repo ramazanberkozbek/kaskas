@@ -52,7 +52,6 @@ struct MicroReminderDesignView: View {
                                     .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 10))
                             }
                             .buttonStyle(.plain)
-                            .help("settings.breakAppearance.fullscreenPreview")
                             .padding(14)
                         }
 
@@ -164,7 +163,7 @@ struct MicroReminderDesignView: View {
 
 }
 
-private struct MicroReminderArtwork: View {
+struct MicroReminderArtwork: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -246,7 +245,7 @@ struct MascotWheelPicker: View {
                         .overlay { Circle().stroke(.white.opacity(0.2), lineWidth: 1) }
                 }
                 .buttonStyle(.plain)
-                .help("Kapat")
+                .accessibilityLabel("Kapat")
             }
 
             ZStack {
@@ -261,7 +260,6 @@ struct MascotWheelPicker: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel(Text(LocalizedStringKey(option.titleKey)))
                         .accessibilityAddTraits(option == mascot ? .isSelected : [])
-                        .help(Text(LocalizedStringKey(option.titleKey)))
                     } else {
                         wheelSegment(at: angle, option: nil, size: wheelSize)
                             .allowsHitTesting(false)
@@ -317,7 +315,6 @@ struct MascotWheelPicker: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(Text(LocalizedStringKey(option.titleKey)))
-                    .help(Text(LocalizedStringKey(option.titleKey)))
                 }
             }
             .padding(.horizontal, 10)

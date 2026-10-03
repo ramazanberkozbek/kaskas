@@ -334,6 +334,7 @@ struct DashboardView: View {
             registry: controller.categoryRegistry, isOngoing: session.isOngoing(startedAt: controller.activeStudyingStartedAt))
         let timeRange = "\(formatTime(session.startedAt))–\(formatTime(session.endedAt))"
         let durationLabel = SessionDuration.minutesLabel(session.focusedDuration)
+        let categoryTitle = (category.mixedBreakdown?.isEmpty == false) ? category.mixedBreakdown! : category.title
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 14) {
                 Image(systemName: "timer")
@@ -355,20 +356,10 @@ struct DashboardView: View {
                     }
                 }
                 Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 4) {
-                    Label(category.title, systemImage: category.symbol)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(category.color)
-                        .lineLimit(1)
-                    if let breakdown = category.mixedBreakdown {
-                        Text(breakdown)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-                .frame(maxWidth: 220, alignment: .trailing)
-                .help(category.explanation)
+                Label(categoryTitle, systemImage: category.symbol)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(category.color)
+                    .lineLimit(1)
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
             }
 #if DEBUG

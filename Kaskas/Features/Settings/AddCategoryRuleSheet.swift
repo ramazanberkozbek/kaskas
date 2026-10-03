@@ -165,7 +165,7 @@ struct AddCategoryRuleSheet: View {
                                                     .foregroundStyle(.secondary)
                                                     .frame(width: 22, height: 22)
                                                     .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                                                    .help("\(currentCategory.localizedName) kategorisinde tanımlı")
+                                                    .accessibilityLabel("\(currentCategory.localizedName) kategorisinde tanımlı")
                                             }
 
                                             if isSelected {
