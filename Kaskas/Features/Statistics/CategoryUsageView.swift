@@ -4,22 +4,28 @@ struct CategoryUsageView: View {
     let summary: CategoryUsageSummary
     let registry: CategoryRegistry
     let storageFailed: Bool
-    var title: LocalizedStringKey = "categories.usage.title"
-    var subtitle: LocalizedStringKey = "categories.usage.subtitle"
+    var title: LocalizedStringKey? = "categories.usage.title"
+    var subtitle: LocalizedStringKey? = "categories.usage.subtitle"
     var showsAppSegments = true
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.locale) private var locale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
+            if title != nil || subtitle != nil {
+                VStack(alignment: .leading, spacing: 2) {
+                    if let title {
+                        Text(title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                    }
 
-                Text(subtitle)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
 
             VStack(alignment: .leading, spacing: 12) {

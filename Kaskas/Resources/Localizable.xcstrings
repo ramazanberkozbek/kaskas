@@ -910,13 +910,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Measured focused time. The session label does not change this breakdown."
+            "value" : "Category was automatically determined based on the apps you used."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ölçülen çalışma süreleri. Oturum etiketi bu dağılımı değiştirmez."
+            "value" : "Kategori, kullandığın uygulamalara göre otomatik belirlendi."
           }
         }
       }

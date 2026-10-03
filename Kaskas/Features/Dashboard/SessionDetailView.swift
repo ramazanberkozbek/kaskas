@@ -79,7 +79,7 @@ struct SessionDetailView: View {
             categoryEditor
             CategoryUsageView(summary: summary.usage, registry: controller.categoryRegistry,
                 storageFailed: controller.appUsage.storageFailed,
-                title: "dashboard.session.category.distribution",
+                title: nil,
                 subtitle: "dashboard.session.category.distributionExplanation",
                 showsAppSegments: true)
             noteEditor
