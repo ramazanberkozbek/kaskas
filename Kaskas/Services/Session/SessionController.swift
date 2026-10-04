@@ -188,6 +188,13 @@ final class SessionController {
         engine.breaksTakenToday(at: now)
     }
 
+    func screenTimeToday(at now: Date = Date()) -> TimeInterval {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: now)
+        let intervals = activityIntervals(from: startOfDay, to: now, now: now)
+        return ActivityStatistics.days(from: startOfDay, through: startOfDay, intervals: intervals, calendar: calendar).first?.studying ?? 0
+    }
+
     func activityIntervals(from start: Date, to end: Date, now: Date = Date()) -> [ActivityInterval] {
         let intervals = activityTracker.intervals(from: start, to: end, now: now)
         activityStorageFailed = activityTracker.storageFailed

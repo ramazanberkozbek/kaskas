@@ -94,6 +94,26 @@ struct SessionIntegrationTests {
         #expect(!coordinator.enforceSingleInstance(bundleID: "test.kaskas", currentPID: 42, isTestEnvironment: false))
         #expect(exitCode == 0)
     }
+
+    @Test
+    func screenTimeTodayReflectsActiveStudyingTime() {
+        let suiteName = "ScreenTimeTodayTests.\(UUID())"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = SessionStore(defaults: defaults)
+        let now = Date()
+        let controller = SessionController(store: store, now: now)
+        controller.start()
+
+        let screenTimeAtStart = controller.screenTimeToday(at: now)
+        #expect(screenTimeAtStart == 0)
+
+        let tenMinutesLater = now.addingTimeInterval(10 * 60)
+        let screenTimeLater = controller.screenTimeToday(at: tenMinutesLater)
+        #expect(abs(screenTimeLater - 10 * 60) < 1.0)
+
+        controller.stop()
+    }
 }
 
 @MainActor

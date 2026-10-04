@@ -532,11 +532,12 @@ fileprivate extension SessionEngine {
                 relativeTo: now,
                 focusEndsAt: endsAt
             )
+            let effectiveWarningShown = grace > 0 ? false : warningShown
             status = .focusing(FocusRun(
                 startedAt: startedAt,
                 endsAt: endsAt,
                 nextMicroReminderAt: firstReminder,
-                warningShown: warningShown
+                warningShown: effectiveWarningShown
             ))
         case .breakTime(let kind, let remaining, let total):
             let endsAt = now.addingTimeInterval(remaining + grace)

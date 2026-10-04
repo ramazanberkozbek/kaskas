@@ -49,8 +49,9 @@ struct SessionEngine: Sendable {
                 let resumeGrace = max(0, Self.systemResumeGrace - rem)
                 let endsAt = resumeAt.addingTimeInterval(rem + resumeGrace)
                 let startedAt = endsAt.addingTimeInterval(-tot)
+                let warningShown = resumeGrace > 0 ? false : w
                 resolvedStatus = .focusing(FocusRun(
-                    startedAt: startedAt, endsAt: endsAt, nextMicroReminderAt: nil, warningShown: w
+                    startedAt: startedAt, endsAt: endsAt, nextMicroReminderAt: nil, warningShown: warningShown
                 ))
             } else if case .breakTime(let k, let rem, let tot) = s.frozen {
                 let endsAt = resumeAt.addingTimeInterval(rem)

@@ -283,10 +283,11 @@ struct MenuBarView: View {
 
             Spacer()
 
-            Text(controller.breaksTakenToday(at: now).formatted())
-                .foregroundStyle(.primary)
+            Text(MenuBarDurationFormatter.screenTimeString(for: controller.screenTimeToday(at: now), locale: controller.locale))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
 
-            Text("menu.breaksTaken")
+            Text("menu.screenTime")
                 .foregroundStyle(.secondary)
         }
         .font(.system(size: 11, weight: .semibold))

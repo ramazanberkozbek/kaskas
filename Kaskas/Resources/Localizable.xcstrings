@@ -2745,6 +2745,23 @@
         }
       }
     },
+    "menu.screenTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "screen time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ekran süresi"
+          }
+        }
+      }
+    },
     "menu.settings" : {
       "extractionState" : "manual",
       "localizations" : {
