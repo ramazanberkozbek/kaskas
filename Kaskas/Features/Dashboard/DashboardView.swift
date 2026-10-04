@@ -134,7 +134,8 @@ struct DashboardView: View {
                     .dashboardPanel(colorScheme)
 
                 CategoryUsageView(summary: categorySnapshot.usage, registry: controller.categoryRegistry,
-                    storageFailed: controller.appUsage.storageFailed, showsAppSegments: true)
+                    storageFailed: controller.appUsage.storageFailed, showsAppSegments: true,
+                    minimumVisibleShare: 0.05)
 
                 VStack(alignment: .leading, spacing: 8) {
                     sectionHeading("dashboard.sessions.title", subtitle: sessionsSubtitle)

@@ -1,6 +1,23 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
+    "categories.usage.smallCategories" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other categories"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer kategoriler"
+          }
+        }
+      }
+    },
     "" : {
 
     },
