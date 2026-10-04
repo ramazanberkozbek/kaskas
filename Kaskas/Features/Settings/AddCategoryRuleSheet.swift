@@ -8,7 +8,8 @@ struct AddCategoryRuleSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var appSearchText: String = ""
-    @State private var selectedApp: CategoryRegistry.DiscoveredApp? = nil
+    @State private var selectedAppIDs: Set<String> = []
+    @State private var savedAppCount: Int = 0
     @State private var categoryName: String
     @State private var categoryIcon: String
     @State private var showingIconPickerPopover: Bool = false
@@ -43,11 +44,13 @@ struct AddCategoryRuleSheet: View {
         return nil
     }
 
-    private var selectedAppHasExistingRule: Bool {
-        guard let selectedApp else { return false }
-        return existingCategory(for: selectedApp) != nil
+    private var selectedApps: [CategoryRegistry.DiscoveredApp] {
+        installedApps.filter { selectedAppIDs.contains($0.id) }
     }
 
+    private var selectedAppHasExistingRule: Bool {
+        selectedApps.count == 1 && selectedApps.first.map { existingCategory(for: $0) != nil } == true
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,7 +59,7 @@ struct AddCategoryRuleSheet: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Yeni Kural Ekle")
                         .font(.headline)
-                    Text("Mac'inizdeki bir uygulamayı seçin ve çalışma kategorisini belirleyin.")
+                    Text("Mac'inizdeki uygulamaları seçin ve ortak kategorilerini belirleyin.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -80,7 +83,7 @@ struct AddCategoryRuleSheet: View {
             VStack(alignment: .leading, spacing: 16) {
                 // Search installed apps
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Yüklü Uygulamayı Seçin")
+                    Text("Yüklü Uygulamaları Seçin")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
 
@@ -91,18 +94,19 @@ struct AddCategoryRuleSheet: View {
                         TextField("Uygulama ara", text: $appSearchText)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13))
-                        if !appSearchText.isEmpty {
-                            Button {
-                                appSearchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                                    .frame(width: 24, height: 24)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
+                        Button {
+                            appSearchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                                .frame(width: 24, height: 24)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .opacity(appSearchText.isEmpty ? 0 : 1)
+                        .disabled(appSearchText.isEmpty)
+                        .accessibilityHidden(appSearchText.isEmpty)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
@@ -133,13 +137,20 @@ struct AddCategoryRuleSheet: View {
                             LazyVStack(spacing: 4) {
                                 ForEach(filteredInstalledApps) { app in
                                     let currentCategory = existingCategory(for: app)
-                                    let isSelected = selectedApp?.bundleId == app.bundleId
+                                    let isSelected = selectedAppIDs.contains(app.id)
 
                                     Button {
-                                        selectedApp = app
-                                        if initialCategory == nil, let currentCategory {
-                                            categoryName = currentCategory.localizedName
-                                            categoryIcon = currentCategory.iconName
+                                        savedAppCount = 0
+                                        if isSelected {
+                                            selectedAppIDs.remove(app.id)
+                                        } else {
+                                            selectedAppIDs.insert(app.id)
+                                            if initialCategory == nil,
+                                               categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                                               let currentCategory {
+                                                categoryName = currentCategory.localizedName
+                                                categoryIcon = currentCategory.iconName
+                                            }
                                         }
                                     } label: {
                                         HStack(spacing: 10) {
@@ -205,7 +216,7 @@ struct AddCategoryRuleSheet: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
 
-                        if let selectedApp, let curCat = existingCategory(for: selectedApp) {
+                        if selectedApps.count == 1, let selectedApp = selectedApps.first, let curCat = existingCategory(for: selectedApp) {
                             Spacer()
                             HStack(spacing: 4) {
                                 Image(systemName: curCat.iconName)
@@ -245,18 +256,19 @@ struct AddCategoryRuleSheet: View {
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 13))
 
-                            if !categoryName.isEmpty {
-                                Button {
-                                    categoryName = ""
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.caption)
-                                        .foregroundStyle(.tertiary)
-                                        .frame(width: 24, height: 24)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
+                            Button {
+                                categoryName = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: 24, height: 24)
+                                    .contentShape(Rectangle())
                             }
+                            .buttonStyle(.plain)
+                            .opacity(categoryName.isEmpty ? 0 : 1)
+                            .disabled(categoryName.isEmpty)
+                            .accessibilityHidden(categoryName.isEmpty)
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
@@ -322,6 +334,16 @@ struct AddCategoryRuleSheet: View {
                 }
                 .keyboardShortcut(.cancelAction)
 
+                if savedAppCount > 0 {
+                    Text("\(savedAppCount) uygulama kaydedildi")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if !selectedAppIDs.isEmpty {
+                    Text("\(selectedAppIDs.count) uygulama seçildi")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 Spacer()
 
                 Button(selectedAppHasExistingRule ? "Kuralı Güncelle" : "Kuralı Kaydet") {
@@ -329,12 +351,12 @@ struct AddCategoryRuleSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(selectedApp == nil || categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(selectedAppIDs.isEmpty || categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
         }
-        .frame(width: 500)
+        .frame(width: 500, height: 550)
         .task {
             if installedApps.isEmpty {
                 isLoadingApps = true
@@ -351,9 +373,8 @@ struct AddCategoryRuleSheet: View {
     }
 
     private func saveRule() {
-        guard let app = selectedApp else { return }
-        let cleanName = app.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanId = app.bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let apps = selectedApps
+        guard !apps.isEmpty else { return }
         let cleanCategoryName = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanCategoryName.isEmpty else { return }
 
@@ -383,12 +404,17 @@ struct AddCategoryRuleSheet: View {
             targetCategoryId = newCategory.id
         }
 
-        registry.addOrUpdateRule(
-            appIdentifier: cleanId.isEmpty ? cleanName : cleanId,
-            displayName: cleanName,
-            categoryId: targetCategoryId
-        )
+        for app in apps {
+            let cleanName = app.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanId = app.bundleId.trimmingCharacters(in: .whitespacesAndNewlines)
+            registry.addOrUpdateRule(
+                appIdentifier: cleanId.isEmpty ? cleanName : cleanId,
+                displayName: cleanName,
+                categoryId: targetCategoryId
+            )
+        }
+        selectedAppIDs.removeAll()
+        savedAppCount = apps.count
         onSave()
-        dismiss()
     }
 }

@@ -20,6 +20,8 @@ struct DailyStudyChart: View {
         let current = data.todayHours
         let previous = data.yesterdayHours
         let visibleHours = data.visibleHours(at: now)
+        let scale = DurationChartScale(maximum: (current + previous).max() ?? 0,
+                                       minimum: 1, secondsPerUnit: 3600)
         Chart {
             ForEach(0..<24, id: \.self) { hour in
                 if visibleHours.contains(hour) {
@@ -48,7 +50,7 @@ struct DailyStudyChart: View {
         }
         .chartLegend(.hidden)
         .chartXScale(domain: 0.0...24.0)
-        .chartYScale(domain: 0.0...1.0)
+        .chartYScale(domain: 0...scale.upperBound)
         .chartXAxis {
             AxisMarks(values: [0.0, 6, 12, 18, 24]) { value in
                 AxisGridLine()
@@ -60,16 +62,7 @@ struct DailyStudyChart: View {
                 }
             }
         }
-        .chartYAxis {
-            AxisMarks(position: .trailing, values: [0.0, 0.25, 0.5, 0.75, 1.0]) { value in
-                AxisGridLine()
-                AxisValueLabel {
-                    if let hours = value.as(Double.self) {
-                        Text(String(format: localizedString("%lld dk", locale: locale), Int64((hours * 60).rounded())))
-                    }
-                }
-            }
-        }
+        .chartYAxis { DurationChartAxis.marks(scale: scale, locale: locale) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {

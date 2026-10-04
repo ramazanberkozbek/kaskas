@@ -92,7 +92,8 @@ struct YearActivityHeatmap: View {
     }
 
     private var weekdayLabels: some View {
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.locale = locale
         let labels = (0..<7).map { index in
             calendar.shortWeekdaySymbols[(calendar.firstWeekday - 1 + index) % 7]
         }

@@ -157,7 +157,7 @@ struct CategoryDetectionTests {
         #expect(!SessionStore(defaults: defaults).automaticCategoryDetectionEnabled)
     }
 
-    @Test func liveRuleChangesSplitUsageButDoNotRewriteHistory() {
+    @Test func liveRuleChangesApplyCurrentCategoryToAllUsage() {
         let (store, registry, defaults, suite) = fixture()
         defer { defaults.removePersistentDomain(forName: suite) }
         var time = start
@@ -169,7 +169,8 @@ struct CategoryDetectionTests {
         time = start.addingTimeInterval(20)
         controller.setWorking(false, at: time)
         let records = controller.segments(from: start, to: time, now: time)
-        #expect(records.map(\.resolution.categoryID) == ["coding", "design"])
+        #expect(records.map(\.resolution.categoryID) == ["design", "design"])
+        #expect(store.loadAppUsageJournal().pending.map(\.resolution.categoryID) == ["coding", "design"])
         #expect(monitor.starts == 1)
     }
 

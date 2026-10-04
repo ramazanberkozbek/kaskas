@@ -7,36 +7,62 @@ struct StudyTrendChart: View {
     @State private var hoveredDate: Date?
     @Environment(\.locale) private var locale
 
+    private var resolution: ActivityChartResolution { data.resolution }
+
     var body: some View {
         let chartPoints = data.points
+        let scale = DurationChartScale(
+            maximum: chartPoints.map { max($0.hours, $0.averageHours) }.max() ?? 0,
+            minimum: 1, secondsPerUnit: 3600
+        )
         let selected = chartPoints.first { $0.date == hoveredDate }
-        let dayAxisLabel = localizedString("stats.axis.day", locale: locale)
+        let dayAxisLabel = localizedString(resolution == .month ? "stats.axis.month" : "stats.axis.day", locale: locale)
         let hoursAxisLabel = localizedString("stats.axis.hours", locale: locale)
         return Chart {
             ForEach(chartPoints) { point in
                 LineMark(
-                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    x: .value(dayAxisLabel, point.date, unit: resolution.component),
                     y: .value(hoursAxisLabel, point.hours),
                     series: .value("Series", "daily")
                 )
                 .foregroundStyle(StatisticsStyle.studying)
                 PointMark(
-                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    x: .value(dayAxisLabel, point.date, unit: resolution.component),
                     y: .value(hoursAxisLabel, point.hours)
                 )
                 .foregroundStyle(StatisticsStyle.studying)
-                LineMark(
-                    x: .value(dayAxisLabel, point.date, unit: .day),
-                    y: .value(hoursAxisLabel, point.averageHours),
-                    series: .value("Series", "average")
-                )
-                .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
-                .foregroundStyle(StatisticsStyle.average)
+                if resolution == .day {
+                    LineMark(
+                        x: .value(dayAxisLabel, point.date, unit: .day),
+                        y: .value(hoursAxisLabel, point.averageHours),
+                        series: .value("Series", "average")
+                    )
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
+                    .foregroundStyle(StatisticsStyle.average)
+                }
             }
         }
         .chartLegend(.hidden)
-        .chartYAxis { AxisMarks(position: .trailing) }
-        .chartXAxis { AxisMarks(values: .stride(by: .day, count: chartPoints.count <= 7 ? 1 : 5)) }
+        .chartXScale(domain: resolution.domain(for: chartPoints.map(\.date)))
+        .chartYScale(domain: 0...scale.upperBound)
+        .chartYAxis { DurationChartAxis.marks(scale: scale, locale: locale) }
+        .chartXAxis {
+            AxisMarks(values: .stride(by: resolution.component, count: resolution == .month || chartPoints.count <= 7 ? 1 : 5)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel {
+                    if let date = value.as(Date.self), let first = chartPoints.first?.date,
+                       let last = chartPoints.last?.date,
+                       (resolution == .month
+                        ? Calendar.current.isDate(date, equalTo: first, toGranularity: .year)
+                        : date <= last) {
+                        Text(date.formatted(resolution == .month
+                            ? .dateTime.month(.abbreviated).locale(locale)
+                            : .dateTime.day().locale(locale)))
+                    }
+                }
+            }
+        }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {
@@ -50,12 +76,12 @@ struct StudyTrendChart: View {
                                 hoveredDate = nil
                                 return
                             }
-                            let day = Calendar.current.startOfDay(for: date)
-                            hoveredDate = chartPoints.first { Calendar.current.isDate($0.date, inSameDayAs: day) }?.date
+                            hoveredDate = chartPoints.first {
+                                Calendar.current.isDate($0.date, equalTo: date, toGranularity: resolution.component)
+                            }?.date
                         }
                     if let selected, let plotFrame = proxy.plotFrame,
-                       let day = Calendar.current.dateInterval(of: .day, for: selected.date),
-                       let position = proxy.position(forX: day.start.addingTimeInterval(day.duration / 2)) {
+                       let position = proxy.position(forX: resolution.center(of: selected.date)) {
                         let plot = geometry[plotFrame]
                         let x = plot.minX + position
                         ChartHoverGuide(x: x, plot: plot)
@@ -68,11 +94,15 @@ struct StudyTrendChart: View {
                                 .allowsHitTesting(false)
                         }
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(selected.date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
+                            Text(selected.date.formatted(resolution == .month
+                                ? .dateTime.month(.wide).year().locale(locale)
+                                : .dateTime.month(.abbreviated).day().locale(locale)))
                                 .font(.subheadline.weight(.semibold))
                             Divider()
                             ChartTooltipRow("stats.kind.studying", value: StatisticsDuration.label(selected.hours * 3600, locale: locale), color: StatisticsStyle.studying)
-                            ChartTooltipRow("stats.trend.average", value: StatisticsDuration.label(selected.averageHours * 3600, locale: locale), color: StatisticsStyle.average)
+                            if resolution == .day {
+                                ChartTooltipRow("stats.trend.average", value: StatisticsDuration.label(selected.averageHours * 3600, locale: locale), color: StatisticsStyle.average)
+                            }
                         }
                         .chartTooltip(width: 230)
                         .offset(x: ChartTooltipPosition.originX(for: x, in: plot), y: plot.minY + 8)
@@ -82,6 +112,7 @@ struct StudyTrendChart: View {
             }
         }
         .frame(height: 220)
+        .onChange(of: resolution) { _, _ in hoveredDate = nil }
         .onChange(of: data.points.first?.date) { _, _ in hoveredDate = nil }
         .onChange(of: data.points.last?.date) { _, _ in hoveredDate = nil }
     }

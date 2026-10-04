@@ -12,10 +12,15 @@ struct CategorySettingsView: View {
     @State private var showingResetAlert: Bool = false
     @State private var isResetHovered: Bool = false
     @State private var categoryToDelete: AppCategory? = nil
-    @State private var expandedCategories: Set<String> = []
-    @State private var hasInitializedExpansion: Bool = false
+    @State private var expandedCategories: Set<String>
 
     private static let expandedCategoriesStorageKey = "kaskas_expanded_category_ids"
+
+    init(controller: SessionController) {
+        self.controller = controller
+        let saved = UserDefaults.standard.stringArray(forKey: Self.expandedCategoriesStorageKey) ?? []
+        _expandedCategories = State(initialValue: Set(saved))
+    }
 
     private var registry: CategoryRegistry {
         controller.categoryRegistry
@@ -161,9 +166,6 @@ struct CategorySettingsView: View {
         } message: {
             Text("Eklediğiniz tüm özel uygulama kuralları kaldırılacak ve sistem varsayılanlarına dönülecektir.")
         }
-        .onAppear {
-            initializeExpansionState()
-        }
     }
 
     // MARK: - Subviews
@@ -299,16 +301,6 @@ struct CategorySettingsView: View {
             }
             saveExpansionState()
         }
-    }
-
-    private func initializeExpansionState() {
-        guard !hasInitializedExpansion else { return }
-        if let saved = UserDefaults.standard.stringArray(forKey: Self.expandedCategoriesStorageKey) {
-            expandedCategories = Set(saved)
-        } else {
-            expandedCategories = []
-        }
-        hasInitializedExpansion = true
     }
 
     private func saveExpansionState() {

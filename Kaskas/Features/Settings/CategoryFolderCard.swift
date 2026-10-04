@@ -92,7 +92,7 @@ struct CategoryFolderCard: View {
 
                     Image(systemName: category.iconName)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(category.color)
                         .frame(width: 18)
 
                     Text(category.localizedName(for: locale))
@@ -156,7 +156,7 @@ struct CategoryFolderCard: View {
                 HStack(spacing: 4) {
                     Image(systemName: editingIcon)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(category.color)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 8, weight: .semibold))
                         .foregroundStyle(.secondary)

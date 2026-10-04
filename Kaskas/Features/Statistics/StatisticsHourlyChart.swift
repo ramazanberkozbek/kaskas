@@ -14,7 +14,8 @@ struct StatisticsHourlyChart: View {
 
     var body: some View {
         let selectedHour = hoveredHour
-        let upperBound = max(60, (points.map(\.minutes).max() ?? 0).rounded(.up))
+        let scale = DurationChartScale(maximum: points.map(\.minutes).max() ?? 0,
+                                       minimum: 60, secondsPerUnit: 60)
         return Chart {
             if hourlyPeriod == .day {
                 ForEach(points) { point in
@@ -41,7 +42,7 @@ struct StatisticsHourlyChart: View {
         }
         .chartLegend(.hidden)
         .chartXScale(domain: 0.0...24.0)
-        .chartYScale(domain: 0...upperBound)
+        .chartYScale(domain: 0...scale.upperBound)
         .chartXAxis {
             AxisMarks(values: [0.0, 3, 6, 9, 12, 15, 18, 21]) { value in
                 AxisGridLine()
@@ -53,16 +54,7 @@ struct StatisticsHourlyChart: View {
                 }
             }
         }
-        .chartYAxis {
-            AxisMarks(position: .trailing, values: [0, 15, 30, 45, 60]) { value in
-                AxisGridLine()
-                AxisValueLabel {
-                    if let minutes = value.as(Int.self) {
-                        Text(StatisticsDuration.label(Double(minutes) * 60, locale: locale))
-                    }
-                }
-            }
-        }
+        .chartYAxis { DurationChartAxis.marks(scale: scale, locale: locale) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {

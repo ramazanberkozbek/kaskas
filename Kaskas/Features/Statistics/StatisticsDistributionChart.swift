@@ -2,21 +2,25 @@ import Charts
 import SwiftUI
 
 struct StatisticsDistributionChart: View {
-    let days: [DailyActivity]
+    let buckets: [ActivityChartBucket]
     let points: [StatisticsChartSnapshot.DistributionPoint]
     let period: StatisticsPeriod
 
     @State private var hoveredDate: Date?
     @Environment(\.locale) private var locale
 
+    private var resolution: ActivityChartResolution { period == .year ? .month : .day }
+
     var body: some View {
-        let selected = days.first { $0.date == hoveredDate }
-        let dayAxisLabel = localizedString("stats.axis.day", locale: locale)
+        let selected = buckets.first { $0.date == hoveredDate }
+        let dayAxisLabel = localizedString(resolution == .month ? "stats.axis.month" : "stats.axis.day", locale: locale)
         let hoursAxisLabel = localizedString("stats.axis.hours", locale: locale)
+        let scale = DurationChartScale(maximum: buckets.map { $0.total / 3600 }.max() ?? 0,
+                                       minimum: resolution == .month ? 1 : 24, secondsPerUnit: 3600)
         return Chart {
             ForEach(points) { point in
                 BarMark(
-                    x: .value(dayAxisLabel, point.date, unit: .day),
+                    x: .value(dayAxisLabel, point.date, unit: resolution.component),
                     y: .value(hoursAxisLabel, point.hours)
                 )
                 .foregroundStyle(point.kind.color)
@@ -24,15 +28,24 @@ struct StatisticsDistributionChart: View {
             }
         }
         .chartLegend(.hidden)
-        .chartYScale(domain: 0...24)
-        .chartYAxis {
-            AxisMarks(position: .trailing, values: [0, 6, 12, 18, 24])
-        }
+        .chartXScale(domain: resolution.domain(for: buckets.map(\.date)))
+        .chartYScale(domain: 0...scale.upperBound)
+        .chartYAxis { DurationChartAxis.marks(scale: scale, locale: locale) }
         .chartXAxis {
-            if period == .year {
-                AxisMarks(values: .stride(by: .month))
-            } else {
-                AxisMarks(values: .stride(by: .day, count: period == .thirty ? 5 : 1))
+            AxisMarks(values: .stride(by: resolution.component, count: period == .thirty ? 5 : 1)) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel {
+                    if let date = value.as(Date.self), let first = buckets.first?.date,
+                       let last = buckets.last?.date,
+                       (resolution == .month
+                        ? Calendar.current.isDate(date, equalTo: first, toGranularity: .year)
+                        : date <= last) {
+                        Text(date.formatted(resolution == .month
+                            ? .dateTime.month(.abbreviated).locale(locale)
+                            : .dateTime.day().locale(locale)))
+                    }
+                }
             }
         }
         .chartOverlay { proxy in
@@ -40,26 +53,31 @@ struct StatisticsDistributionChart: View {
                 ZStack(alignment: .topLeading) {
                     Rectangle().fill(.clear).contentShape(Rectangle())
                         .onContinuousHover { phase in
-                            hoveredDate = dateAtHover(phase: phase, proxy: proxy, geometry: geometry, dates: days.map(\.date))
+                            hoveredDate = dateAtHover(phase: phase, proxy: proxy, geometry: geometry, dates: buckets.map(\.date))
                         }
                     if let selected, let plotFrame = proxy.plotFrame,
-                       let position = proxy.position(forX: chartDayCenter(selected.date)) {
+                       let position = proxy.position(forX: resolution.center(of: selected.date)) {
                         let plot = geometry[plotFrame]
                         let x = plot.minX + position
-                        let total = ActivityKind.allCases.reduce(0.0) { $0 + selected.duration(for: $1) }
+                        let total = selected.total
                         ChartHoverGuide(x: x, plot: plot)
-                        if total > 0, let y = proxy.position(forY: total / 3600) {
+                        if total > 0, let y = proxy.position(forY: total / 3600),
+                           let interval = Calendar.current.dateInterval(of: resolution.component, for: selected.date),
+                           let left = proxy.position(forX: interval.start),
+                           let right = proxy.position(forX: interval.end) {
                             RoundedRectangle(cornerRadius: 4)
                                 .strokeBorder(.white.opacity(0.8), lineWidth: 2)
                                 .frame(
-                                    width: plot.width / CGFloat(days.count) * 0.64,
+                                    width: max(1, right - left) * 0.64,
                                     height: max(1, plot.maxY - plot.minY - y)
                                 )
                                 .position(x: x, y: plot.minY + y + (plot.maxY - plot.minY - y) / 2)
                                 .allowsHitTesting(false)
                         }
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(selected.date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
+                            Text(selected.date.formatted(resolution == .month
+                                ? .dateTime.month(.wide).year().locale(locale)
+                                : .dateTime.month(.abbreviated).day().locale(locale)))
                                 .font(.subheadline.weight(.semibold))
                             ForEach(ActivityKind.allCases, id: \.self) { kind in
                                 ChartTooltipRow(kind.labelKey, value: StatisticsDuration.label(selected.duration(for: kind), locale: locale), color: kind.color)
@@ -73,8 +91,9 @@ struct StatisticsDistributionChart: View {
             }
         }
         .frame(height: 220)
-        .onChange(of: days.first?.date) { _, _ in hoveredDate = nil }
-        .onChange(of: days.last?.date) { _, _ in hoveredDate = nil }
+        .onChange(of: period) { _, _ in hoveredDate = nil }
+        .onChange(of: buckets.first?.date) { _, _ in hoveredDate = nil }
+        .onChange(of: buckets.last?.date) { _, _ in hoveredDate = nil }
     }
 
     private func dateAtHover(
@@ -88,12 +107,8 @@ struct StatisticsDistributionChart: View {
         let plot = geometry[plotFrame]
         guard plot.contains(location),
               let date = proxy.value(atX: location.x - plot.minX, as: Date.self) else { return nil }
-        let day = Calendar.current.startOfDay(for: date)
-        return dates.first { Calendar.current.isDate($0, inSameDayAs: day) }
-    }
-
-    private func chartDayCenter(_ date: Date) -> Date {
-        guard let day = Calendar.current.dateInterval(of: .day, for: date) else { return date }
-        return day.start.addingTimeInterval(day.duration / 2)
+        return dates.first {
+            Calendar.current.isDate($0, equalTo: date, toGranularity: resolution.component)
+        }
     }
 }

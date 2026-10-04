@@ -283,71 +283,42 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = FocusConfiguration()
+        // A removed enum case or malformed field must not reset unrelated preferences.
+        func value<T: Decodable>(_ key: CodingKeys, fallback: T) -> T {
+            do {
+                return try container.decodeIfPresent(T.self, forKey: key) ?? fallback
+            } catch {
+                NSLog("Kaskas: Could not restore setting %@: %@", key.stringValue, String(describing: error))
+                return fallback
+            }
+        }
         self.init(
-            focusDuration: try container.decode(TimeInterval.self, forKey: .focusDuration),
-            microReminderInterval: try container.decode(TimeInterval.self, forKey: .microReminderInterval),
-            breakDuration: try container.decode(TimeInterval.self, forKey: .breakDuration),
-            longBreakEnabled: try container.decodeIfPresent(Bool.self, forKey: .longBreakEnabled) ?? false,
-            longBreakFrequency: try container.decodeIfPresent(Int.self, forKey: .longBreakFrequency) ?? 3,
-            longBreakDuration: try container.decodeIfPresent(TimeInterval.self, forKey: .longBreakDuration) ?? 10 * 60,
-            snoozeDuration: try container.decode(TimeInterval.self, forKey: .snoozeDuration),
-            breakBackground: try container.decodeIfPresent(
-                BreakBackground.self,
-                forKey: .breakBackground
-            ) ?? .snowPeaks,
-            breakLayout: try container.decodeIfPresent(
-                BreakLayout.self,
-                forKey: .breakLayout
-            ) ?? .gentleBar,
-            breakSoundEnabled: try container.decodeIfPresent(
-                Bool.self,
-                forKey: .breakSoundEnabled
-            ) ?? true,
-            breakSound: try container.decodeIfPresent(
-                BreakSound.self,
-                forKey: .breakSound
-            ) ?? .glass,
-            breakEndSoundEnabled: try container.decodeIfPresent(
-                Bool.self,
-                forKey: .breakEndSoundEnabled
-            ) ?? true,
-            breakEndSound: try container.decodeIfPresent(
-                BreakSound.self,
-                forKey: .breakEndSound
-            ) ?? .glass,
-            microReminderMascot: (try? container.decode(
-                MicroReminderMascot.self,
-                forKey: .microReminderMascot
-            )) ?? .flame,
-            microReminderColor: try container.decodeIfPresent(
-                MicroReminderColor.self,
-                forKey: .microReminderColor
-            ) ?? .white,
-            customWallpaperPath: try container.decodeIfPresent(
-                String.self,
-                forKey: .customWallpaperPath
-            ),
-            pauseDuringMeetings: try container.decodeIfPresent(
-                Bool.self,
-                forKey: .pauseDuringMeetings
-            ) ?? true,
-            idleDetectionEnabled: try container.decodeIfPresent(
-                Bool.self,
-                forKey: .idleDetectionEnabled
-            ) ?? true,
-            idleThreshold: try container.decodeIfPresent(
-                TimeInterval.self,
-                forKey: .idleThreshold
-            ) ?? 3 * 60,
-            menuBarDisplayMode: try container.decodeIfPresent(
-                MenuBarDisplayMode.self,
-                forKey: .menuBarDisplayMode
-            ) ?? .iconAndTimer,
-            showInDock: try container.decodeIfPresent(Bool.self, forKey: .showInDock) ?? false,
-            breakWarningEnabled: try container.decodeIfPresent(Bool.self, forKey: .breakWarningEnabled) ?? true,
-            breakWarningLeadTime: try container.decodeIfPresent(TimeInterval.self, forKey: .breakWarningLeadTime) ?? 20,
-            notificationPosition: try container.decodeIfPresent(NotificationPosition.self, forKey: .notificationPosition) ?? .center,
-            appLanguage: try container.decodeIfPresent(AppLanguage.self, forKey: .appLanguage) ?? FocusConfiguration.defaultLanguage
+            focusDuration: value(.focusDuration, fallback: defaults.focusDuration),
+            microReminderInterval: value(.microReminderInterval, fallback: defaults.microReminderInterval),
+            breakDuration: value(.breakDuration, fallback: defaults.breakDuration),
+            longBreakEnabled: value(.longBreakEnabled, fallback: defaults.longBreakEnabled),
+            longBreakFrequency: value(.longBreakFrequency, fallback: defaults.longBreakFrequency),
+            longBreakDuration: value(.longBreakDuration, fallback: defaults.longBreakDuration),
+            snoozeDuration: value(.snoozeDuration, fallback: defaults.snoozeDuration),
+            breakBackground: value(.breakBackground, fallback: defaults.breakBackground),
+            breakLayout: value(.breakLayout, fallback: defaults.breakLayout),
+            breakSoundEnabled: value(.breakSoundEnabled, fallback: defaults.breakSoundEnabled),
+            breakSound: value(.breakSound, fallback: defaults.breakSound),
+            breakEndSoundEnabled: value(.breakEndSoundEnabled, fallback: defaults.breakEndSoundEnabled),
+            breakEndSound: value(.breakEndSound, fallback: defaults.breakEndSound),
+            microReminderMascot: value(.microReminderMascot, fallback: defaults.microReminderMascot),
+            microReminderColor: value(.microReminderColor, fallback: defaults.microReminderColor),
+            customWallpaperPath: value(.customWallpaperPath, fallback: defaults.customWallpaperPath),
+            pauseDuringMeetings: value(.pauseDuringMeetings, fallback: defaults.pauseDuringMeetings),
+            idleDetectionEnabled: value(.idleDetectionEnabled, fallback: defaults.idleDetectionEnabled),
+            idleThreshold: value(.idleThreshold, fallback: defaults.idleThreshold),
+            menuBarDisplayMode: value(.menuBarDisplayMode, fallback: defaults.menuBarDisplayMode),
+            showInDock: value(.showInDock, fallback: defaults.showInDock),
+            breakWarningEnabled: value(.breakWarningEnabled, fallback: defaults.breakWarningEnabled),
+            breakWarningLeadTime: value(.breakWarningLeadTime, fallback: defaults.breakWarningLeadTime),
+            notificationPosition: value(.notificationPosition, fallback: defaults.notificationPosition),
+            appLanguage: value(.appLanguage, fallback: defaults.appLanguage)
         )
     }
 }

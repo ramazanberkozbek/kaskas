@@ -3,6 +3,74 @@ import Testing
 @testable import Kaskas
 
 struct SessionStoreTests {
+    @Test
+    func allSettingsSurviveReopeningWithoutTerminationCallback() throws {
+        let suite = "SessionStoreTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let configuration = FocusConfiguration(
+            focusDuration: 3600, microReminderInterval: 900, breakDuration: 600,
+            longBreakEnabled: true, longBreakFrequency: 5, longBreakDuration: 1200,
+            snoozeDuration: 120, breakBackground: .custom, breakLayout: .horizon,
+            breakSoundEnabled: false, breakSound: .hero,
+            breakEndSoundEnabled: false, breakEndSound: .pop,
+            microReminderMascot: .glasses, microReminderColor: .rainbow,
+            customWallpaperPath: "/persistent/custom_wallpaper.png",
+            pauseDuringMeetings: false, idleDetectionEnabled: false, idleThreshold: 600,
+            menuBarDisplayMode: .iconOnly, showInDock: true,
+            breakWarningEnabled: false, breakWarningLeadTime: 45,
+            notificationPosition: .left, appLanguage: .turkish
+        )
+        SessionStore(defaults: defaults).save(configuration: configuration)
+        let reopenedDefaults = try #require(UserDefaults(suiteName: suite))
+        #expect(SessionStore(defaults: reopenedDefaults).loadConfiguration() == configuration)
+    }
+
+    @Test(arguments: [
+        "breakLayout", "breakSound", "breakEndSound", "microReminderColor",
+        "menuBarDisplayMode", "notificationPosition", "appLanguage", "focusDuration",
+        "showInDock", "customWallpaperPath"
+    ])
+    func invalidSettingDoesNotResetOtherPreferences(key: String) throws {
+        let suite = "SessionStoreTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let configuration = FocusConfiguration(
+            focusDuration: 3600, breakDuration: 600, breakBackground: .aurora,
+            breakLayout: .horizon, breakSound: .ping, breakEndSound: .hero,
+            microReminderColor: .rainbow, customWallpaperPath: "/persistent/photo.png",
+            pauseDuringMeetings: false, idleDetectionEnabled: false,
+            menuBarDisplayMode: .timerOnly, showInDock: true,
+            notificationPosition: .right, appLanguage: .turkish
+        )
+        let encoded = try JSONEncoder().encode(configuration)
+        var saved = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        saved[key] = ["invalid": "removed-option"]
+        defaults.set(try JSONSerialization.data(withJSONObject: saved), forKey: "focusConfiguration")
+        let loaded = SessionStore(defaults: defaults).loadConfiguration()
+        var actual = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(loaded)) as? [String: Any])
+        var expected = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        actual.removeValue(forKey: key)
+        expected.removeValue(forKey: key)
+        #expect(NSDictionary(dictionary: actual).isEqual(to: expected))
+    }
+
+    @Test
+    func removedEnumOptionAndMissingDurationPreserveOtherSettings() throws {
+        let data = Data("""
+        {"focusDuration":3600,"breakDuration":600,"snoozeDuration":120,
+         "breakSound":"RemovedSound","showInDock":true,"appLanguage":"tr"}
+        """.utf8)
+        let configuration = try JSONDecoder().decode(FocusConfiguration.self, from: data)
+        #expect(configuration.focusDuration == 3600)
+        #expect(configuration.breakDuration == 600)
+        #expect(configuration.snoozeDuration == 120)
+        #expect(configuration.microReminderInterval == FocusConfiguration().microReminderInterval)
+        #expect(configuration.breakSound == .glass)
+        #expect(configuration.showInDock)
+        #expect(configuration.appLanguage == .turkish)
+    }
+
     @Test func cachedAnnotationsImmediatelyFollowOtherWritersAndPreserveUnrelatedNotes() throws {
         let suite = "SessionStoreTests.\(UUID())"
         let defaults = try #require(UserDefaults(suiteName: suite))

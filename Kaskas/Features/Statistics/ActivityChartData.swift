@@ -10,7 +10,14 @@ nonisolated struct StudyTrendData: Sendable {
     }
 
     let points: [Point]
+    var resolution: ActivityChartResolution = .day
     static let empty = Self(points: [])
+
+    static func monthly(buckets: [ActivityChartBucket]) -> Self {
+        Self(points: buckets.map {
+            Point(date: $0.date, hours: $0.duration(for: .studying) / 3600, averageHours: 0)
+        }, resolution: .month)
+    }
 
     static func make(days: [DailyActivity], intervals: [ActivityInterval], calendar: Calendar = .current) -> Self {
         guard let start = days.first?.date, let end = days.last?.date else { return .empty }
@@ -28,6 +35,54 @@ nonisolated struct StudyTrendData: Sendable {
             }
             return Point(date: day.date, hours: day.studying / 3600, averageHours: total / 7 / 3600)
         })
+    }
+}
+
+/// Temporal resolution is shared by marks, axes, and hover selection.
+nonisolated enum ActivityChartResolution: Sendable {
+    case day
+    case month
+
+    var component: Calendar.Component { self == .month ? .month : .day }
+
+    func domain(for dates: [Date], calendar: Calendar = .current) -> ClosedRange<Date> {
+        guard let first = dates.first, let last = dates.last else {
+            return Date.distantPast...Date.distantPast.addingTimeInterval(86400)
+        }
+        if self == .month, let year = calendar.dateInterval(of: .year, for: first) {
+            return year.start...year.end
+        }
+        let end = calendar.date(byAdding: .day, value: 1, to: last) ?? last.addingTimeInterval(86400)
+        return first...end
+    }
+
+    func center(of date: Date, calendar: Calendar = .current) -> Date {
+        guard let interval = calendar.dateInterval(of: component, for: date) else { return date }
+        return interval.start.addingTimeInterval(interval.duration / 2)
+    }
+}
+
+/// Totals for one calendar day or month. Daily source data remains available for summaries and averages.
+nonisolated struct ActivityChartBucket: Identifiable, Sendable {
+    let date: Date
+    var durations: [ActivityKind: TimeInterval]
+    var id: Date { date }
+
+    func duration(for kind: ActivityKind) -> TimeInterval { durations[kind] ?? 0 }
+    var total: TimeInterval { durations.values.reduce(0, +) }
+
+    static func make(days: [DailyActivity], resolution: ActivityChartResolution,
+                     calendar: Calendar = .current) -> [Self] {
+        var buckets: [Date: Self] = [:]
+        for day in days {
+            let date = calendar.dateInterval(of: resolution.component, for: day.date)?.start ?? day.date
+            var bucket = buckets[date] ?? Self(date: date, durations: [:])
+            for kind in ActivityKind.allCases {
+                bucket.durations[kind, default: 0] += day.duration(for: kind)
+            }
+            buckets[date] = bucket
+        }
+        return buckets.values.sorted { $0.date < $1.date }
     }
 }
 

@@ -282,7 +282,7 @@ struct MenuBarView: View {
     }
 
     private var todayRow: some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
             Text("menu.today")
                 .foregroundStyle(.secondary)
 

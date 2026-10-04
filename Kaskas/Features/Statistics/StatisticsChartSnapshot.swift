@@ -18,6 +18,7 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
     let dailyTrend: DailyStudyChartData
     let trend: StudyTrendData
     let distributionDays: [DailyActivity]
+    let distributionBuckets: [ActivityChartBucket]
     let distributionPoints: [DistributionPoint]
     let hourlyDays: [DailyActivity]
     let hourlyPoints: [HourlyPoint]
@@ -33,12 +34,12 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
         }
     }
 
-    static let empty = Self(dailyTrend: .empty, trend: .empty, distributionDays: [], distributionPoints: [],
+    static let empty = Self(dailyTrend: .empty, trend: .empty, distributionDays: [], distributionBuckets: [], distributionPoints: [],
                             hourlyDays: [], hourlyPoints: [], year: .empty)
 
     static func make(intervals: [ActivityInterval], trendWindow: (start: Date, end: Date),
                      distributionWindow: (start: Date, end: Date), hourlyWindow: (start: Date, end: Date),
-                     year: Int, calendar: Calendar = .current) -> Self {
+                     year: Int, calendar: Calendar = .current, period: StatisticsPeriod = .seven) -> Self {
         let yearStart = calendar.date(from: DateComponents(year: year, month: 1, day: 1))
         let yearEnd = calendar.date(from: DateComponents(year: year, month: 12, day: 31))
         let averageStart = calendar.date(byAdding: .day, value: -6, to: trendWindow.start) ?? trendWindow.start
@@ -53,6 +54,8 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
         }
         let trendDays = days(in: trendWindow)
         let distributionDays = days(in: distributionWindow)
+        let resolution: ActivityChartResolution = period == .year ? .month : .day
+        let distributionBuckets = ActivityChartBucket.make(days: distributionDays, resolution: resolution, calendar: calendar)
         let hourlyDays = days(in: hourlyWindow)
         let minutesByDay = ActivityStatistics.focusMinutesByDay(from: hourlyWindow.start, through: hourlyWindow.end,
             intervals: intervals, calendar: calendar)
@@ -63,9 +66,12 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
         }
         let yearDays = if let yearStart, let yearEnd { days(in: (yearStart, yearEnd)) } else { [DailyActivity]() }
         return Self(dailyTrend: .make(date: trendWindow.end, intervals: intervals, calendar: calendar),
-                    trend: .make(days: trendDays, history: history, calendar: calendar),
+                    trend: period == .year
+                        ? .monthly(buckets: ActivityChartBucket.make(days: trendDays, resolution: .month, calendar: calendar))
+                        : .make(days: trendDays, history: history, calendar: calendar),
                     distributionDays: distributionDays,
-                    distributionPoints: distributionDays.flatMap { day in
+                    distributionBuckets: distributionBuckets,
+                    distributionPoints: distributionBuckets.flatMap { day in
                         ActivityKind.allCases.map { DistributionPoint(date: day.date, kind: $0, hours: day.duration(for: $0) / 3600) }
                     }, hourlyDays: hourlyDays, hourlyPoints: hourlyPoints,
                     year: .make(year: year, days: yearDays, calendar: calendar))
@@ -78,10 +84,10 @@ nonisolated struct StatisticsRefreshSnapshot: Sendable {
 
     @concurrent static func make(intervals: [ActivityInterval], usage: [AppUsageSegment],
                                 window: (start: Date, end: Date), categoryEnd: Date,
-                                year: Int, calendar: Calendar) async throws -> Self {
+                                year: Int, calendar: Calendar, period: StatisticsPeriod) async throws -> Self {
         try Task.checkCancellation()
         return Self(categories: .make(intervals: intervals, usage: usage, from: window.start, to: categoryEnd),
              chart: .make(intervals: intervals, trendWindow: window, distributionWindow: window,
-                          hourlyWindow: window, year: year, calendar: calendar))
+                          hourlyWindow: window, year: year, calendar: calendar, period: period))
     }
 }

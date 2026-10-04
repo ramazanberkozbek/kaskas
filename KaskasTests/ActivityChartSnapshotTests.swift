@@ -21,10 +21,12 @@ struct ActivityChartSnapshotTests {
                                  endedAt: exclusiveEnd.addingTimeInterval(1800))]
             let snapshot = StatisticsChartSnapshot.make(intervals: intervals,
                 trendWindow: window, distributionWindow: window, hourlyWindow: window,
-                year: 2026, calendar: calendar)
+                year: 2026, calendar: calendar, period: period)
             let categories = CategoryUsageSummary.make(intervals: intervals, usage: [], from: window.start, to: exclusiveEnd)
             #expect(snapshot.distributionDays.count == calendar.dateComponents([.day], from: window.start, to: exclusiveEnd).day)
-            #expect(snapshot.trend.points.map(\.date) == snapshot.distributionDays.map(\.date))
+            #expect(snapshot.trend.points.map(\.date) == snapshot.distributionBuckets.map(\.date))
+            #expect(snapshot.trend.resolution == (period == .year ? .month : .day))
+            #expect(snapshot.distributionBuckets.reduce(0) { $0 + $1.duration(for: .studying) } == categories.total)
             #expect(snapshot.hourlyDays.map(\.date) == snapshot.distributionDays.map(\.date))
             #expect(snapshot.distributionDays.reduce(0) { $0 + $1.studying } == categories.total)
             #expect(categories.total == 5400)
@@ -82,6 +84,50 @@ struct ActivityChartSnapshotTests {
         #expect(statistics.dailyTrend.previousLabelKey(at: tomorrow, calendar: calendar) == "dashboard.day.previous")
         #expect(statistics.distributionDays.count == 1)
         #expect(statistics.distributionDays[0].studying == 3600)
+    }
+
+    @Test(arguments: [2024, 2026])
+    func yearlyChartsUseMonthlyTotalsWithoutChangingSummaryOrHourlyAverages(_ year: Int) throws {
+        let calendar = calendar()
+        let start = try #require(calendar.date(from: DateComponents(year: year, month: 1, day: 1)))
+        let januaryEnd = try #require(calendar.date(from: DateComponents(year: year, month: 1, day: 3)))
+        let february = try #require(calendar.date(from: DateComponents(year: year, month: 2, day: 1)))
+        let end = try #require(calendar.date(from: DateComponents(year: year, month: 10, day: 4)))
+        let intervals = [
+            ActivityInterval(kind: .studying, startedAt: start, endedAt: januaryEnd),
+            ActivityInterval(kind: .breakTime, startedAt: february, endedAt: february.addingTimeInterval(1800)),
+            ActivityInterval(kind: .studying, startedAt: end, endedAt: end.addingTimeInterval(3600))
+        ]
+        let snapshot = StatisticsChartSnapshot.make(intervals: intervals,
+            trendWindow: (start, end), distributionWindow: (start, end), hourlyWindow: (start, end),
+            year: year, calendar: calendar, period: .year)
+        #expect(snapshot.trend.resolution == .month)
+        #expect(snapshot.trend.points.count == 10)
+        #expect(snapshot.distributionBuckets.count == 10)
+        #expect(snapshot.distributionPoints.count == 10 * ActivityKind.allCases.count)
+        #expect(snapshot.trend.points.map { calendar.component(.month, from: $0.date) } == Array(1...10))
+        #expect(snapshot.trend.points[0].hours == 48)
+        #expect(snapshot.trend.points[1].hours == 0)
+        #expect(snapshot.trend.points[9].hours == 1)
+        #expect(snapshot.distributionBuckets[0].duration(for: .studying) == 48 * 3600)
+        #expect(snapshot.distributionBuckets[1].duration(for: .breakTime) == 1800)
+        #expect(snapshot.distributionBuckets[2].total == 0)
+        let exclusiveEnd = try #require(calendar.date(byAdding: .day, value: 1, to: end))
+        let categories = CategoryUsageSummary.make(intervals: intervals, usage: [], from: start, to: exclusiveEnd)
+        #expect(snapshot.trend.points.reduce(0) { $0 + $1.hours } * 3600 == categories.total)
+        #expect(snapshot.distributionDays.reduce(0) { $0 + $1.studying } == categories.total)
+        #expect(abs(snapshot.averageHourlyPoints.reduce(0) { $0 + $1.minutes }
+                    - categories.total / 60 / Double(snapshot.hourlyDays.count)) < 0.000001)
+        let domain = ActivityChartResolution.month.domain(for: snapshot.trend.points.map(\.date), calendar: calendar)
+        #expect(domain.lowerBound == start)
+        #expect(calendar.component(.year, from: domain.upperBound) == year + 1)
+        #expect(calendar.component(.month, from: domain.upperBound) == 1)
+        let fullWindow = StatisticsPeriod.year.window(endingAt: end, calendar: calendar)
+        let full = StatisticsChartSnapshot.make(intervals: intervals, trendWindow: fullWindow,
+            distributionWindow: fullWindow, hourlyWindow: fullWindow, year: year, calendar: calendar, period: .year)
+        #expect(full.trend.points.count == 12)
+        #expect(full.distributionBuckets.count == 12)
+        #expect(full.distributionDays.count == (year == 2024 ? 366 : 365))
     }
 
     @Test func monthlyHourlyAverageIncludesAllThirtyDaysIncludingEmptyDays() throws {

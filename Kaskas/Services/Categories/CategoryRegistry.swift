@@ -18,6 +18,7 @@ public final class CategoryRegistry {
 
     public private(set) var customRules: [CategoryRule] = []
     public private(set) var customCategories: [AppCategory] = []
+    public private(set) var revision = 0
 
     @ObservationIgnored var onChange: (() -> Void)?
     @ObservationIgnored private var cachedResolver: CategoryResolver?
@@ -25,16 +26,21 @@ public final class CategoryRegistry {
 
     private func didChange() {
         cachedResolver = nil
+        revision += 1
         rebuildInstalledRules()
         onChange?()
     }
 
     func resolution(bundleID: String?, appName: String?) -> CategoryResolution {
-        if let cachedResolver { return cachedResolver.resolve(bundleID: bundleID, appName: appName) }
+        resolverSnapshot().resolve(bundleID: bundleID, appName: appName)
+    }
+
+    func resolverSnapshot() -> CategoryResolver {
+        if let cachedResolver { return cachedResolver }
         let resolver = CategoryResolver(customRules: customRules, defaultRules: Self.defaultRules,
             categoryIDs: Set(categories.map(\.id)))
         cachedResolver = resolver
-        return resolver.resolve(bundleID: bundleID, appName: appName)
+        return resolver
     }
 
     func historicalCategory(for id: String) -> AppCategory? {

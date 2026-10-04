@@ -122,6 +122,26 @@
         }
       }
     },
+    "%lld uygulama kaydedildi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld apps saved"
+          }
+        }
+      }
+    },
+    "%lld uygulama seçildi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld apps selected"
+          }
+        }
+      }
+    },
     "%lldx" : {
 
     },
@@ -2559,11 +2579,22 @@
       }
     },
     "Mac'inizdeki bir uygulamayı seçin ve çalışma kategorisini belirleyin." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select an app on your Mac and set its focus category."
+          }
+        }
+      }
+    },
+    "Mac'inizdeki uygulamaları seçin ve ortak kategorilerini belirleyin." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select apps on your Mac and choose a shared category."
           }
         }
       }
@@ -5604,6 +5635,23 @@
         }
       }
     },
+    "stats.axis.month" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Month"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ay"
+          }
+        }
+      }
+    },
     "stats.categories.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5634,6 +5682,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tarih seç"
+          }
+        }
+      }
+    },
+    "stats.distribution.monthlySubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly totals for each activity"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her aktivitenin aylık toplam süresi"
           }
         }
       }
@@ -6199,6 +6264,23 @@
         }
       }
     },
+    "stats.trend.monthlySubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly study totals"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aylık toplam çalışma süresi"
+          }
+        }
+      }
+    },
     "stats.trend.subtitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6686,7 +6768,18 @@
         }
       }
     },
+    "Yüklü Uygulamaları Seçin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Installed Apps"
+          }
+        }
+      }
+    },
     "Yüklü Uygulamayı Seçin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

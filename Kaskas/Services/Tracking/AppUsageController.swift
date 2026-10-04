@@ -51,13 +51,27 @@ final class AppUsageController {
     func segments(from start: Date, to end: Date, now: Date) -> [AppUsageSegment] {
         let segments = tracker.segments(from: start, to: end, now: now)
         storageFailed = tracker.storageFailed
-        return segments
+        return Self.resolve(segments, using: registry.resolverSnapshot())
     }
 
     func segmentsAsync(from start: Date, to end: Date, now: Date) async -> [AppUsageSegment] {
         let segments = await tracker.segmentsAsync(from: start, to: end, now: now)
         storageFailed = tracker.storageFailed
-        return segments
+        return await Self.resolveAsync(segments, using: registry.resolverSnapshot())
+    }
+
+    /// Stored assignments describe collection time. Reports use today's rules for
+    /// persisted, pending and live usage alike, without rewriting the history store.
+    nonisolated private static func resolve(_ segments: [AppUsageSegment], using resolver: CategoryResolver) -> [AppUsageSegment] {
+        segments.map { segment in
+            AppUsageSegment(id: segment.id, app: segment.app,
+                resolution: resolver.resolve(bundleID: segment.app.bundleID, appName: segment.app.name),
+                startedAt: segment.startedAt, endedAt: segment.endedAt)
+        }
+    }
+
+    @concurrent private static func resolveAsync(_ segments: [AppUsageSegment], using resolver: CategoryResolver) async -> [AppUsageSegment] {
+        resolve(segments, using: resolver)
     }
 
     func suspendPersistence() { tracker.suspendPersistence() }

@@ -7,7 +7,6 @@ struct StatisticsView: View {
     @State private var period: StatisticsPeriod = .seven
     @State private var endDate = Calendar.current.startOfDay(for: Date())
     @State private var now = Date()
-    @State private var intervals: [ActivityInterval] = []
     @State private var categorySummary: CategoryUsageSummary = .empty
     @State private var chartSnapshot: StatisticsChartSnapshot = .empty
     @State private var loaded = false
@@ -39,7 +38,7 @@ struct StatisticsView: View {
 
                     StatisticsChartSection(
                         title: "stats.trend.title",
-                        subtitle: period == .day ? "stats.trend.dailySubtitle" : "stats.trend.subtitle",
+                        subtitle: trendSubtitle,
                         legend: trendLegend
                     ) {
                         if period == .day {
@@ -60,11 +59,11 @@ struct StatisticsView: View {
 
                     StatisticsChartSection(
                         title: "stats.distribution.title",
-                        subtitle: "stats.distribution.subtitle",
+                        subtitle: period == .year ? "stats.distribution.monthlySubtitle" : "stats.distribution.subtitle",
                         legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
                     ) {
                         StatisticsDistributionChart(
-                            days: chartSnapshot.distributionDays,
+                            buckets: chartSnapshot.distributionBuckets,
                             points: chartSnapshot.distributionPoints,
                             period: period
                         )
@@ -92,7 +91,9 @@ struct StatisticsView: View {
                         Label("stats.storageWarning", systemImage: "exclamationmark.triangle")
                             .font(.caption)
                             .foregroundStyle(.orange)
-                    } else if loaded && intervals.isEmpty {
+                    } else if loaded && chartSnapshot.distributionDays.allSatisfy({ day in
+                        ActivityKind.allCases.allSatisfy { day.duration(for: $0) == 0 }
+                    }) {
                         Text("stats.empty")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -108,6 +109,7 @@ struct StatisticsView: View {
         .onAppear { reload() }
         .onDisappear { refreshTask?.cancel() }
         .onChange(of: controller.historyRevision) { _, _ in reload() }
+        .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
         .onChange(of: period) { _, _ in resetSelectionAndReload() }
         .onChange(of: endDate) { _, _ in resetSelectionAndReload() }
         .onReceive(refreshClock) { date in
@@ -139,6 +141,14 @@ struct StatisticsView: View {
         period.usesHourlyAverage ? chartSnapshot.averageHourlyPoints : chartSnapshot.hourlyPoints
     }
 
+    private var trendSubtitle: LocalizedStringKey {
+        switch period {
+        case .day: "stats.trend.dailySubtitle"
+        case .year: "stats.trend.monthlySubtitle"
+        case .seven, .thirty: "stats.trend.subtitle"
+        }
+    }
+
     private var trendLegend: [(Color, String)] {
         if period == .day {
             return [
@@ -146,6 +156,7 @@ struct StatisticsView: View {
                 (StatisticsStyle.average, chartSnapshot.dailyTrend.previousLabelKey(at: now))
             ]
         }
+        if period == .year { return [(StatisticsStyle.studying, "stats.kind.studying")] }
         return [
             (StatisticsStyle.studying, "stats.kind.studying"),
             (StatisticsStyle.average, "stats.trend.average")
@@ -177,6 +188,7 @@ struct StatisticsView: View {
         let calendar = Calendar.current
         let window = selectedWindow
         let year = selectedYear
+        let refreshPeriod = period
         let refreshNow = now
         let trendStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
         let yearStart = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) ?? window.start
@@ -192,9 +204,8 @@ struct StatisticsView: View {
             let usage = await controller.appUsage.segmentsAsync(from: window.start, to: min(categoryEnd, refreshNow), now: refreshNow)
             guard !Task.isCancelled else { return }
             guard let snapshot = try? await StatisticsRefreshSnapshot.make(intervals: history, usage: usage,
-                window: window, categoryEnd: categoryEnd, year: year, calendar: calendar) else { return }
+                window: window, categoryEnd: categoryEnd, year: year, calendar: calendar, period: refreshPeriod) else { return }
             guard !Task.isCancelled else { return }
-            intervals = history
             categorySummary = snapshot.categories
             chartSnapshot = snapshot.chart
             loaded = true

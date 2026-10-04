@@ -208,6 +208,7 @@ struct DashboardView: View {
         .onAppear(perform: reload)
         .onDisappear { refreshTask?.cancel() }
         .onChange(of: controller.historyRevision) { _, _ in reload() }
+        .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
         .onChange(of: endDate) { _, newDate in
             let normalized = Calendar.current.startOfDay(for: newDate)
             if endDate != normalized {
@@ -398,6 +399,10 @@ struct DashboardView: View {
             dayCategorySnapshot = snapshot.day
             weekCategorySnapshot = snapshot.week
             chartSnapshot = snapshot.chart
+            if let selected = selectedSession,
+               let refreshed = (snapshot.day.sessions + snapshot.week.sessions).first(where: { $0.id == selected.id }) {
+                selectedSession = refreshed
+            }
         }
     }
 
