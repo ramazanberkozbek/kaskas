@@ -113,24 +113,15 @@ struct GeneralSettingsView: View {
             } header: {
                 sectionHeader("settings.idle.section")
                     .settingsFormSectionHeader()
-            }
-
-            Section {
+            } footer: {
                 HStack {
-                    Spacer()
-                    VStack(spacing: 4) {
-                        Text(appVersionText)
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundStyle(.tertiary)
-                        if isDeveloperModeEnabled {
-                            Label("developer.banner.title", systemImage: "hammer.fill")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    Text(appVersionText)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(.tertiary)
                     Spacer()
                 }
-                .padding(.vertical, 8)
+                .settingsFormSectionHeader()
+                .padding(.top, 8)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     versionClickCount += 1
@@ -141,7 +132,6 @@ struct GeneralSettingsView: View {
                         }
                     }
                 }
-                .listRowBackground(Color.clear)
             }
         }
         .settingsGroupedFormLayout()

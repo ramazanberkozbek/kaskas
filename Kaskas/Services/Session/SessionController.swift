@@ -23,6 +23,8 @@ final class SessionController {
     private(set) var historySaveFailed = false
     private(set) var activityStorageFailed = false
     private(set) var annotationsRevision = 0
+    private(set) var speedMultiplier: Double = 1.0
+    @ObservationIgnored private var speedTimer: Timer?
     let appUsage: AppUsageController
     let categoryRegistry: CategoryRegistry
     let launchAtLogin = LaunchAtLoginController()
@@ -391,6 +393,43 @@ final class SessionController {
         breakPresenter.dismissPreview()
         skippedBreakNotifier.dismiss()
         idleBreakNotifier.dismiss()
+    }
+
+    // MARK: - Simulation & Time Machine
+
+    func setSpeedMultiplier(_ multiplier: Double) {
+        speedMultiplier = multiplier
+        speedTimer?.invalidate()
+        speedTimer = nil
+
+        guard multiplier > 1.0 else { return }
+
+        speedTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                let extra = 0.5 * (multiplier - 1.0)
+                self.advanceSession(by: extra)
+            }
+        }
+    }
+
+    func advanceSession(by seconds: TimeInterval) {
+        engine.advanceTime(by: seconds)
+        reconcile()
+        refreshSnapshot()
+    }
+
+    func advanceDay() {
+        engine.advanceDay(at: Date())
+        reconcile()
+        refreshSnapshot()
+    }
+
+    func resetSessionCycle() {
+        setSpeedMultiplier(1.0)
+        engine.resetFocus(at: Date())
+        reconcile()
+        refreshSnapshot()
     }
 
 

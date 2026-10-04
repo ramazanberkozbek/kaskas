@@ -19,6 +19,7 @@ struct DeveloperSettingsView: View {
                         Spacer()
                         Button("developer.turnOff") {
                             isDeveloperModeEnabled = false
+                            controller.setSpeedMultiplier(1.0)
                             controller.dismissPreviews()
                         }
                         .buttonStyle(.bordered)
@@ -33,6 +34,73 @@ struct DeveloperSettingsView: View {
                 .settingsFormSectionHeader()
             }
 
+            // MARK: - Time Machine & Simulation Speed
+            Section {
+                Group {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("developer.time.speed")
+                            Spacer()
+                            if controller.speedMultiplier > 1.0 {
+                                Text("\(Int(controller.speedMultiplier))x")
+                                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.orange.opacity(0.2), in: Capsule())
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+
+                        Picker("developer.time.speed", selection: speedBinding) {
+                            Text("1x").tag(1.0)
+                            Text("5x").tag(5.0)
+                            Text("10x").tag(10.0)
+                            Text("30x").tag(30.0)
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("developer.time.fastForward")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+
+                        HStack(spacing: 8) {
+                            Button {
+                                controller.advanceSession(by: 5 * 60)
+                            } label: {
+                                Label("developer.time.plus5m", systemImage: "forward.fill")
+                            }
+
+                            Button {
+                                controller.advanceSession(by: 60 * 60)
+                            } label: {
+                                Label("developer.time.plus1h", systemImage: "goforward.60")
+                            }
+
+                            Button {
+                                controller.advanceDay()
+                            } label: {
+                                Label("developer.time.plus1d", systemImage: "calendar.badge.plus")
+                            }
+
+                            Spacer()
+
+                            Button {
+                                controller.resetSessionCycle()
+                            } label: {
+                                Label("developer.time.reset", systemImage: "arrow.clockwise")
+                            }
+                        }
+                    }
+                }
+                .settingsFormRow()
+            } header: {
+                sectionHeader("developer.section.timeMachine")
+                    .settingsFormSectionHeader()
+            }
+
+            // MARK: - Interactive Previews
             Section {
                 Group {
                     Button {
@@ -77,6 +145,7 @@ struct DeveloperSettingsView: View {
                     .settingsFormSectionHeader()
             }
 
+            // MARK: - Live Diagnostics
             Section {
                 Group {
                     let snapshot = controller.sessionSnapshot
@@ -102,6 +171,7 @@ struct DeveloperSettingsView: View {
                     .settingsFormSectionHeader()
             }
 
+            // MARK: - Session Control
             Section {
                 Group {
                     HStack(spacing: 12) {
@@ -124,6 +194,14 @@ struct DeveloperSettingsView: View {
         }
         .settingsGroupedFormLayout()
         .scrollIndicators(.hidden)
+    }
+
+    private var speedBinding: Binding<Double> {
+        Binding {
+            controller.speedMultiplier
+        } set: { newSpeed in
+            controller.setSpeedMultiplier(newSpeed)
+        }
     }
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {

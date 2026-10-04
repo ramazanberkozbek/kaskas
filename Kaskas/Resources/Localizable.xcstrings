@@ -122,6 +122,9 @@
         }
       }
     },
+    "%lldx" : {
+
+    },
     "•" : {
       "localizations" : {
         "en" : {
@@ -156,6 +159,18 @@
           }
         }
       }
+    },
+    "1x" : {
+
+    },
+    "5x" : {
+
+    },
+    "10x" : {
+
+    },
+    "30x" : {
+
     },
     "app.name" : {
       "extractionState" : "manual",
@@ -1804,6 +1819,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durum"
+          }
+        }
+      }
+    },
+    "developer.section.timeMachine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Machine & Speed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaman Makinesi & Hızlandırma"
+          }
+        }
+      }
+    },
+    "developer.time.fastForward" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast Forward & Jump"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İleri Sar & Zaman Atla"
+          }
+        }
+      }
+    },
+    "developer.time.plus1d" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 Day"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 Gün"
+          }
+        }
+      }
+    },
+    "developer.time.plus1h" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 Hour"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 Saat"
+          }
+        }
+      }
+    },
+    "developer.time.plus5m" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 Min"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 Dk"
+          }
+        }
+      }
+    },
+    "developer.time.reset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıfırla"
+          }
+        }
+      }
+    },
+    "developer.time.speed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock Speed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saat Hızı"
           }
         }
       }

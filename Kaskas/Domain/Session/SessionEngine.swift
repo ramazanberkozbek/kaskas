@@ -237,4 +237,43 @@ struct SessionEngine: Sendable {
             warningShown: false
         )
     }
+
+    mutating func advanceTime(by duration: TimeInterval) {
+        switch status {
+        case .focusing(var run):
+            run.startedAt = run.startedAt.addingTimeInterval(-duration)
+            run.endsAt = run.endsAt.addingTimeInterval(-duration)
+            if let reminder = run.nextMicroReminderAt {
+                run.nextMicroReminderAt = reminder.addingTimeInterval(-duration)
+            }
+            status = .focusing(run)
+        case .onBreak(var run):
+            run.startedAt = run.startedAt.addingTimeInterval(-duration)
+            run.endsAt = run.endsAt.addingTimeInterval(-duration)
+            status = .onBreak(run)
+        case .suspended(var suspension):
+            suspension.awaySince = suspension.awaySince.addingTimeInterval(-duration)
+            status = .suspended(suspension)
+        }
+    }
+
+    mutating func advanceDay(at now: Date = Date()) {
+        completedBreaks = 0
+        completedBreaksDay = Calendar.current.date(byAdding: .day, value: -1, to: now)
+        activeConfiguration = configuration
+        status = .focusing(Self.makeFocusRun(
+            duration: activeConfiguration.focusDuration,
+            microReminderInterval: activeConfiguration.microReminderInterval,
+            at: now
+        ))
+    }
+
+    mutating func resetFocus(at now: Date = Date()) {
+        activeConfiguration = configuration
+        status = .focusing(Self.makeFocusRun(
+            duration: activeConfiguration.focusDuration,
+            microReminderInterval: activeConfiguration.microReminderInterval,
+            at: now
+        ))
+    }
 }
