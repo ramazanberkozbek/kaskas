@@ -36,6 +36,7 @@ struct SessionEngine: Sendable {
     ) {
         self.configuration = configuration
         activeConfiguration = restoredState.activeConfiguration
+        activeConfiguration.microReminderInterval = configuration.microReminderInterval
         completedBreaks = restoredState.completedBreaks
         completedBreaksDay = restoredState.completedBreaksDay
         consecutiveSkippedBreaks = restoredState.consecutiveSkippedBreaks

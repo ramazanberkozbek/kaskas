@@ -327,14 +327,38 @@ fileprivate extension SessionEngine {
         _ configuration: FocusConfiguration,
         at now: Date = Date()
     ) {
+        let microReminderChanged = configuration.microReminderInterval != self.configuration.microReminderInterval
+            || configuration.microReminderInterval != activeConfiguration.microReminderInterval
+
         if case .focusing = status,
            configuration.focusDuration != self.configuration.focusDuration {
             activeConfiguration.focusDuration = configuration.focusDuration
+            activeConfiguration.microReminderInterval = configuration.microReminderInterval
             status = .focusing(Self.makeFocusRun(
                 duration: activeConfiguration.focusDuration,
                 microReminderInterval: activeConfiguration.microReminderInterval,
                 at: now
             ))
+        } else if microReminderChanged {
+            activeConfiguration.microReminderInterval = configuration.microReminderInterval
+            if case .focusing(var run) = status {
+                let nextReminder = now.addingTimeInterval(configuration.microReminderInterval)
+                run.nextMicroReminderAt = nextReminder < run.endsAt ? nextReminder : nil
+                status = .focusing(run)
+            } else if case .suspended(var suspension) = status {
+                if case .focus(let remaining, let total, _, let warningShown) = suspension.frozen {
+                    let nextReminderIn = configuration.microReminderInterval < remaining
+                        ? configuration.microReminderInterval
+                        : nil
+                    suspension.frozen = .focus(
+                        remaining: remaining,
+                        total: total,
+                        nextMicroReminderIn: nextReminderIn,
+                        warningShown: warningShown
+                    )
+                    status = .suspended(suspension)
+                }
+            }
         }
         self.configuration = configuration
         if !configuration.pauseDuringMeetings, status.isMeetingPaused {

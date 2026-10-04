@@ -116,7 +116,7 @@ struct StudySessionCategoryTests {
         // Presentation resolves names by ID, not the saved display name.
         let registry = CategoryRegistry(defaults: defaults)
         let presentation = SessionCategoryPresentation(selection: .init(annotation: reopened.annotation(for: session)),
-            summary: summary([segment("coding", 0, 1000)]), registry: registry, isOngoing: false)
+            summary: summary([segment("coding", 0, 1000)]), registry: registry, isOngoing: false, locale: Locale(identifier: "tr"))
         #expect(presentation.title == registry.historicalCategory(for: "design")?.name)
     }
 

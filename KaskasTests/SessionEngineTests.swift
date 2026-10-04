@@ -652,12 +652,12 @@ struct SessionEngineTests {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let updatedConfiguration = FocusConfiguration(
             focusDuration: 45 * 60,
-            microReminderInterval: 15 * 60,
+            microReminderInterval: 20 * 60,
             breakDuration: 10 * 60,
             snoozeDuration: 10 * 60
         )
 
-        engine.updateConfiguration(updatedConfiguration)
+        engine.updateConfiguration(updatedConfiguration, at: startDate)
         let events = engine.process(at: startDate.addingTimeInterval(20 * 60))
         engine.snooze()
 
@@ -671,7 +671,7 @@ struct SessionEngineTests {
         var original = SessionEngine(configuration: configuration, now: startDate)
         let updatedConfiguration = FocusConfiguration(
             focusDuration: 60 * 60,
-            microReminderInterval: 15 * 60,
+            microReminderInterval: 20 * 60,
             breakDuration: 10 * 60,
             snoozeDuration: 10 * 60
         )
@@ -684,6 +684,22 @@ struct SessionEngineTests {
         _ = restored.process(at: startDate.addingTimeInterval(20 * 60))
 
         #expect(restored.session.nextMicroReminderAt == startDate.addingTimeInterval(40 * 60))
+    }
+
+    @Test
+    func microReminderIntervalAppliesImmediatelyToActiveSession() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(20 * 60))
+
+        var updated = configuration
+        updated.microReminderInterval = 5 * 60
+        let changeDate = startDate.addingTimeInterval(2 * 60)
+        engine.updateConfiguration(updated, at: changeDate)
+
+        #expect(engine.session.nextMicroReminderAt == changeDate.addingTimeInterval(5 * 60))
+        let events = engine.process(at: changeDate.addingTimeInterval(5 * 60))
+        #expect(events == [.microReminderDue])
+        #expect(engine.session.nextMicroReminderAt == changeDate.addingTimeInterval(10 * 60))
     }
 
     @Test
