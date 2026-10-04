@@ -27,6 +27,7 @@ final class BreakPresenter {
     private var presentation: Presentation?
     private var screenLayout: [ScreenLayout] = []
     private var screenChangeObserver: NSObjectProtocol?
+    private var previouslyActiveApp: NSRunningApplication?
 
     func show(
         endsAt: Date,
@@ -48,7 +49,16 @@ final class BreakPresenter {
             return
         }
 
-        dismiss()
+        // Capture frontmost app before break panels gain key window status,
+        // so we can reliably return focus when the break concludes.
+        if previouslyActiveApp == nil {
+            if let frontmost = NSWorkspace.shared.frontmostApplication,
+               frontmost.bundleIdentifier != Bundle.main.bundleIdentifier {
+                previouslyActiveApp = frontmost
+            }
+        }
+
+        dismissPanels()
         guard !screens.isEmpty else { return }
 
         presentation = Presentation(
@@ -70,10 +80,18 @@ final class BreakPresenter {
             }
         }
         rebuildPanels(on: screens)
-
     }
 
     func dismiss() {
+        dismissPanels()
+        restorePreviousAppFocus()
+    }
+
+    func dismissPreview() {
+        if presentation?.isPreview == true { dismiss() }
+    }
+
+    private func dismissPanels() {
         if let screenChangeObserver {
             NotificationCenter.default.removeObserver(screenChangeObserver)
             self.screenChangeObserver = nil
@@ -84,8 +102,12 @@ final class BreakPresenter {
         presentation = nil
     }
 
-    func dismissPreview() {
-        if presentation?.isPreview == true { dismiss() }
+    private func restorePreviousAppFocus() {
+        guard let app = previouslyActiveApp else { return }
+        previouslyActiveApp = nil
+        if !app.isTerminated {
+            app.activate()
+        }
     }
 
     private func updateForScreenChanges() {
@@ -102,8 +124,10 @@ final class BreakPresenter {
         panels.removeAll()
         screenLayout = screens.map(ScreenLayout.init)
 
-        let primaryScreen = NSScreen.main ?? screens.first
-        var primaryAssigned = false
+        // Ensure the interactive break view is always assigned to the active main display
+        // (NSScreen.main), preventing it from unintentionally rendering on a secondary monitor.
+        let primaryScreen = screens.first(where: { $0 == NSScreen.main }) ?? screens.first
+        var primaryPanel: BreakPanel?
 
         for screen in screens {
             let panel = BreakPanel(
@@ -114,8 +138,8 @@ final class BreakPresenter {
                 screen: screen
             )
             panel.onEscape = presentation.onSkip
-            if !primaryAssigned && (screen == primaryScreen || screen == screens.first) {
-                primaryAssigned = true
+            if primaryPanel == nil && screen == primaryScreen {
+                primaryPanel = panel
                 panel.contentViewController = NSHostingController(rootView: BreakView(
                     endsAt: presentation.endsAt,
                     configuration: presentation.configuration,
@@ -141,7 +165,7 @@ final class BreakPresenter {
             panels.append(panel)
         }
 
-        panels.first?.makeKey()
+        (primaryPanel ?? panels.first)?.makeKey()
     }
 }
 
