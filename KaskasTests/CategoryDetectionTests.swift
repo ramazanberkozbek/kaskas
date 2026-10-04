@@ -245,7 +245,7 @@ struct CategoryDetectionTests {
         #expect(tracker.journal.pending.isEmpty)
     }
 
-    @Test func failedWriteRetriesIdempotentlyWithoutLosingJournal() {
+    @Test func failedWriteRetriesIdempotentlyWithoutLosingJournal() async {
         let (store, _, defaults, suite) = fixture()
         defer { defaults.removePersistentDomain(forName: suite) }
         let database = FailingUsageStore()
@@ -253,9 +253,12 @@ struct CategoryDetectionTests {
         tracker.update(app: xcode, at: start)
         database.shouldFail = true
         tracker.update(app: nil, at: start.addingTimeInterval(10))
+        await tracker.waitForPersistence()
         #expect(tracker.storageFailed)
         #expect(store.loadAppUsageJournal().pending.count == 1)
         database.shouldFail = false
+        tracker.update(app: nil, at: start.addingTimeInterval(20))
+        await tracker.waitForPersistence()
         let records = tracker.segments(from: start, to: start.addingTimeInterval(20), now: start.addingTimeInterval(20))
         #expect(records.count == 1)
         #expect(!tracker.storageFailed)
@@ -263,30 +266,30 @@ struct CategoryDetectionTests {
         #expect(database.records.count == 1)
     }
 
-    @Test func swiftDataInsertIsIdempotent() throws {
+    @Test func swiftDataInsertIsIdempotent() async throws {
         let container = try ModelContainer(for: AppUsageRecord.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let store = AppUsageStore(container: container)
         let record = segment(xcode, "coding", 0, 10)
-        try store.insert(record)
-        try store.insert(record)
+        try await store.insert(record)
+        try await store.insert(record)
         #expect(try store.segments(from: start, to: start.addingTimeInterval(20)) == [record])
     }
 
-    @Test func addingUsageModelPreservesExistingActivityDatabase() throws {
+    @Test func addingUsageModelPreservesExistingActivityDatabase() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("history.store")
         let activity = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(60))
-        try autoreleasepool {
+        do {
             let oldContainer = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, configurations: ModelConfiguration(url: url))
-            try ActivityStore(container: oldContainer).insert(activity)
+            try await ActivityStore(container: oldContainer).insert(activity)
         }
         let updated = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, AppUsageRecord.self, configurations: ModelConfiguration(url: url))
         #expect(try ActivityStore(container: updated).intervals(from: start, to: start.addingTimeInterval(100)) == [activity])
         let usageStore = AppUsageStore(container: updated)
         let record = segment(xcode, "coding", 0, 60)
-        try usageStore.insert(record)
+        try await usageStore.insert(record)
         #expect(try usageStore.segments(from: start, to: start.addingTimeInterval(100)) == [record])
     }
 

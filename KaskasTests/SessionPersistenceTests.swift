@@ -17,7 +17,7 @@ struct SessionPersistenceTests {
     }
 
     @Test
-    func historyFailureStillSavesSessionAndRetriesAfterRestart() throws {
+    func historyFailureStillSavesSessionAndRetriesAfterRestart() async throws {
         let suiteName = "SessionPersistenceTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -37,6 +37,7 @@ struct SessionPersistenceTests {
 
         let firstPersistence = SessionPersistence(store: store, historyStore: history)
         firstPersistence.save(state: engine.state, record: record)
+        await firstPersistence.waitForPersistence()
         #expect(firstPersistence.historySaveFailed)
         #expect(store.loadSessionState() == engine.state)
         #expect(store.loadPendingHistoryEntries() == [record])
@@ -45,6 +46,7 @@ struct SessionPersistenceTests {
         let restoredPersistence = SessionPersistence(store: store, historyStore: history)
         restoredPersistence.save(state: engine.state)
         restoredPersistence.save(state: engine.state)
+        await restoredPersistence.waitForPersistence()
         #expect(!restoredPersistence.historySaveFailed)
         #expect(history.entries == [record])
         #expect(store.loadPendingHistoryEntries().isEmpty)

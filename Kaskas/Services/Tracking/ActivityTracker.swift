@@ -6,7 +6,12 @@ final class ActivityTracker {
     private let sessionStore: SessionStore
     private let activityStore: (any ActivityRecording)?
     private(set) var journal: ActivityJournal
-    private(set) var storageFailed = false
+    private var persistenceTask: Task<Void, Never>?
+    private var persistenceRequested = false
+    private(set) var storageFailed = false {
+        didSet { if storageFailed != oldValue { onStorageFailureChanged?(storageFailed) } }
+    }
+    var onStorageFailureChanged: ((Bool) -> Void)?
 
     init(sessionStore: SessionStore, activityStore: (any ActivityRecording)?) {
         self.sessionStore = sessionStore
@@ -25,13 +30,13 @@ final class ActivityTracker {
             }
         }
         journal.cursor = ActivityCursor(kind: kind, startedAt: now, checkpointAt: now)
-        saveAndFlush()
+        checkpointAndEnqueue()
     }
 
     func update(to kind: ActivityKind, at now: Date) {
         guard let cursor = journal.cursor else {
             journal.cursor = ActivityCursor(kind: kind, startedAt: now, checkpointAt: now)
-            saveAndFlush()
+            checkpointAndEnqueue()
             return
         }
         if cursor.kind == kind {
@@ -44,11 +49,10 @@ final class ActivityTracker {
             append(cursor.kind, from: cursor.startedAt, to: now)
             journal.cursor = ActivityCursor(kind: kind, startedAt: now, checkpointAt: now)
         }
-        saveAndFlush()
+        checkpointAndEnqueue()
     }
 
     func intervals(from start: Date, to end: Date, now: Date = Date()) -> [ActivityInterval] {
-        flush()
         var byID: [String: ActivityInterval] = [:]
         if let activityStore {
             do {
@@ -108,23 +112,41 @@ final class ActivityTracker {
         journal.pending.append(ActivityInterval(kind: kind, startedAt: start, endedAt: end))
     }
 
-    private func saveAndFlush() {
+    private func checkpointAndEnqueue() {
         sessionStore.save(activityJournal: journal)
-        flush()
+        schedulePersistence()
     }
 
-    private func flush() {
-        guard let activityStore, !journal.pending.isEmpty else { return }
-        do {
-            for interval in journal.pending {
-                try activityStore.insert(interval)
+    /// Writes belong to tracking events, never to a history read. One task drains
+    /// ordered batches; it retains the tracker until every acknowledgement is saved.
+    private func schedulePersistence() {
+        guard activityStore != nil, !journal.pending.isEmpty else { return }
+        persistenceRequested = true
+        guard persistenceTask == nil else { return }
+        persistenceTask = Task {
+            while persistenceRequested {
+                persistenceRequested = false
+                guard let activityStore, !journal.pending.isEmpty else { continue }
+                let batch = journal.pending
+                do {
+                    try await activityStore.insertBatch(batch)
+                    let committed = Set(batch.map(\.id))
+                    journal.pending.removeAll { committed.contains($0.id) }
+                    sessionStore.save(activityJournal: journal)
+                    storageFailed = false
+                } catch {
+                    storageFailed = true
+                    NSLog("Kaskas: Failed to save history: %@", String(describing: error))
+                    // Keep the durable outbox. A later tracking checkpoint retries;
+                    // reads do not write, and failures do not spin in a retry loop.
+                }
             }
-            journal.pending.removeAll()
-            sessionStore.save(activityJournal: journal)
-            storageFailed = false
-        } catch {
-            storageFailed = true
-            NSLog("Kaskas: Failed to save activity history: %@", String(describing: error))
+            persistenceTask = nil
         }
+    }
+
+    /// Await outstanding writes for lifecycle tests and explicit shutdown work.
+    func waitForPersistence() async {
+        await persistenceTask?.value
     }
 }

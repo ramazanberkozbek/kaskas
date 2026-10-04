@@ -6,7 +6,12 @@ final class AppUsageTracker {
     private let sessionStore: SessionStore
     private let usageStore: (any AppUsageRecording)?
     private(set) var journal: AppUsageJournal
-    private(set) var storageFailed: Bool
+    private var persistenceTask: Task<Void, Never>?
+    private var persistenceRequested = false
+    private(set) var storageFailed: Bool {
+        didSet { if storageFailed != oldValue { onStorageFailureChanged?(storageFailed) } }
+    }
+    var onStorageFailureChanged: ((Bool) -> Void)?
 
     init(sessionStore: SessionStore, usageStore: (any AppUsageRecording)?) {
         self.sessionStore = sessionStore
@@ -18,14 +23,14 @@ final class AppUsageTracker {
             append(cursor, endingAt: cursor.checkpointAt)
             journal.cursor = nil
         }
-        saveAndFlush()
+        checkpointAndEnqueue()
     }
 
     func update(app: ForegroundApp?, resolution: CategoryResolution = .unmatched, at now: Date) {
         if let cursor = journal.cursor {
             if let app, cursor.app == app, cursor.resolution == resolution {
                 journal.cursor?.checkpointAt = max(cursor.checkpointAt, now)
-                saveAndFlush()
+                checkpointAndEnqueue()
                 return
             }
             append(cursor, endingAt: now)
@@ -33,17 +38,16 @@ final class AppUsageTracker {
         journal.cursor = app.map {
             AppUsageCursor(id: UUID(), app: $0, resolution: resolution, startedAt: now, checkpointAt: now)
         }
-        saveAndFlush()
+        checkpointAndEnqueue()
     }
 
     func clockDidChange() {
         if let cursor = journal.cursor { append(cursor, endingAt: cursor.checkpointAt) }
         journal.cursor = nil
-        saveAndFlush()
+        checkpointAndEnqueue()
     }
 
     func segments(from start: Date, to end: Date, now: Date) -> [AppUsageSegment] {
-        flush()
         var byID: [UUID: AppUsageSegment] = [:]
         if let usageStore {
             do {
@@ -89,21 +93,41 @@ final class AppUsageTracker {
         journal.pending.append(cursor.segment(endingAt: end))
     }
 
-    private func saveAndFlush() {
+    private func checkpointAndEnqueue() {
         sessionStore.save(appUsageJournal: journal)
-        flush()
+        schedulePersistence()
     }
 
-    private func flush() {
-        guard let usageStore, !journal.pending.isEmpty else { return }
-        do {
-            for segment in journal.pending { try usageStore.insert(segment) }
-            journal.pending.removeAll()
-            sessionStore.save(appUsageJournal: journal)
-            storageFailed = false
-        } catch {
-            storageFailed = true
-            NSLog("Kaskas: Failed to save category history: %@", String(describing: error))
+    /// Writes belong to tracking events, never to a history read. One task drains
+    /// ordered batches; it retains the tracker until every acknowledgement is saved.
+    private func schedulePersistence() {
+        guard usageStore != nil, !journal.pending.isEmpty else { return }
+        persistenceRequested = true
+        guard persistenceTask == nil else { return }
+        persistenceTask = Task {
+            while persistenceRequested {
+                persistenceRequested = false
+                guard let usageStore, !journal.pending.isEmpty else { continue }
+                let batch = journal.pending
+                do {
+                    try await usageStore.insertBatch(batch)
+                    let committed = Set(batch.map(\.id))
+                    journal.pending.removeAll { committed.contains($0.id) }
+                    sessionStore.save(appUsageJournal: journal)
+                    storageFailed = false
+                } catch {
+                    storageFailed = true
+                    NSLog("Kaskas: Failed to save history: %@", String(describing: error))
+                    // Keep the durable outbox. A later tracking checkpoint retries;
+                    // reads do not write, and failures do not spin in a retry loop.
+                }
+            }
+            persistenceTask = nil
         }
+    }
+
+    /// Await outstanding writes for lifecycle tests and explicit shutdown work.
+    func waitForPersistence() async {
+        await persistenceTask?.value
     }
 }

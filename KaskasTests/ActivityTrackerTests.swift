@@ -130,15 +130,15 @@ struct ActivityTrackerTests {
     }
 
     @Test
-    func databaseInsertionIsIdempotent() throws {
+    func databaseInsertionIsIdempotent() async throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, configurations: configuration)
         let store = ActivityStore(container: container)
         let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
         let interval = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(600))
 
-        try store.insert(interval)
-        try store.insert(interval)
+        try await store.insert(interval)
+        try await store.insert(interval)
 
         #expect(try store.intervals(from: start, to: start.addingTimeInterval(1200)) == [interval])
     }

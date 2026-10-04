@@ -26,6 +26,7 @@ final class AppUsageController {
         isEnabled = sessionStore.automaticCategoryDetectionEnabled
         tracker = AppUsageTracker(sessionStore: sessionStore, usageStore: usageStore)
         storageFailed = tracker.storageFailed
+        tracker.onStorageFailureChanged = { [weak self] failed in self?.storageFailed = failed }
         registry.onChange = { [weak self] in self?.rulesChanged() }
     }
 

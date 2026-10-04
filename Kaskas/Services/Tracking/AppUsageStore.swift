@@ -32,12 +32,19 @@ nonisolated final class AppUsageRecord {
 
 @MainActor
 protocol AppUsageRecording {
-    func insert(_ segment: AppUsageSegment) throws
+    func insert(_ segment: AppUsageSegment) async throws
+    func insertBatch(_ values: [AppUsageSegment]) async throws
     func segments(from start: Date, to end: Date) throws -> [AppUsageSegment]
     func segmentsAsync(from start: Date, to end: Date) async throws -> [AppUsageSegment]
 }
 
 extension AppUsageRecording {
+    /// Compatibility for lightweight recording implementations. Production stores
+    /// override this to perform the entire transaction on their worker.
+    func insertBatch(_ values: [AppUsageSegment]) async throws {
+        for value in values { try await insert(value) }
+    }
+
     func segmentsAsync(from start: Date, to end: Date) async throws -> [AppUsageSegment] {
         try segments(from: start, to: end)
     }
@@ -47,20 +54,21 @@ extension AppUsageRecording {
 @MainActor
 final class AppUsageStore: AppUsageRecording {
     private let context: ModelContext
+    private let writer: HistoryWriteWorker
     private let container: ModelContainer
 
     init(container: ModelContainer) {
         self.container = container
+        writer = HistoryWriteWorker(container: container)
         context = ModelContext(container)
     }
 
-    func insert(_ segment: AppUsageSegment) throws {
-        let id = segment.id
-        var query = FetchDescriptor<AppUsageRecord>(predicate: #Predicate { $0.recordID == id })
-        query.fetchLimit = 1
-        guard try context.fetch(query).isEmpty else { return }
-        context.insert(AppUsageRecord(segment))
-        do { try context.save() } catch { context.rollback(); throw error }
+    func insertBatch(_ values: [AppUsageSegment]) async throws {
+        try await writer.insert(values)
+    }
+
+    func insert(_ segment: AppUsageSegment) async throws {
+        try await insertBatch([segment])
     }
 
     func segments(from start: Date, to end: Date) throws -> [AppUsageSegment] {

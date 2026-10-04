@@ -38,17 +38,29 @@ nonisolated final class BreakRecord {
 
 @MainActor
 protocol BreakHistoryRecording {
-    func insert(_ entry: BreakHistoryEntry) throws
+    func insert(_ entry: BreakHistoryEntry) async throws
+    func insertBatch(_ values: [BreakHistoryEntry]) async throws
+}
+
+extension BreakHistoryRecording {
+    /// Compatibility for lightweight recording implementations. Production stores
+    /// override this to perform the entire transaction on their worker.
+    func insertBatch(_ values: [BreakHistoryEntry]) async throws {
+        for value in values { try await insert(value) }
+    }
+
 }
 
 /// Stores completed and skipped break history records using SwiftData.
 @MainActor
 final class BreakHistoryStore: BreakHistoryRecording {
     private let context: ModelContext
+    private let writer: HistoryWriteWorker
     private let container: ModelContainer
 
     init(container: ModelContainer) {
         self.container = container
+        writer = HistoryWriteWorker(container: container)
         context = ModelContext(container)
     }
 
@@ -56,20 +68,12 @@ final class BreakHistoryStore: BreakHistoryRecording {
         try self.init(container: ModelContainer(for: BreakRecord.self, ActivityRecord.self))
     }
 
-    func insert(_ entry: BreakHistoryEntry) throws {
-        let recordID = entry.id
-        var descriptor = FetchDescriptor<BreakRecord>(
-            predicate: #Predicate { $0.recordID == recordID }
-        )
-        descriptor.fetchLimit = 1
-        guard try context.fetch(descriptor).isEmpty else { return }
-        context.insert(BreakRecord(entry))
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-            throw error
-        }
+    func insertBatch(_ values: [BreakHistoryEntry]) async throws {
+        try await writer.insert(values)
+    }
+
+    func insert(_ entry: BreakHistoryEntry) async throws {
+        try await insertBatch([entry])
     }
 
     func entries(from start: Date, to end: Date) throws -> [BreakHistoryEntry] {

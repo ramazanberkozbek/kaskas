@@ -66,14 +66,14 @@ struct HistoryRefreshTests {
         let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
         let end = start.addingTimeInterval(3600)
         let focus = ActivityInterval(kind: .studying, startedAt: start.addingTimeInterval(-60), endedAt: end)
-        try activities.insert(focus)
-        try activities.insert(ActivityInterval(kind: .studying, startedAt: end, endedAt: end.addingTimeInterval(60)))
+        try await activities.insert(focus)
+        try await activities.insert(ActivityInterval(kind: .studying, startedAt: end, endedAt: end.addingTimeInterval(60)))
         let segment = AppUsageSegment(id: UUID(), app: ForegroundApp(bundleID: "example.app", name: "Example"),
             resolution: .unmatched, startedAt: start, endedAt: end)
-        try usage.insert(segment)
+        try await usage.insert(segment)
         let entry = BreakHistoryEntry(id: "break", occurredAt: start, startedAt: start,
             focusStartedAt: nil, focusedDuration: nil, outcome: .completed, source: .manual)
-        try breaks.insert(entry)
+        try await breaks.insert(entry)
         #expect(try await activities.intervalsAsync(from: start, to: end) == [focus])
         #expect(try await usage.segmentsAsync(from: start, to: end) == [segment])
         #expect(try await breaks.entriesAsync(from: start, to: end) == [entry])

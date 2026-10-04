@@ -23,12 +23,19 @@ nonisolated final class ActivityRecord {
 
 @MainActor
 protocol ActivityRecording {
-    func insert(_ interval: ActivityInterval) throws
+    func insert(_ interval: ActivityInterval) async throws
+    func insertBatch(_ values: [ActivityInterval]) async throws
     func intervals(from start: Date, to end: Date) throws -> [ActivityInterval]
     func intervalsAsync(from start: Date, to end: Date) async throws -> [ActivityInterval]
 }
 
 extension ActivityRecording {
+    /// Compatibility for lightweight recording implementations. Production stores
+    /// override this to perform the entire transaction on their worker.
+    func insertBatch(_ values: [ActivityInterval]) async throws {
+        for value in values { try await insert(value) }
+    }
+
     func intervalsAsync(from start: Date, to end: Date) async throws -> [ActivityInterval] {
         try intervals(from: start, to: end)
     }
@@ -38,27 +45,21 @@ extension ActivityRecording {
 @MainActor
 final class ActivityStore: ActivityRecording {
     private let context: ModelContext
+    private let writer: HistoryWriteWorker
     private let container: ModelContainer
 
     init(container: ModelContainer) {
         self.container = container
+        writer = HistoryWriteWorker(container: container)
         context = ModelContext(container)
     }
 
-    func insert(_ interval: ActivityInterval) throws {
-        let recordID = interval.id
-        var descriptor = FetchDescriptor<ActivityRecord>(
-            predicate: #Predicate { $0.recordID == recordID }
-        )
-        descriptor.fetchLimit = 1
-        guard try context.fetch(descriptor).isEmpty else { return }
-        context.insert(ActivityRecord(interval))
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-            throw error
-        }
+    func insertBatch(_ values: [ActivityInterval]) async throws {
+        try await writer.insert(values)
+    }
+
+    func insert(_ interval: ActivityInterval) async throws {
+        try await insertBatch([interval])
     }
 
     func intervals(from start: Date, to end: Date) throws -> [ActivityInterval] {

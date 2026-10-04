@@ -12,7 +12,7 @@ struct BreakHistoryStoreTests {
     }
 
     @Test
-    func storesOneEntryPerBreakAndFetchesOnlyTheRequestedDates() throws {
+    func storesOneEntryPerBreakAndFetchesOnlyTheRequestedDates() async throws {
         let store = try makeStore()
         let day = Date(timeIntervalSinceReferenceDate: 1_000_000)
         let firstSession = FocusSession(
@@ -40,9 +40,9 @@ struct BreakHistoryStoreTests {
             source: .manual
         )
 
-        try store.insert(first)
-        try store.insert(first)
-        try store.insert(second)
+        try await store.insert(first)
+        try await store.insert(first)
+        try await store.insert(second)
 
         #expect(try store.entries(from: day, to: day.addingTimeInterval(86_400)) == [first])
         #expect(try store.entries(from: day, to: day.addingTimeInterval(172_800)) == [first, second])

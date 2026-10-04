@@ -105,6 +105,12 @@ final class SessionController {
         }
         self.engine = engine
         sessionSnapshot = engine.snapshot(at: now)
+        activityTracker.onStorageFailureChanged = { [weak self] failed in
+            self?.activityStorageFailed = failed
+        }
+        persistence.onHistoryFailureChanged = { [weak self] failed in
+            self?.historySaveFailed = failed
+        }
     }
 
     func start() {
@@ -247,8 +253,11 @@ final class SessionController {
     }
 
     func breakEntriesAsync(from start: Date, through end: Date) async -> [BreakHistoryEntry] {
-        guard let breakHistoryStore else { return [] }
-        return (try? await breakHistoryStore.entriesAsync(from: start, to: end.addingTimeInterval(0.001))) ?? []
+        let upperBound = end.addingTimeInterval(0.001)
+        let buffered = persistence.bufferedHistoryEntries
+        let persisted = (try? await breakHistoryStore?.entriesAsync(from: start, to: upperBound)) ?? []
+        guard !Task.isCancelled else { return [] }
+        return await SessionPersistence.mergeEntriesAsync(persisted, buffered: buffered, from: start, to: upperBound)
     }
 
     func annotation(for interval: ActivityInterval) -> SessionAnnotation {
@@ -286,8 +295,10 @@ final class SessionController {
     }
 
     func breakEntries(from start: Date, through end: Date) -> [BreakHistoryEntry] {
-        guard let breakHistoryStore else { return [] }
-        return (try? breakHistoryStore.entries(from: start, to: end.addingTimeInterval(0.001))) ?? []
+        let upperBound = end.addingTimeInterval(0.001)
+        let persisted = (try? breakHistoryStore?.entries(from: start, to: upperBound)) ?? []
+        return SessionPersistence.mergeEntries(persisted, buffered: persistence.bufferedHistoryEntries,
+            from: start, to: upperBound)
     }
 
     func applyDockVisibility() {
