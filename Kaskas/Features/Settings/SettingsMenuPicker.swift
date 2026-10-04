@@ -24,6 +24,7 @@ struct SettingsMenuPicker<Selection: Hashable, Options: View>: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
             }
         }
+        .dropdownHoverEffect()
     }
 
     private var control: some View {

@@ -17,6 +17,17 @@ actor HistoryWriteWorker {
         return context
     }
 
+    /// Delete all history in one transaction after the callers drain their writers.
+    func deleteAllHistory() throws {
+        let context = context
+        do {
+            for record in try context.fetch(FetchDescriptor<ActivityRecord>()) { context.delete(record) }
+            for record in try context.fetch(FetchDescriptor<AppUsageRecord>()) { context.delete(record) }
+            for record in try context.fetch(FetchDescriptor<BreakRecord>()) { context.delete(record) }
+            try context.save()
+        } catch { context.rollback(); throw error }
+    }
+
     func insert(_ values: [ActivityInterval]) throws {
         let context = context
         do {

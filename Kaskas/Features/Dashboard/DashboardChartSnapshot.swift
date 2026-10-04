@@ -2,7 +2,7 @@ import Foundation
 
 nonisolated struct DashboardChartSnapshot: Sendable {
     let days: [DailyActivity]
-    let today: DashboardTodayChartData
+    let today: DailyStudyChartData
     let trend: StudyTrendData
 
     static let empty = Self(days: [], today: .empty, trend: .empty)

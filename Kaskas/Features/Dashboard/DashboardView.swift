@@ -103,7 +103,7 @@ struct DashboardView: View {
                 VStack(spacing: 14) {
                     rangeControls
                     if period == .today {
-                            DashboardTodayChart(data: chartSnapshot.today)
+                            DailyStudyChart(data: chartSnapshot.today, now: now)
                         } else {
                             StudyTrendChart(data: chartSnapshot.trend)
                         }
@@ -111,11 +111,11 @@ struct DashboardView: View {
                         HStack(spacing: 18) {
                             if period == .today {
                                 legend(
-                                    Calendar.current.isDateInToday(endDate) ? "dashboard.today" : "dashboard.day.selected",
+                                    LocalizedStringKey(chartSnapshot.today.currentLabelKey(at: now)),
                                     color: StatisticsStyle.studying
                                 )
                                 legend(
-                                    Calendar.current.isDateInToday(endDate) ? "dashboard.yesterday" : "dashboard.day.previous",
+                                    LocalizedStringKey(chartSnapshot.today.previousLabelKey(at: now)),
                                     color: StatisticsStyle.average
                                 )
                             } else {
@@ -207,6 +207,7 @@ struct DashboardView: View {
         }
         .onAppear(perform: reload)
         .onDisappear { refreshTask?.cancel() }
+        .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: endDate) { _, newDate in
             let normalized = Calendar.current.startOfDay(for: newDate)
             if endDate != normalized {

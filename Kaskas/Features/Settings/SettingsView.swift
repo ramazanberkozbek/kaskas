@@ -5,6 +5,7 @@ struct SettingsView: View {
     let controller: SessionController
 
     @State private var selection: SettingsPane = .dashboard
+    @State private var hoveredPane: SettingsPane?
     @State private var navigationTrace = SettingsNavigationTrace()
     @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
     @Environment(\.colorScheme) private var colorScheme
@@ -14,6 +15,24 @@ struct SettingsView: View {
             List(availablePanes, selection: paneSelection) { pane in
                 sidebarLabel(pane)
                     .tag(pane)
+                    .listRowBackground(
+                        Color.clear
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.09 : 0.06))
+                                    .padding(.horizontal, 10)
+                                    .opacity(hoveredPane == pane && selection != pane ? 1 : 0)
+                            }
+                            .contentShape(Rectangle())
+                            .onHover { isHovered in
+                                if isHovered {
+                                    hoveredPane = pane
+                                } else if hoveredPane == pane {
+                                    hoveredPane = nil
+                                }
+                            }
+                            .animation(.easeInOut(duration: 0.15), value: hoveredPane)
+                    )
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)

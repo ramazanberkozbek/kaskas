@@ -76,6 +76,10 @@ final class BreakHistoryStore: BreakHistoryRecording {
         try await insertBatch([entry])
     }
 
+    func deleteAllHistory() async throws {
+        try await writer.deleteAllHistory()
+    }
+
     func entries(from start: Date, to end: Date) throws -> [BreakHistoryEntry] {
         let descriptor = FetchDescriptor<BreakRecord>(
             predicate: #Predicate { $0.occurredAt >= start && $0.occurredAt < end },

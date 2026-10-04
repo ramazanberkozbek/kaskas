@@ -66,6 +66,7 @@ struct CategoryRuleRow: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
+            .dropdownHoverEffect()
 
             // Delete Rule Button
             Button(action: onDeleteRule) {

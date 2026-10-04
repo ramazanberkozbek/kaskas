@@ -28,7 +28,13 @@ struct StatisticsDistributionChart: View {
         .chartYAxis {
             AxisMarks(position: .trailing, values: [0, 6, 12, 18, 24])
         }
-        .chartXAxis { AxisMarks(values: .stride(by: .day, count: period == .thirty ? 5 : 1)) }
+        .chartXAxis {
+            if period == .year {
+                AxisMarks(values: .stride(by: .month))
+            } else {
+                AxisMarks(values: .stride(by: .day, count: period == .thirty ? 5 : 1))
+            }
+        }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {

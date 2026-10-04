@@ -29,7 +29,7 @@ nonisolated struct StudySession: Identifiable, Sendable {
 
     func isVisible(showShortSessions: Bool, hasAnnotation: Bool, activeStartedAt: Date?) -> Bool {
         if hasAnnotation { return true }
-        if isOngoing(startedAt: activeStartedAt), focusedDuration < 60 { return false }
+        if isOngoing(startedAt: activeStartedAt) { return focusedDuration >= 60 }
         return showShortSessions || focusedDuration >= StudySessionGrouping.minimumDefaultDuration
     }
 }

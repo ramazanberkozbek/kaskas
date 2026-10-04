@@ -8,6 +8,7 @@ final class AppUsageTracker {
     private(set) var journal: AppUsageJournal
     private var persistenceTask: Task<Void, Never>?
     private var persistenceRequested = false
+    private var persistenceSuspended = false
     private(set) var storageFailed: Bool {
         didSet { if storageFailed != oldValue { onStorageFailureChanged?(storageFailed) } }
     }
@@ -101,11 +102,11 @@ final class AppUsageTracker {
     /// Writes belong to tracking events, never to a history read. One task drains
     /// ordered batches; it retains the tracker until every acknowledgement is saved.
     private func schedulePersistence() {
-        guard usageStore != nil, !journal.pending.isEmpty else { return }
+        guard !persistenceSuspended, usageStore != nil, !journal.pending.isEmpty else { return }
         persistenceRequested = true
         guard persistenceTask == nil else { return }
         persistenceTask = Task {
-            while persistenceRequested {
+            while persistenceRequested && !persistenceSuspended {
                 persistenceRequested = false
                 guard let usageStore, !journal.pending.isEmpty else { continue }
                 let batch = journal.pending
@@ -124,6 +125,23 @@ final class AppUsageTracker {
             }
             persistenceTask = nil
         }
+    }
+
+    func suspendPersistence() { persistenceSuspended = true }
+
+    func resumePersistence() {
+        persistenceSuspended = false
+        schedulePersistence()
+    }
+
+    /// Called only after the database deletion succeeds and outstanding writes finish.
+    func resetHistory(at now: Date) {
+        journal.pending.removeAll()
+        if let cursor = journal.cursor {
+            journal.cursor = AppUsageCursor(id: UUID(), app: cursor.app, resolution: cursor.resolution,
+                startedAt: now, checkpointAt: now)
+        }
+        sessionStore.save(appUsageJournal: journal)
     }
 
     /// Await outstanding writes for lifecycle tests and explicit shutdown work.

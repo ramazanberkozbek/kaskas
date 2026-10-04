@@ -9,8 +9,7 @@ struct StatisticsRangeControls: View {
         HStack(spacing: 10) {
             StatisticsDateNavigator(
                 endDate: $endDate,
-                startDate: period.window(endingAt: endDate).start,
-                stepDays: period.rawValue,
+                period: period,
                 now: now
             )
             Spacer(minLength: 8)
@@ -21,15 +20,14 @@ struct StatisticsRangeControls: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 180)
+            .frame(width: 320)
         }
     }
 }
 
 private struct StatisticsDateNavigator: View {
     @Binding var endDate: Date
-    let startDate: Date
-    let stepDays: Int
+    let period: StatisticsPeriod
     let now: Date
     @Environment(\.locale) private var locale
     @State private var showingCalendar = false
@@ -39,7 +37,7 @@ private struct StatisticsDateNavigator: View {
         let today = calendar.startOfDay(for: now)
         ControlGroup {
             Button {
-                endDate = calendar.date(byAdding: .day, value: -stepDays, to: endDate) ?? endDate
+                endDate = period.shiftedDate(endDate, by: -1, calendar: calendar)
             } label: {
                 Image(systemName: "chevron.left")
             }
@@ -61,19 +59,17 @@ private struct StatisticsDateNavigator: View {
             }
 
             Button {
-                let next = calendar.date(byAdding: .day, value: stepDays, to: endDate) ?? endDate
+                let next = period.shiftedDate(endDate, by: 1, calendar: calendar)
                 endDate = min(today, next)
             } label: {
                 Image(systemName: "chevron.right")
             }
-            .disabled(endDate >= today)
+            .disabled(period.window(endingAt: endDate).end >= today)
             .accessibilityLabel("stats.nextPeriod")
         }
     }
 
     private var rangeLabel: String {
-        let start = startDate.formatted(.dateTime.day().month(.abbreviated).year().locale(locale))
-        let end = endDate.formatted(.dateTime.day().month(.abbreviated).year().locale(locale))
-        return stepDays == 1 ? end : "\(start)–\(end)"
+        period.rangeLabel(endingAt: endDate, locale: locale)
     }
 }

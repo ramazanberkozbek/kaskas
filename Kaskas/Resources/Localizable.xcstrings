@@ -390,6 +390,7 @@
       }
     },
     "Bu kategoriye uygulama ekle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -754,6 +755,7 @@
       }
     },
     "dashboard.day.previous" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -770,6 +772,7 @@
       }
     },
     "dashboard.day.selected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1585,6 +1588,150 @@
         }
       }
     },
+    "developer.history.cancel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İptal"
+          }
+        }
+      }
+    },
+    "developer.history.confirmMessage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All history and session notes will be permanently deleted. This cannot be undone. The current focus cycle will restart."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm geçmiş ve oturum notları kalıcı olarak silinecek. Bu işlem geri alınamaz. Mevcut çalışma döngüsü yeniden başlatılacak."
+          }
+        }
+      }
+    },
+    "developer.history.confirmTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete all records?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm kayıtlar silinsin mi?"
+          }
+        }
+      }
+    },
+    "developer.history.delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete records"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtları sil"
+          }
+        }
+      }
+    },
+    "developer.history.deleted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records deleted."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlar silindi."
+          }
+        }
+      }
+    },
+    "developer.history.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete study, break and app usage history, including session notes. Your settings and category rules are kept."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma, mola ve uygulama kullanım geçmişini ve oturum notlarını siler. Ayarlarınız ve kategori kurallarınız korunur."
+          }
+        }
+      }
+    },
+    "developer.history.errorMessage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The records could not be deleted. Please try again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlar silinemedi. Lütfen tekrar deneyin."
+          }
+        }
+      }
+    },
+    "developer.history.errorTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not delete records"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlar silinemedi"
+          }
+        }
+      }
+    },
+    "developer.history.ok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamam"
+          }
+        }
+      }
+    },
     "developer.live.breaksToday" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1768,6 +1915,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Canlı Teşhis"
+          }
+        }
+      }
+    },
+    "developer.section.history" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlar"
           }
         }
       }
@@ -5804,13 +5967,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "7D"
+            "value" : "Weekly"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "7G"
+            "value" : "Haftalık"
           }
         }
       }
@@ -5821,13 +5984,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "30D"
+            "value" : "Monthly"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "30G"
+            "value" : "Aylık"
+          }
+        }
+      }
+    },
+    "stats.period.year" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yıllık"
           }
         }
       }
@@ -5862,23 +6042,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Önceki yıl"
-          }
-        }
-      }
-    },
-    "stats.range.scope" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All charts use the selected period; the yearly view shows the selected date’s year."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tüm grafikler seçili dönemi, yıllık görünüm ise seçili tarihin yılını gösterir."
           }
         }
       }
@@ -6015,6 +6178,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "7 günlük ortalama"
+          }
+        }
+      }
+    },
+    "stats.trend.dailySubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hourly study time compared with the previous day"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki günle karşılaştırmalı saatlik çalışma süresi"
           }
         }
       }

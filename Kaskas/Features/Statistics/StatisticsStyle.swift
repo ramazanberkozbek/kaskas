@@ -41,6 +41,7 @@ enum StatisticsPeriod: Int, CaseIterable, Identifiable {
     case day = 1
     case seven = 7
     case thirty = 30
+    case year = 365
 
     var id: Self { self }
 
@@ -49,13 +50,62 @@ enum StatisticsPeriod: Int, CaseIterable, Identifiable {
         case .day: "stats.hourly.day"
         case .seven: "stats.period.seven"
         case .thirty: "stats.period.thirty"
+        case .year: "stats.period.year"
         }
     }
 
+    var usesHourlyAverage: Bool { self == .thirty || self == .year }
+
     func window(endingAt endDate: Date, calendar: Calendar = .current) -> (start: Date, end: Date) {
         let end = calendar.startOfDay(for: endDate)
-        let start = calendar.date(byAdding: .day, value: 1 - rawValue, to: end) ?? end
-        return (start, end)
+        switch self {
+        case .day:
+            return (end, end)
+        case .seven:
+            return (calendar.date(byAdding: .day, value: -6, to: end) ?? end, end)
+        case .thirty, .year:
+            let component: Calendar.Component = self == .thirty ? .month : .year
+            guard let interval = calendar.dateInterval(of: component, for: end) else { return (end, end) }
+            let lastDay = calendar.date(byAdding: .day, value: -1, to: interval.end) ?? end
+            return (interval.start, lastDay)
+        }
+    }
+
+    func shiftedDate(_ date: Date, by direction: Int, calendar: Calendar = .current) -> Date {
+        let component: Calendar.Component = switch self {
+        case .day, .seven: .day
+        case .thirty: .month
+        case .year: .year
+        }
+        let amount = self == .seven ? 7 : 1
+        return calendar.date(byAdding: component, value: direction * amount, to: date) ?? date
+    }
+
+    func rangeLabel(endingAt date: Date, locale: Locale, calendar: Calendar = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        switch self {
+        case .day:
+            if locale.language.languageCode?.identifier == "tr" {
+                formatter.dateFormat = "EEEE d MMMM"
+            } else {
+                formatter.setLocalizedDateFormatFromTemplate("EEEE d MMMM")
+            }
+        case .seven:
+            let window = window(endingAt: date, calendar: calendar)
+            let crossesYear = calendar.component(.year, from: window.start) != calendar.component(.year, from: window.end)
+            formatter.setLocalizedDateFormatFromTemplate(crossesYear ? "d MMMM yyyy" : "d MMMM")
+            let start = formatter.string(from: window.start)
+            formatter.setLocalizedDateFormatFromTemplate("d MMMM yyyy")
+            return "\(start)–\(formatter.string(from: window.end))"
+        case .thirty:
+            formatter.setLocalizedDateFormatFromTemplate("MMMM yyyy")
+        case .year:
+            formatter.setLocalizedDateFormatFromTemplate("yyyy")
+        }
+        return formatter.string(from: date)
     }
 }
 

@@ -23,6 +23,8 @@ final class SessionController {
     private(set) var historySaveFailed = false
     private(set) var activityStorageFailed = false
     private(set) var annotationsRevision = 0
+    private(set) var historyRevision = 0
+    private(set) var isDeletingHistory = false
     private(set) var speedMultiplier: Double = 1.0
     @ObservationIgnored private var speedTimer: Timer?
     let appUsage: AppUsageController
@@ -528,6 +530,48 @@ final class SessionController {
         engine.advanceDay(at: Date())
         reconcile()
         refreshSnapshot()
+    }
+
+    func deleteHistory() async throws {
+        guard !isDeletingHistory else { return }
+        guard let breakHistoryStore else { throw CocoaError(.fileNoSuchFile) }
+        isDeletingHistory = true
+        persistence.suspendPersistence()
+        activityTracker.suspendPersistence()
+        appUsage.suspendPersistence()
+        defer {
+            persistence.resumePersistence()
+            activityTracker.resumePersistence()
+            appUsage.resumePersistence()
+            isDeletingHistory = false
+        }
+        await persistence.waitForPersistence()
+        await activityTracker.waitForPersistence()
+        await appUsage.waitForPersistence()
+        try await breakHistoryStore.deleteAllHistory()
+
+        let now = Date()
+        persistence.resetHistory()
+        activityTracker.resetHistory(at: now)
+        appUsage.resetHistory(at: now)
+        store.clearAnnotations()
+        // Start a new cycle so a later completed break cannot restore pre-deletion focus time.
+        dismissPreviews()
+        microReminderPresenter.dismiss()
+        breakWarningPresenter.dismiss()
+        breakPresenter.dismiss()
+        setSpeedMultiplier(1.0)
+        engine = SessionEngine(configuration: configuration, now: now)
+        reconcile(at: now)
+        persistSession(at: now)
+        refreshSnapshot(at: now)
+        annotationsRevision += 1
+        historyRevision += 1
+        screenTimeRefreshTask?.cancel()
+        screenTimeRefreshKey = nil
+        cachedTodayBaseStudyingTime = 0
+        cachedTodayStartOfDay = Calendar.current.startOfDay(for: now)
+        refreshScreenTimeToday(at: now)
     }
 
     func resetSessionCycle() {

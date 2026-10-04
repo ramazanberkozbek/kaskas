@@ -10,7 +10,7 @@ struct StatisticsHourlyChart: View {
     @Environment(\.locale) private var locale
 
     private var hourlyPeriod: HourlyPeriod { period == .seven ? .week : .day }
-    private var hourlyValueLabel: String { period == .thirty ? "stats.hourly.average" : "stats.kind.studying" }
+    private var hourlyValueLabel: String { period.usesHourlyAverage ? "stats.hourly.average" : "stats.kind.studying" }
 
     var body: some View {
         let selectedHour = hoveredHour

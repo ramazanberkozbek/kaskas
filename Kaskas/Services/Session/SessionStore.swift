@@ -146,6 +146,11 @@ final class SessionStore {
         saveAnnotations(annotations)
     }
 
+    func clearAnnotations() {
+        defaults.removeObject(forKey: Key.sessionAnnotations)
+        annotationCache = nil
+    }
+
     private func loadAnnotations() -> [String: SessionAnnotation] {
         let data = defaults.data(forKey: Key.sessionAnnotations)
         // Check the stored bytes so writes by another store instance and resets

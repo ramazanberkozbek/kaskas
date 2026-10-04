@@ -9,6 +9,7 @@ final class ActivityTracker {
     private(set) var completedIntervalsRevision = 0
     private var persistenceTask: Task<Void, Never>?
     private var persistenceRequested = false
+    private var persistenceSuspended = false
     private(set) var storageFailed = false {
         didSet { if storageFailed != oldValue { onStorageFailureChanged?(storageFailed) } }
     }
@@ -122,11 +123,11 @@ final class ActivityTracker {
     /// Writes belong to tracking events, never to a history read. One task drains
     /// ordered batches; it retains the tracker until every acknowledgement is saved.
     private func schedulePersistence() {
-        guard activityStore != nil, !journal.pending.isEmpty else { return }
+        guard !persistenceSuspended, activityStore != nil, !journal.pending.isEmpty else { return }
         persistenceRequested = true
         guard persistenceTask == nil else { return }
         persistenceTask = Task {
-            while persistenceRequested {
+            while persistenceRequested && !persistenceSuspended {
                 persistenceRequested = false
                 guard let activityStore, !journal.pending.isEmpty else { continue }
                 let batch = journal.pending
@@ -145,6 +146,23 @@ final class ActivityTracker {
             }
             persistenceTask = nil
         }
+    }
+
+    func suspendPersistence() { persistenceSuspended = true }
+
+    func resumePersistence() {
+        persistenceSuspended = false
+        schedulePersistence()
+    }
+
+    /// Called only after the database deletion succeeds and outstanding writes finish.
+    func resetHistory(at now: Date) {
+        journal.pending.removeAll()
+        if let cursor = journal.cursor {
+            journal.cursor = ActivityCursor(kind: cursor.kind, startedAt: now, checkpointAt: now)
+        }
+        completedIntervalsRevision += 1
+        sessionStore.save(activityJournal: journal)
     }
 
     /// Await outstanding writes for lifecycle tests and explicit shutdown work.

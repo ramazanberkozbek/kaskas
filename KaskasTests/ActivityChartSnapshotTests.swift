@@ -23,12 +23,65 @@ struct ActivityChartSnapshotTests {
                 trendWindow: window, distributionWindow: window, hourlyWindow: window,
                 year: 2026, calendar: calendar)
             let categories = CategoryUsageSummary.make(intervals: intervals, usage: [], from: window.start, to: exclusiveEnd)
-            #expect(snapshot.distributionDays.count == period.rawValue)
+            #expect(snapshot.distributionDays.count == calendar.dateComponents([.day], from: window.start, to: exclusiveEnd).day)
             #expect(snapshot.trend.points.map(\.date) == snapshot.distributionDays.map(\.date))
             #expect(snapshot.hourlyDays.map(\.date) == snapshot.distributionDays.map(\.date))
             #expect(snapshot.distributionDays.reduce(0) { $0 + $1.studying } == categories.total)
             #expect(categories.total == 5400)
         }
+    }
+
+    @Test func calendarPeriodsAndLabelsFollowTheSelectedDate() throws {
+        let calendar = calendar()
+        let date = try #require(calendar.date(from: DateComponents(year: 2026, month: 2, day: 19)))
+        let locale = Locale(identifier: "tr_TR")
+        #expect(StatisticsPeriod.day.rangeLabel(endingAt: date, locale: locale, calendar: calendar) == "Perşembe 19 Şubat")
+        #expect(StatisticsPeriod.seven.rangeLabel(endingAt: date, locale: locale, calendar: calendar) == "13 Şubat–19 Şubat 2026")
+        #expect(StatisticsPeriod.thirty.rangeLabel(endingAt: date, locale: locale, calendar: calendar) == "Şubat 2026")
+        #expect(StatisticsPeriod.year.rangeLabel(endingAt: date, locale: locale, calendar: calendar) == "2026")
+        let month = StatisticsPeriod.thirty.window(endingAt: date, calendar: calendar)
+        #expect(calendar.component(.day, from: month.start) == 1)
+        #expect(calendar.component(.day, from: month.end) == 28)
+        let leapDate = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 29)))
+        let year = StatisticsPeriod.year.window(endingAt: leapDate, calendar: calendar)
+        #expect(calendar.dateComponents([.day], from: year.start, to: year.end).day == 365)
+        let previous = StatisticsPeriod.year.shiftedDate(leapDate, by: -1, calendar: calendar)
+        #expect(calendar.component(.year, from: previous) == 2023)
+        #expect(calendar.component(.day, from: previous) == 28)
+        let january = StatisticsPeriod.thirty.shiftedDate(date, by: -1, calendar: calendar)
+        #expect(calendar.component(.month, from: january) == 1)
+    }
+
+    @Test func dailyTrendMatchesDashboardAcrossTheYearBoundary() throws {
+        let calendar = calendar()
+        let date = try #require(calendar.date(from: DateComponents(year: 2026, month: 1, day: 1)))
+        let previous = try #require(calendar.date(byAdding: .day, value: -1, to: date))
+        let intervals = [
+            ActivityInterval(kind: .studying, startedAt: previous.addingTimeInterval(23 * 3600),
+                             endedAt: date.addingTimeInterval(1800)),
+            ActivityInterval(kind: .studying, startedAt: date.addingTimeInterval(1800),
+                             endedAt: date.addingTimeInterval(3600)),
+            ActivityInterval(kind: .breakTime, startedAt: date.addingTimeInterval(9 * 3600),
+                             endedAt: date.addingTimeInterval(10 * 3600))
+        ]
+        let window = StatisticsPeriod.day.window(endingAt: date, calendar: calendar)
+        let statistics = StatisticsChartSnapshot.make(intervals: intervals, trendWindow: window,
+            distributionWindow: window, hourlyWindow: window, year: 2026, calendar: calendar)
+        let dashboard = DashboardChartSnapshot.make(intervals: intervals, date: date,
+            weekStart: previous, calendar: calendar)
+        #expect(statistics.dailyTrend.date == date)
+        #expect(statistics.dailyTrend.todayHours == dashboard.today.todayHours)
+        #expect(statistics.dailyTrend.yesterdayHours == dashboard.today.yesterdayHours)
+        #expect(statistics.dailyTrend.todayHours[0] == 1)
+        #expect(statistics.dailyTrend.yesterdayHours[23] == 1)
+        #expect(statistics.dailyTrend.todayHours[9] == 0)
+        #expect(statistics.dailyTrend.currentLabelKey(at: date, calendar: calendar) == "dashboard.today")
+        #expect(statistics.dailyTrend.previousLabelKey(at: date, calendar: calendar) == "dashboard.yesterday")
+        let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: date))
+        #expect(statistics.dailyTrend.currentLabelKey(at: tomorrow, calendar: calendar) == "dashboard.day.selected")
+        #expect(statistics.dailyTrend.previousLabelKey(at: tomorrow, calendar: calendar) == "dashboard.day.previous")
+        #expect(statistics.distributionDays.count == 1)
+        #expect(statistics.distributionDays[0].studying == 3600)
     }
 
     @Test func monthlyHourlyAverageIncludesAllThirtyDaysIncludingEmptyDays() throws {
@@ -122,7 +175,7 @@ struct ActivityChartSnapshotTests {
         #expect(snapshot.hourlyPoints.reduce(0) { $0 + $1.minutes } == Double(hours) * 60)
         if hours == 23 { #expect(snapshot.hourlyPoints.first { $0.hour == 2 }?.minutes == repeatedHour) }
         else { #expect(snapshot.hourlyPoints.first { $0.hour == 1 }?.minutes == repeatedHour) }
-        let daily = DashboardTodayChartData.make(date: start, intervals: intervals, calendar: calendar)
+        let daily = DailyStudyChartData.make(date: start, intervals: intervals, calendar: calendar)
         #expect(daily.todayHours.reduce(0, +) == Double(hours))
         #expect(daily.yesterdayHours.reduce(0, +) == 0)
     }

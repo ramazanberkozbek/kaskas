@@ -60,6 +60,11 @@ final class AppUsageController {
         return segments
     }
 
+    func suspendPersistence() { tracker.suspendPersistence() }
+    func resumePersistence() { tracker.resumePersistence() }
+    func waitForPersistence() async { await tracker.waitForPersistence() }
+    func resetHistory(at now: Date) { tracker.resetHistory(at: now) }
+
     private func synchronize(at now: Date) {
         let shouldMonitor = isEnabled && isWorking
         if shouldMonitor && !isMonitoring {

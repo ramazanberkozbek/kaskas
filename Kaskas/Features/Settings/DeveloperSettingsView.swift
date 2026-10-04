@@ -4,6 +4,10 @@ struct DeveloperSettingsView: View {
     let controller: SessionController
     @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
 
+    @State private var showsDeleteConfirmation = false
+    @State private var showsDeleteError = false
+    @State private var historyDeleted = false
+
     var body: some View {
         Form {
             Section {
@@ -145,6 +149,32 @@ struct DeveloperSettingsView: View {
                     .settingsFormSectionHeader()
             }
 
+            Section {
+                Group {
+                    Text("developer.history.description")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Button(role: .destructive) {
+                        showsDeleteConfirmation = true
+                    } label: {
+                        Label("developer.history.delete", systemImage: "trash")
+                    }
+                    .disabled(controller.isDeletingHistory)
+                    if controller.isDeletingHistory {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else if historyDeleted {
+                        Text("developer.history.deleted")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .settingsFormRow()
+            } header: {
+                sectionHeader("developer.section.history")
+                    .settingsFormSectionHeader()
+            }
+
             // MARK: - Live Diagnostics
             Section {
                 Group {
@@ -194,6 +224,27 @@ struct DeveloperSettingsView: View {
         }
         .settingsGroupedFormLayout()
         .scrollIndicators(.hidden)
+        .alert("developer.history.confirmTitle", isPresented: $showsDeleteConfirmation) {
+            Button("developer.history.delete", role: .destructive) {
+                historyDeleted = false
+                Task {
+                    do {
+                        try await controller.deleteHistory()
+                        historyDeleted = true
+                    } catch {
+                        showsDeleteError = true
+                    }
+                }
+            }
+            Button("developer.history.cancel", role: .cancel) { }
+        } message: {
+            Text("developer.history.confirmMessage")
+        }
+        .alert("developer.history.errorTitle", isPresented: $showsDeleteError) {
+            Button("developer.history.ok", role: .cancel) { }
+        } message: {
+            Text("developer.history.errorMessage")
+        }
     }
 
     private var speedBinding: Binding<Double> {

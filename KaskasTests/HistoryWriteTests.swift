@@ -111,6 +111,88 @@ struct HistoryWriteTests {
         #expect(store.loadPendingHistoryEntries().isEmpty)
     }
 
+    @Test func suspendedWriterCannotReplayDeletedPendingHistory() async throws {
+        let suite = "HistoryDeletionRaceTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = SessionStore(defaults: defaults)
+        let database = SuspendedUsageStore()
+        let tracker = AppUsageTracker(sessionStore: store, usageStore: database)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let app = ForegroundApp(bundleID: "test", name: "Test")
+        tracker.update(app: app, at: start)
+        tracker.update(app: nil, at: start.addingTimeInterval(10))
+        while database.continuation == nil { await Task.yield() }
+        tracker.suspendPersistence()
+        tracker.update(app: app, at: start.addingTimeInterval(20))
+        tracker.update(app: nil, at: start.addingTimeInterval(30))
+        database.finish()
+        await tracker.waitForPersistence()
+        #expect(database.batches.count == 1)
+        #expect(tracker.journal.pending.count == 1)
+        database.records.removeAll()
+        tracker.resetHistory(at: start.addingTimeInterval(40))
+        tracker.resumePersistence()
+        await tracker.waitForPersistence()
+        #expect(database.records.isEmpty)
+        #expect(database.batches.count == 1)
+        #expect(store.loadAppUsageJournal().pending.isEmpty)
+    }
+
+    @Test func deletingHistoryClearsDatabaseOutboxesNotesAndCounters() async throws {
+        let suite = "HistoryDeletionTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = SessionStore(defaults: defaults)
+        var configuration = store.loadConfiguration()
+        configuration.idleDetectionEnabled = false
+        configuration.pauseDuringMeetings = false
+        configuration.focusDuration = 1200
+        store.save(configuration: configuration)
+        let container = try ModelContainer(for: ActivityRecord.self, AppUsageRecord.self, BreakRecord.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let activities = ActivityStore(container: container)
+        let usage = AppUsageStore(container: container)
+        let breaks = BreakHistoryStore(container: container)
+        let start = Date().addingTimeInterval(-600)
+        let interval = ActivityInterval(kind: .studying, startedAt: start, endedAt: start.addingTimeInterval(60))
+        let entry = BreakHistoryEntry(id: "old-break", occurredAt: start.addingTimeInterval(60),
+            startedAt: start, focusStartedAt: start, focusedDuration: 60, outcome: .completed, source: .manual)
+        let segment = AppUsageSegment(id: UUID(), app: ForegroundApp(bundleID: "test", name: "Test"),
+            resolution: .unmatched, startedAt: interval.startedAt, endedAt: interval.endedAt)
+        try await activities.insert(interval)
+        try await usage.insert(segment)
+        try await breaks.insert(entry)
+        store.save(activityJournal: ActivityJournal(cursor: ActivityCursor(kind: .studying,
+            startedAt: start, checkpointAt: Date()), pending: [interval]))
+        store.save(appUsageJournal: AppUsageJournal(cursor: nil, pending: [segment]))
+        store.save(pendingHistoryEntries: [entry])
+        store.save(annotation: SessionAnnotation(note: "Old note"), for: interval)
+        var engine = SessionEngine(configuration: configuration, now: start)
+        engine.completedBreaks = 4
+        engine.completedBreaksDay = Calendar.current.startOfDay(for: Date())
+        store.save(state: engine.state)
+        let controller = SessionController(store: store, historyStore: breaks,
+            activityStore: activities, appUsageStore: usage)
+        try await controller.deleteHistory()
+        await controller.waitForScreenTimeRefresh()
+        let end = Date().addingTimeInterval(1)
+        #expect(try await activities.intervalsAsync(from: start, to: end).isEmpty)
+        #expect(try await usage.segmentsAsync(from: start, to: end).isEmpty)
+        #expect(try await breaks.entriesAsync(from: start, to: end).isEmpty)
+        #expect(store.loadPendingHistoryEntries().isEmpty)
+        #expect(store.loadActivityJournal().pending.isEmpty)
+        #expect(store.loadAppUsageJournal().pending.isEmpty)
+        #expect(store.loadActivityJournal().cursor!.startedAt > start)
+        #expect(store.annotation(for: interval).isEmpty)
+        #expect(store.loadConfiguration().focusDuration == 1200)
+        #expect(store.loadSessionState()?.completedBreaks == 0)
+        #expect(controller.breaksTakenToday(at: Date()) == 0)
+        #expect(controller.historyRevision == 1)
+        #expect(!controller.isDeletingHistory)
+        #expect(controller.screenTimeToday() < 5)
+    }
+
     @Test func workerBatchesReplayIdempotentlyAcrossQueryChunks() async throws {
         let container = try ModelContainer(for: ActivityRecord.self, AppUsageRecord.self, BreakRecord.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true))

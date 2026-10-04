@@ -15,6 +15,7 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
         var id: String { "\(date.timeIntervalSinceReferenceDate)-\(hour)" }
     }
 
+    let dailyTrend: DailyStudyChartData
     let trend: StudyTrendData
     let distributionDays: [DailyActivity]
     let distributionPoints: [DistributionPoint]
@@ -22,7 +23,7 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
     let hourlyPoints: [HourlyPoint]
     let year: YearHeatmapData
 
-    /// Includes empty days so the monthly view shows a daily average, not a total.
+    /// Includes empty days so monthly and yearly views show a daily average.
     var averageHourlyPoints: [HourlyPoint] {
         guard let lastDay = hourlyDays.last else { return [] }
         var totals = Array(repeating: 0.0, count: 24)
@@ -32,7 +33,7 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
         }
     }
 
-    static let empty = Self(trend: .empty, distributionDays: [], distributionPoints: [],
+    static let empty = Self(dailyTrend: .empty, trend: .empty, distributionDays: [], distributionPoints: [],
                             hourlyDays: [], hourlyPoints: [], year: .empty)
 
     static func make(intervals: [ActivityInterval], trendWindow: (start: Date, end: Date),
@@ -61,7 +62,8 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
             }
         }
         let yearDays = if let yearStart, let yearEnd { days(in: (yearStart, yearEnd)) } else { [DailyActivity]() }
-        return Self(trend: .make(days: trendDays, history: history, calendar: calendar),
+        return Self(dailyTrend: .make(date: trendWindow.end, intervals: intervals, calendar: calendar),
+                    trend: .make(days: trendDays, history: history, calendar: calendar),
                     distributionDays: distributionDays,
                     distributionPoints: distributionDays.flatMap { day in
                         ActivityKind.allCases.map { DistributionPoint(date: day.date, kind: $0, hours: day.duration(for: $0) / 3600) }

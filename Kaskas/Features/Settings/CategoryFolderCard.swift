@@ -113,8 +113,14 @@ struct CategoryFolderCard: View {
             }
             .buttonStyle(.plain)
 
-            // Action buttons (delete, edit, add)
+            // Action buttons (edit, delete)
             HStack(spacing: 4) {
+                Button(action: startEditing) {
+                    Image(systemName: "pencil")
+                }
+                .buttonStyle(HeaderActionButtonStyle())
+                .accessibilityLabel("Bu kategoriyi düzenle")
+
                 if category.id != "other" {
                     Button(action: onDeleteCategory) {
                         Image(systemName: "trash")
@@ -122,20 +128,8 @@ struct CategoryFolderCard: View {
                     .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
                     .accessibilityLabel("Bu kategoriyi sil")
                 }
-
-                Button(action: startEditing) {
-                    Image(systemName: "pencil")
-                }
-                .buttonStyle(HeaderActionButtonStyle())
-                .accessibilityLabel("Bu kategoriyi düzenle")
-
-                Button(action: onStartAddRule) {
-                    Image(systemName: "plus")
-                }
-                .buttonStyle(HeaderActionButtonStyle())
-                .accessibilityLabel("Bu kategoriye uygulama ekle")
             }
-            .padding(.trailing, 10)
+            .padding(.trailing, SettingsPageLayout.cardInset)
             .padding(.vertical, 8)
         }
     }

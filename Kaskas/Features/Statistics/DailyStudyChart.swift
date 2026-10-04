@@ -1,37 +1,41 @@
 import Charts
 import SwiftUI
 
-struct DashboardTodayChart: View {
-    let data: DashboardTodayChartData
+struct DailyStudyChart: View {
+    let data: DailyStudyChartData
+    let now: Date
     private var date: Date { data.date }
 
     @State private var hoveredHour: Int?
     @Environment(\.locale) private var locale
 
     private var currentLabel: LocalizedStringKey {
-        Calendar.current.isDateInToday(date) ? "dashboard.today" : "dashboard.day.selected"
+        LocalizedStringKey(data.currentLabelKey(at: now))
     }
     private var previousLabel: LocalizedStringKey {
-        Calendar.current.isDateInToday(date) ? "dashboard.yesterday" : "dashboard.day.previous"
+        LocalizedStringKey(data.previousLabelKey(at: now))
     }
 
     var body: some View {
         let current = data.todayHours
         let previous = data.yesterdayHours
+        let visibleHours = data.visibleHours(at: now)
         Chart {
             ForEach(0..<24, id: \.self) { hour in
-                LineMark(
-                    x: .value("Hour", Double(hour) + 0.5),
-                    y: .value("Hours", current[hour]),
-                    series: .value("Day", "today")
-                )
-                .foregroundStyle(StatisticsStyle.studying)
-                if current[hour] > 0 {
-                    PointMark(
-                        x: .value("Hour", Double(hour) + 0.5),
-                        y: .value("Hours", current[hour])
+                if visibleHours.contains(hour) {
+                    LineMark(
+                        x: .value("Hour", data.position(for: hour, at: now)),
+                        y: .value("Hours", current[hour]),
+                        series: .value("Day", "today")
                     )
                     .foregroundStyle(StatisticsStyle.studying)
+                    if current[hour] > 0 {
+                        PointMark(
+                            x: .value("Hour", data.position(for: hour, at: now)),
+                            y: .value("Hours", current[hour])
+                        )
+                        .foregroundStyle(StatisticsStyle.studying)
+                    }
                 }
                 LineMark(
                     x: .value("Hour", Double(hour) + 0.5),
@@ -61,7 +65,7 @@ struct DashboardTodayChart: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let hours = value.as(Double.self) {
-                        Text(StatisticsDuration.label(hours * 3600, locale: locale))
+                        Text(String(format: localizedString("%lld dk", locale: locale), Int64((hours * 60).rounded())))
                     }
                 }
             }
@@ -93,7 +97,9 @@ struct DashboardTodayChart: View {
                             Text(String(format: "%02d:00–%02d:00", hoveredHour, hoveredHour + 1))
                                 .font(.subheadline.weight(.semibold))
                             Divider()
-                            ChartTooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
+                            if visibleHours.contains(hoveredHour) {
+                                ChartTooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
+                            }
                             ChartTooltipRow(previousLabel, value: StatisticsDuration.label(previous[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.average)
                         }
                         .chartTooltip(width: 230)

@@ -101,13 +101,14 @@ struct GeneralSettingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    SettingsDurationRow(
-                        title: "settings.idle.threshold",
-                        subtitle: "settings.idle.threshold.description",
-                        selection: idleThreshold,
-                        options: [1, 3, 5, 10].map { TimeInterval($0 * 60) }
-                    )
-                    .disabled(!controller.configuration.idleDetectionEnabled)
+                    if controller.configuration.idleDetectionEnabled {
+                        SettingsDurationRow(
+                            title: "settings.idle.threshold",
+                            subtitle: "settings.idle.threshold.description",
+                            selection: idleThreshold,
+                            options: [1, 3, 5, 10].map { TimeInterval($0 * 60) }
+                        )
+                    }
                 }
                 .settingsFormRow()
             } header: {

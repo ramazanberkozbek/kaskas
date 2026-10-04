@@ -12,6 +12,7 @@ final class SessionPersistence {
     private let historyStore: (any BreakHistoryRecording)?
     private var persistenceTask: Task<Void, Never>?
     private var persistenceRequested = false
+    private var persistenceSuspended = false
     private var pendingEntries: [BreakHistoryEntry]
 
     init(store: SessionStore, historyStore: (any BreakHistoryRecording)?) {
@@ -33,11 +34,11 @@ final class SessionPersistence {
     }
 
     private func schedulePersistence() {
-        guard historyStore != nil, !pendingEntries.isEmpty else { return }
+        guard !persistenceSuspended, historyStore != nil, !pendingEntries.isEmpty else { return }
         persistenceRequested = true
         guard persistenceTask == nil else { return }
         persistenceTask = Task {
-            while persistenceRequested {
+            while persistenceRequested && !persistenceSuspended {
                 persistenceRequested = false
                 guard let historyStore, !pendingEntries.isEmpty else { continue }
                 let batch = pendingEntries
@@ -68,6 +69,18 @@ final class SessionPersistence {
     @concurrent static func mergeEntriesAsync(_ persisted: [BreakHistoryEntry], buffered: [BreakHistoryEntry],
         from start: Date, to end: Date) async -> [BreakHistoryEntry] {
         mergeEntries(persisted, buffered: buffered, from: start, to: end)
+    }
+
+    func suspendPersistence() { persistenceSuspended = true }
+
+    func resumePersistence() {
+        persistenceSuspended = false
+        schedulePersistence()
+    }
+
+    func resetHistory() {
+        pendingEntries.removeAll()
+        store.save(pendingHistoryEntries: [])
     }
 
     func waitForPersistence() async {

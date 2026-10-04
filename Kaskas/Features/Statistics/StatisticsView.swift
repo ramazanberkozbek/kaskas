@@ -39,13 +39,14 @@ struct StatisticsView: View {
 
                     StatisticsChartSection(
                         title: "stats.trend.title",
-                        subtitle: "stats.trend.subtitle",
-                        legend: [
-                            (StatisticsStyle.studying, "stats.kind.studying"),
-                            (StatisticsStyle.average, "stats.trend.average")
-                        ]
+                        subtitle: period == .day ? "stats.trend.dailySubtitle" : "stats.trend.subtitle",
+                        legend: trendLegend
                     ) {
-                        StudyTrendChart(data: chartSnapshot.trend)
+                        if period == .day {
+                            DailyStudyChart(data: chartSnapshot.dailyTrend, now: now)
+                        } else {
+                            StudyTrendChart(data: chartSnapshot.trend)
+                        }
                     }
 
                     CategoryUsageView(
@@ -71,7 +72,7 @@ struct StatisticsView: View {
 
                     StatisticsChartSection(
                         title: "stats.hourly.title",
-                        subtitle: period == .thirty ? "stats.hourly.averageSubtitle" : "stats.hourly.subtitle",
+                        subtitle: period.usesHourlyAverage ? "stats.hourly.averageSubtitle" : "stats.hourly.subtitle",
                         legend: hourlyLegend
                     ) {
                         StatisticsHourlyChart(
@@ -106,6 +107,7 @@ struct StatisticsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { reload() }
         .onDisappear { refreshTask?.cancel() }
+        .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: period) { _, _ in resetSelectionAndReload() }
         .onChange(of: endDate) { _, _ in resetSelectionAndReload() }
         .onReceive(refreshClock) { date in
@@ -118,27 +120,36 @@ struct StatisticsView: View {
     }
 
     private var dateFilterBar: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            StatisticsRangeControls(period: $period, endDate: $endDate, now: now)
-            Text("stats.range.scope")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 12)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .overlay(alignment: .bottom) { Divider() }
+        StatisticsRangeControls(period: $period, endDate: $endDate, now: now)
+            .padding(.vertical, 12)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .overlay(alignment: .bottom) { Divider() }
     }
 
     private var selectedYear: Int { Calendar.current.component(.year, from: endDate) }
     private var hourlyPeriod: HourlyPeriod { period == .seven ? .week : .day }
-    private var hourlyValueLabel: String { period == .thirty ? "stats.hourly.average" : "stats.kind.studying" }
+    private var hourlyValueLabel: String { period.usesHourlyAverage ? "stats.hourly.average" : "stats.kind.studying" }
 
     private var selectedWindow: (start: Date, end: Date) {
-        period.window(endingAt: endDate)
+        let window = period.window(endingAt: endDate)
+        return (window.start, min(window.end, Calendar.current.startOfDay(for: now)))
     }
 
     private var hourlyPoints: [StatisticsChartSnapshot.HourlyPoint] {
-        period == .thirty ? chartSnapshot.averageHourlyPoints : chartSnapshot.hourlyPoints
+        period.usesHourlyAverage ? chartSnapshot.averageHourlyPoints : chartSnapshot.hourlyPoints
+    }
+
+    private var trendLegend: [(Color, String)] {
+        if period == .day {
+            return [
+                (StatisticsStyle.studying, chartSnapshot.dailyTrend.currentLabelKey(at: now)),
+                (StatisticsStyle.average, chartSnapshot.dailyTrend.previousLabelKey(at: now))
+            ]
+        }
+        return [
+            (StatisticsStyle.studying, "stats.kind.studying"),
+            (StatisticsStyle.average, "stats.trend.average")
+        ]
     }
 
     private var hourlyLegend: [(Color, String)] {

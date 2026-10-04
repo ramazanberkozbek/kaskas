@@ -106,6 +106,7 @@ struct SessionDetailView: View {
                 }
             }
             .pickerStyle(.menu)
+            .dropdownHoverEffect()
             if categorySelection == .automatic,
                isOngoing {
                 Text("dashboard.session.category.provisional").font(.caption).foregroundStyle(.secondary)
