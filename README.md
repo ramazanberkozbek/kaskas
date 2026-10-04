@@ -9,11 +9,12 @@
 # Kaskas
 
 A free, open source break reminder and focus tracker for macOS.<br/>
-Kaskas lives in your menu bar, tracks your study time and reminds you to rest your eyes before you burn out.
+Rest your eyes and stay productive. Kaskas lives in your menu bar, tracks your study time and reminds you to rest before you burn out.
 
 <br/>
 
 <p>
+  <a href="https://github.com/ramazanberkozbek/kaskas/releases/latest"><img alt="Download DMG" src="https://img.shields.io/badge/Download-DMG-007AFF?style=flat&logo=apple&logoColor=white" /></a>
   <img alt="macOS 15+" src="https://img.shields.io/badge/macOS-15%2B-000000?style=flat&logo=apple&logoColor=white" />
   <img alt="Swift" src="https://img.shields.io/badge/Swift-SwiftUI-F05138?style=flat&logo=swift&logoColor=white" />
   <img alt="License GPLv2" src="https://img.shields.io/badge/License-GPLv2-C2410C?style=flat&logo=gnu&logoColor=white" />
@@ -120,6 +121,12 @@ focus. Kaskas follows the idea behind the 20-20-20 rule: every 20 minutes a
 short reminder to look away, and every 45 minutes a real break. It is built
 with native SwiftUI and AppKit, so it feels like part of macOS rather than
 another app fighting for your attention.
+
+## Installation
+
+1. Download **[Kaskas.dmg](https://github.com/ramazanberkozbek/kaskas/releases/latest/download/Kaskas.dmg)** (or browse [all releases](https://github.com/ramazanberkozbek/kaskas/releases)).
+2. Open the DMG and drag **Kaskas** into your **Applications** folder.
+3. Open Kaskas and enjoy healthy breaks.
 
 ## Build from source
 
