@@ -121,7 +121,10 @@ struct MenuBarView: View {
         .onAppear {
             let currentDate = Date.now
             now = currentDate
-            controller.reconcile(at: currentDate)
+            if !controller.sessionSnapshot.status.isPaused,
+               currentDate >= controller.sessionSnapshot.endsAt {
+                controller.reconcile(at: currentDate)
+            }
         }
         .onReceive(clock) { currentDate in
             now = currentDate

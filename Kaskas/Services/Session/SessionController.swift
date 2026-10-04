@@ -49,6 +49,13 @@ final class SessionController {
     @ObservationIgnored private let meetingMonitor: any MeetingActivityMonitoring
     @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
+    @ObservationIgnored private var cachedTodayBaseStudyingTime: TimeInterval?
+    @ObservationIgnored private var cachedTodayStartOfDay: Date?
+
+    private func invalidateScreenTimeTodayCache() {
+        cachedTodayBaseStudyingTime = nil
+        cachedTodayStartOfDay = nil
+    }
 
     init(
         store: SessionStore = SessionStore(),
@@ -105,6 +112,7 @@ final class SessionController {
             return
         }
 
+        invalidateScreenTimeTodayCache()
         hasStarted = true
         if configuration.pauseDuringMeetings {
             meetingMonitor.start { [weak self] active in
@@ -148,6 +156,7 @@ final class SessionController {
     }
 
     func systemDidWake(at now: Date = Date()) {
+        invalidateScreenTimeTodayCache()
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
         let effects = engine.send(.systemResumed(meetingActive: meetingActive), at: now)
         apply(effects, at: now)
@@ -191,13 +200,41 @@ final class SessionController {
     func screenTimeToday(at now: Date = Date()) -> TimeInterval {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: now)
-        let intervals = activityIntervals(from: startOfDay, to: now, now: now)
-        return ActivityStatistics.days(from: startOfDay, through: startOfDay, intervals: intervals, calendar: calendar).first?.studying ?? 0
+
+        if cachedTodayStartOfDay != startOfDay || cachedTodayBaseStudyingTime == nil {
+            cachedTodayStartOfDay = startOfDay
+            let intervals = activityIntervals(from: startOfDay, to: now, now: now)
+            let completedIntervals = intervals.filter { interval in
+                if let cursorStarted = activeStudyingStartedAt,
+                   abs(interval.startedAt.timeIntervalSince(cursorStarted)) < 0.001 {
+                    return false
+                }
+                return true
+            }
+            let base = ActivityStatistics.days(
+                from: startOfDay,
+                through: startOfDay,
+                intervals: completedIntervals,
+                calendar: calendar
+            ).first?.studying ?? 0
+            cachedTodayBaseStudyingTime = base
+        }
+
+        let base = cachedTodayBaseStudyingTime ?? 0
+        if let startedAt = activeStudyingStartedAt {
+            let effectiveStart = max(startOfDay, startedAt)
+            let activeDuration = max(0, now.timeIntervalSince(effectiveStart))
+            return base + activeDuration
+        } else {
+            return base
+        }
     }
 
     func activityIntervals(from start: Date, to end: Date, now: Date = Date()) -> [ActivityInterval] {
         let intervals = activityTracker.intervals(from: start, to: end, now: now)
-        activityStorageFailed = activityTracker.storageFailed
+        if activityStorageFailed != activityTracker.storageFailed {
+            activityStorageFailed = activityTracker.storageFailed
+        }
         return intervals
     }
 
@@ -421,18 +458,21 @@ final class SessionController {
     }
 
     func advanceSession(by seconds: TimeInterval) {
+        invalidateScreenTimeTodayCache()
         engine.advanceTime(by: seconds)
         reconcile()
         refreshSnapshot()
     }
 
     func advanceDay() {
+        invalidateScreenTimeTodayCache()
         engine.advanceDay(at: Date())
         reconcile()
         refreshSnapshot()
     }
 
     func resetSessionCycle() {
+        invalidateScreenTimeTodayCache()
         setSpeedMultiplier(1.0)
         engine.resetFocus(at: Date())
         reconcile()
@@ -522,6 +562,7 @@ final class SessionController {
         at now: Date = Date(),
         activityKind: ActivityKind? = nil
     ) {
+        invalidateScreenTimeTodayCache()
         let kind = activityKind ?? currentActivityKind
         if let record, record.source == .smartPause, let startedAt = record.startedAt {
             activityTracker.update(to: .breakTime, at: startedAt)
@@ -529,7 +570,9 @@ final class SessionController {
         }
         activityTracker.update(to: kind, at: now)
         appUsage.setWorking(hasStarted && kind == .studying, at: now)
-        activityStorageFailed = activityTracker.storageFailed
+        if activityStorageFailed != activityTracker.storageFailed {
+            activityStorageFailed = activityTracker.storageFailed
+        }
         persistence.save(state: engine.state, record: record)
         historySaveFailed = persistence.historySaveFailed
     }
