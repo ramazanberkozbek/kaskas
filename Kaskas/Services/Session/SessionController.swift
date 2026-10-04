@@ -35,6 +35,7 @@ final class SessionController {
 
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
+    @ObservationIgnored private let customWallpaperStore: CustomWallpaperStore
     @ObservationIgnored private let store: SessionStore
     @ObservationIgnored private let persistence: SessionPersistence
     @ObservationIgnored private let activityTracker: ActivityTracker
@@ -49,16 +50,55 @@ final class SessionController {
     @ObservationIgnored private let meetingMonitor: any MeetingActivityMonitoring
     @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
-    @ObservationIgnored private var cachedTodayBaseStudyingTime: TimeInterval?
-    @ObservationIgnored private var cachedTodayStartOfDay: Date?
+    private var cachedTodayBaseStudyingTime: TimeInterval = 0
+    private var cachedTodayStartOfDay: Date?
+    @ObservationIgnored private var screenTimeRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var screenTimeRefreshKey: ScreenTimeRefreshKey?
 
-    private func invalidateScreenTimeTodayCache() {
-        cachedTodayBaseStudyingTime = nil
-        cachedTodayStartOfDay = nil
+    private struct ScreenTimeRefreshKey: Equatable {
+        let day: Date
+        let completedRevision: Int
+    }
+
+    /// Called by lifecycle events and the menu clock, never by a render-time read.
+    /// A checkpoint only moves the active cursor's endpoint, so it reuses the cache.
+    func refreshScreenTimeToday(at now: Date = Date()) {
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: now)
+        let key = ScreenTimeRefreshKey(day: day, completedRevision: activityTracker.completedIntervalsRevision)
+        guard screenTimeRefreshKey != key else { return }
+        screenTimeRefreshKey = key
+        screenTimeRefreshTask?.cancel()
+        let tracker = activityTracker
+        screenTimeRefreshTask = Task { [weak self] in
+            let intervals = await tracker.intervalsAsync(from: day, to: now, now: now, includeActiveCursor: false)
+            guard !Task.isCancelled else { return }
+            let total = await Self.completedStudyingTime(intervals: intervals, day: day, calendar: calendar)
+            guard !Task.isCancelled, let self, self.screenTimeRefreshKey == key else { return }
+            self.cachedTodayBaseStudyingTime = total
+            self.cachedTodayStartOfDay = day
+            self.screenTimeRefreshTask = nil
+        }
+    }
+
+    @concurrent private static func completedStudyingTime(
+        intervals: [ActivityInterval], day: Date, calendar: Calendar
+    ) async -> TimeInterval {
+        ActivityStatistics.days(from: day, through: day, intervals: intervals, calendar: calendar).first?.studying ?? 0
+    }
+
+    /// Allows deterministic validation without moving any work into the getter.
+    func waitForScreenTimeRefresh() async {
+        await screenTimeRefreshTask?.value
+    }
+
+    deinit {
+        screenTimeRefreshTask?.cancel()
     }
 
     init(
         store: SessionStore = SessionStore(),
+        customWallpaperStore: CustomWallpaperStore = .shared,
         historyStore: (any BreakHistoryRecording)? = nil,
         activityStore: (any ActivityRecording)? = nil,
         appUsageStore: (any AppUsageRecording)? = nil,
@@ -78,6 +118,7 @@ final class SessionController {
             UserDefaults.standard.set([configuration.appLanguage.rawValue], forKey: "AppleLanguages")
         }
         self.store = store
+        self.customWallpaperStore = customWallpaperStore
         self.meetingMonitor = meetingMonitor
         self.categoryRegistry = categoryRegistry
         appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore)
@@ -111,6 +152,7 @@ final class SessionController {
         persistence.onHistoryFailureChanged = { [weak self] failed in
             self?.historySaveFailed = failed
         }
+        refreshScreenTimeToday(at: now)
     }
 
     func start() {
@@ -118,7 +160,6 @@ final class SessionController {
             return
         }
 
-        invalidateScreenTimeTodayCache()
         hasStarted = true
         if configuration.pauseDuringMeetings {
             meetingMonitor.start { [weak self] active in
@@ -143,6 +184,7 @@ final class SessionController {
     }
 
     func stop() {
+        wallpaperImportID = nil
         stopIdleMonitoring(at: Date())
         checkpointTimer?.invalidate()
         checkpointTimer = nil
@@ -162,7 +204,6 @@ final class SessionController {
     }
 
     func systemDidWake(at now: Date = Date()) {
-        invalidateScreenTimeTodayCache()
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
         let effects = engine.send(.systemResumed(meetingActive: meetingActive), at: now)
         apply(effects, at: now)
@@ -207,33 +248,12 @@ final class SessionController {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: now)
 
-        if cachedTodayStartOfDay != startOfDay || cachedTodayBaseStudyingTime == nil {
-            cachedTodayStartOfDay = startOfDay
-            let intervals = activityIntervals(from: startOfDay, to: now, now: now)
-            let completedIntervals = intervals.filter { interval in
-                if let cursorStarted = activeStudyingStartedAt,
-                   abs(interval.startedAt.timeIntervalSince(cursorStarted)) < 0.001 {
-                    return false
-                }
-                return true
-            }
-            let base = ActivityStatistics.days(
-                from: startOfDay,
-                through: startOfDay,
-                intervals: completedIntervals,
-                calendar: calendar
-            ).first?.studying ?? 0
-            cachedTodayBaseStudyingTime = base
-        }
-
-        let base = cachedTodayBaseStudyingTime ?? 0
+        let base = cachedTodayStartOfDay == startOfDay ? cachedTodayBaseStudyingTime : 0
         if let startedAt = activeStudyingStartedAt {
             let effectiveStart = max(startOfDay, startedAt)
-            let activeDuration = max(0, now.timeIntervalSince(effectiveStart))
-            return base + activeDuration
-        } else {
-            return base
+            return base + max(0, now.timeIntervalSince(effectiveStart))
         }
+        return base
     }
 
     func activityIntervals(from start: Date, to end: Date, now: Date = Date()) -> [ActivityInterval] {
@@ -332,6 +352,10 @@ final class SessionController {
         }
         let meetingDetectionEnabled = configuration.pauseDuringMeetings && !self.configuration.pauseDuringMeetings
         let dockVisibilityChanged = configuration.showInDock != self.configuration.showInDock
+        if configuration.breakBackground != self.configuration.breakBackground
+            || configuration.customWallpaperPath != self.configuration.customWallpaperPath {
+            wallpaperImportID = nil
+        }
         self.configuration = configuration
         if dockVisibilityChanged { applyDockVisibility() }
         if !configuration.pauseDuringMeetings {
@@ -357,12 +381,25 @@ final class SessionController {
         }
     }
 
-    /// Activates a custom wallpaper only after it has been copied successfully.
-    func setCustomWallpaper(from sourceURL: URL) throws {
-        let targetURL = try CustomWallpaperStore().save(from: sourceURL)
+    @ObservationIgnored private var wallpaperImportID: UUID?
+
+    /// Activates a custom wallpaper only after background copying and image validation succeed.
+    func setCustomWallpaper(from sourceURL: URL) async throws {
+        let requestID = UUID()
+        wallpaperImportID = requestID
+        let wallpaperStore = customWallpaperStore
+        let imported = try await wallpaperStore.save(from: sourceURL, preservingPath: configuration.customWallpaperPath)
+        let revision = CustomWallpaperImages.shared.revision + 1
+        await CustomWallpaperImageWorker.shared.prepareImportedThumbnail(imported, revision: revision)
+        let targetURL = imported.url
+        guard !Task.isCancelled, wallpaperImportID == requestID else {
+            await wallpaperStore.removeOwnedFile(at: targetURL)
+            throw CancellationError()
+        }
         var config = configuration
         config.customWallpaperPath = targetURL.path
         config.breakBackground = .custom
+        CustomWallpaperImages.shared.didImport()
         updateConfiguration(config)
     }
 
@@ -482,21 +519,18 @@ final class SessionController {
     }
 
     func advanceSession(by seconds: TimeInterval) {
-        invalidateScreenTimeTodayCache()
         engine.advanceTime(by: seconds)
         reconcile()
         refreshSnapshot()
     }
 
     func advanceDay() {
-        invalidateScreenTimeTodayCache()
         engine.advanceDay(at: Date())
         reconcile()
         refreshSnapshot()
     }
 
     func resetSessionCycle() {
-        invalidateScreenTimeTodayCache()
         setSpeedMultiplier(1.0)
         engine.resetFocus(at: Date())
         reconcile()
@@ -586,7 +620,6 @@ final class SessionController {
         at now: Date = Date(),
         activityKind: ActivityKind? = nil
     ) {
-        invalidateScreenTimeTodayCache()
         let kind = activityKind ?? currentActivityKind
         if let record, record.source == .smartPause, let startedAt = record.startedAt {
             activityTracker.update(to: .breakTime, at: startedAt)
@@ -599,6 +632,7 @@ final class SessionController {
         }
         persistence.save(state: engine.state, record: record)
         historySaveFailed = persistence.historySaveFailed
+        refreshScreenTimeToday(at: now)
     }
 
     private func refreshSnapshot(at now: Date = Date()) {
@@ -684,5 +718,6 @@ final class SessionController {
                 scheduler.cancel()
             }
         }
+        refreshScreenTimeToday(at: now)
     }
 }

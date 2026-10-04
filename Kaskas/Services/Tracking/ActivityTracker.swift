@@ -6,6 +6,7 @@ final class ActivityTracker {
     private let sessionStore: SessionStore
     private let activityStore: (any ActivityRecording)?
     private(set) var journal: ActivityJournal
+    private(set) var completedIntervalsRevision = 0
     private var persistenceTask: Task<Void, Never>?
     private var persistenceRequested = false
     private(set) var storageFailed = false {
@@ -82,9 +83,9 @@ final class ActivityTracker {
     }
 
 
-    func intervalsAsync(from start: Date, to end: Date, now: Date) async -> [ActivityInterval] {
+    func intervalsAsync(from start: Date, to end: Date, now: Date, includeActiveCursor: Bool = true) async -> [ActivityInterval] {
         var live = journal.pending
-        if let cursor = journal.cursor { live.append(ActivityInterval(kind: cursor.kind, startedAt: cursor.startedAt,
+        if includeActiveCursor, let cursor = journal.cursor { live.append(ActivityInterval(kind: cursor.kind, startedAt: cursor.startedAt,
                 endedAt: cursor.kind == .studying || cursor.kind == .breakTime ? max(cursor.checkpointAt, now) : now)) }
         var persisted: [ActivityInterval] = []
         do {
@@ -110,6 +111,7 @@ final class ActivityTracker {
     private func append(_ kind: ActivityKind, from start: Date, to end: Date) {
         guard end > start else { return }
         journal.pending.append(ActivityInterval(kind: kind, startedAt: start, endedAt: end))
+        completedIntervalsRevision += 1
     }
 
     private func checkpointAndEnqueue() {

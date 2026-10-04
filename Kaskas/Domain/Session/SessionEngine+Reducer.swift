@@ -27,9 +27,7 @@ extension SessionEngine {
             }
 
             effects.dismissAllAlerts()
-            if naturalBreakEntry != nil {
-                effects.play(.playBreakEndSound)
-            }
+            // Restored breaks are recorded silently; their end was not observed live.
             effects.persist(record: naturalBreakEntry, kind: currentActivityKind(at: now))
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
@@ -211,7 +209,7 @@ extension SessionEngine {
 
             if naturalBreakEntry != nil {
                 effects.dismiss(.dismissBreak)
-                effects.play(.playBreakEndSound)
+                // Do not replay a break-end alert after sleep or screen unlock.
             } else if case .onBreak(let r) = status {
                 effects.present(.showBreak(endsAt: r.endsAt))
             }

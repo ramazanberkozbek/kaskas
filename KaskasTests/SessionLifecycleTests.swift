@@ -114,6 +114,49 @@ struct SessionLifecycleTests {
         #expect(snapshot.startedAt == wakeTime)
     }
 
+    @Test(arguments: [SystemCause.sleep, .lock, .quit])
+    func completedAwayBreakIsRecordedWithoutReplayingSounds(cause: SystemCause) {
+        for wasOnBreak in [false, true] {
+            var engine = SessionEngine(configuration: configuration, now: startDate)
+            if wasOnBreak {
+                engine.send(.startBreakNow, at: startDate)
+            }
+            let awayStart = startDate.addingTimeInterval(60)
+            let returnedAt = awayStart.addingTimeInterval(3600)
+            engine.send(.systemSuspended(cause: cause), at: awayStart)
+
+            let effects = engine.send(
+                cause == .quit ? .launch : .systemResumed,
+                at: returnedAt
+            )
+
+            #expect(!effects.contains(.playBreakStartSound))
+            #expect(!effects.contains(.playBreakEndSound))
+            #expect(engine.session.phase == .focusing)
+            #expect(engine.breaksTakenToday(at: returnedAt) == 1)
+            #expect(effects.contains {
+                if case .persistSession(let record, _) = $0 { return record != nil }
+                return false
+            })
+        }
+    }
+
+    @Test
+    func unfinishedBreakResumesSilentlyAndSoundsWhenItEndsWhileAwake() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        engine.send(.sleep, at: startDate.addingTimeInterval(60))
+        let returnedAt = startDate.addingTimeInterval(120)
+        let effects = engine.send(.systemResumed, at: returnedAt)
+
+        #expect(engine.session.phase == .onBreak)
+        #expect(!effects.contains(.playBreakStartSound))
+        #expect(!effects.contains(.playBreakEndSound))
+        #expect(effects.contains(.showBreak(endsAt: engine.session.endsAt)))
+        let endEffects = engine.send(.tick, at: engine.session.endsAt)
+        #expect(endEffects.contains(.playBreakEndSound))
+    }
+
     @Test
     @MainActor
     func lockDuringBreakSuspendsUntilUnlock() {
@@ -267,7 +310,7 @@ struct SessionLifecycleTests {
         engine.send(.sleep, at: sleepTime)
         let effects = engine.send(.systemResumed(meetingActive: false), at: wakeTime)
 
-        #expect(effects.contains(.playBreakEndSound))
+        #expect(!effects.contains(.playBreakEndSound))
         #expect(effects.contains {
             if case .persistSession(let record, let kind) = $0 {
                 return record != nil && kind == .studying

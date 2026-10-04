@@ -21,33 +21,17 @@ struct CategorySettingsView: View {
         controller.categoryRegistry
     }
 
-    private var availableRules: [CategoryRule] {
-        registry.installedRules
-    }
+    @State private var groupedFilteredRules: [String: [CategoryRule]] = [:]
+    @State private var totalMatchingCount = 0
 
-    private var groupedFilteredRules: [String: [CategoryRule]] {
-        let baseRules = availableRules
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-
-        let filtered: [CategoryRule]
-        if query.isEmpty {
-            filtered = baseRules
-        } else {
-            filtered = baseRules.filter {
-                $0.displayName.lowercased().contains(query) ||
-                $0.appIdentifier.lowercased().contains(query)
-            }
-        }
-
-        return Dictionary(grouping: filtered, by: \.categoryId)
+    private func rebuildGrouping() {
+        let snapshot = CategoryRuleGrouping(rules: registry.installedRules, searchText: searchText)
+        groupedFilteredRules = snapshot.groups
+        totalMatchingCount = snapshot.count
     }
 
     private func filteredRules(for categoryId: String) -> [CategoryRule] {
         groupedFilteredRules[categoryId] ?? []
-    }
-
-    private var totalMatchingCount: Int {
-        groupedFilteredRules.values.reduce(0) { $0 + $1.count }
     }
 
     var body: some View {
@@ -118,9 +102,12 @@ struct CategorySettingsView: View {
             }
             .settingsPageContent()
         }
+        .environment(\.categoryApplicationRevision, registry.installationRevision)
         .scrollIndicators(.hidden)
         .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
-        .task { _ = await CategoryRegistry.discoverInstalledApplicationsAsync() }
+        .task { await registry.refreshInstalledApplications(forceRefresh: true) }
+        .onChange(of: registry.installedRules, initial: true) { rebuildGrouping() }
+        .onChange(of: searchText) { rebuildGrouping() }
         .sheet(isPresented: $showingAddSheet) {
             AddCategoryRuleSheet(registry: registry, initialCategory: categoryForNewRule) {
                 if let cat = categoryForNewRule {
@@ -326,5 +313,20 @@ struct CategorySettingsView: View {
 
     private func saveExpansionState() {
         UserDefaults.standard.set(Array(expandedCategories), forKey: Self.expandedCategoriesStorageKey)
+    }
+}
+
+/// Built on input changes, never once per category during rendering.
+struct CategoryRuleGrouping {
+    let groups: [String: [CategoryRule]]
+    let count: Int
+
+    init(rules: [CategoryRule], searchText: String) {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let filtered = query.isEmpty ? rules : rules.filter {
+            $0.displayName.lowercased().contains(query) || $0.appIdentifier.lowercased().contains(query)
+        }
+        groups = Dictionary(grouping: filtered, by: \.categoryId)
+        count = filtered.count
     }
 }

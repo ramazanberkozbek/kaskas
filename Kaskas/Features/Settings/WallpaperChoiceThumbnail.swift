@@ -55,18 +55,12 @@ struct CustomWallpaperChoiceThumbnail: View {
         Button(action: onSelect) {
             VStack(spacing: 6) {
                 ZStack {
-                    if let path = customPath, let nsImage = NSImage(contentsOfFile: path) {
-                        Image(nsImage: nsImage)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        Color.black.opacity(0.3)
-
-                        VStack(spacing: 4) {
-                            Image(systemName: "photo.badge.plus")
-                                .font(.system(size: 18))
-                                .foregroundStyle(.secondary)
-                        }
+                    Color.black.opacity(0.3)
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.secondary)
+                    if let path = customPath {
+                        PreparedCustomWallpaperImage(path: path)
                     }
                 }
                 .frame(width: 96, height: 60)

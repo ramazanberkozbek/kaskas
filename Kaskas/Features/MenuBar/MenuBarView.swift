@@ -121,6 +121,7 @@ struct MenuBarView: View {
         .onAppear {
             let currentDate = Date.now
             now = currentDate
+            controller.refreshScreenTimeToday(at: currentDate)
             if !controller.sessionSnapshot.status.isPaused,
                currentDate >= controller.sessionSnapshot.endsAt {
                 controller.reconcile(at: currentDate)
@@ -128,6 +129,7 @@ struct MenuBarView: View {
         }
         .onReceive(clock) { currentDate in
             now = currentDate
+            controller.refreshScreenTimeToday(at: currentDate)
 
             // The scheduler owns background transitions. This foreground check
             // also keeps the popover correct after sleep or a large clock jump.

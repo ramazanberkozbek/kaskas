@@ -105,14 +105,15 @@ enum AppDiscoveryService: Sendable {
         }
 
         // Build & Package manager artifacts
-        if path.contains("/DerivedData/") ||
-            path.contains("/Debug-") ||
-            path.contains("/Release-") ||
-            path.contains("/build/") ||
-            path.contains("/node_modules/") ||
-            path.contains("/venv/") ||
-            path.contains("/.venv/") ||
-            path.contains("/site-packages/") {
+        let lowerPath = path.lowercased()
+        if lowerPath.contains("/deriveddata/") ||
+            lowerPath.contains("/debug-") ||
+            lowerPath.contains("/release-") ||
+            lowerPath.contains("/build/") ||
+            lowerPath.contains("/node_modules/") ||
+            lowerPath.contains("/venv/") ||
+            lowerPath.contains("/.venv/") ||
+            lowerPath.contains("/site-packages/") {
             return false
         }
 

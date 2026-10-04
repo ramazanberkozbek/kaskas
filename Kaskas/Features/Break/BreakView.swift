@@ -245,25 +245,29 @@ struct BreakBackgroundView: View {
 
     @ViewBuilder
     private var imageLayer: some View {
-        if background == .custom, let path = customWallpaperPath, let nsImage = NSImage(contentsOfFile: path) {
-            Image(nsImage: nsImage)
-                .resizable()
-                .scaledToFill()
+        if background == .custom, let path = customWallpaperPath {
+            ZStack {
+                fallbackGradient
+                PreparedCustomWallpaperImage(path: path)
+            }
         } else if let assetName = background.assetName {
             Image(assetName)
                 .resizable()
                 .scaledToFill()
         } else {
-            // Calm gradient fallback
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.10, blue: 0.16),
-                    Color(red: 0.08, green: 0.22, blue: 0.28),
-                    Color(red: 0.03, green: 0.07, blue: 0.12)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            fallbackGradient
         }
+    }
+
+    private var fallbackGradient: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.05, green: 0.10, blue: 0.16),
+                Color(red: 0.08, green: 0.22, blue: 0.28),
+                Color(red: 0.03, green: 0.07, blue: 0.12)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }

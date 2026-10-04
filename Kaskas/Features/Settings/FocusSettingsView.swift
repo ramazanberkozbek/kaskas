@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct FocusSettingsView: View {
     let controller: SessionController
+    @State private var wallpaperImportTask: Task<Void, Never>?
     @Environment(\.colorScheme) private var colorScheme
     private let focusDurations: [TimeInterval] = [15, 20, 25, 30, 45, 60].map { $0 * 60 }
     private let breakDurations: [TimeInterval] = [1, 3, 5, 10].map { $0 * 60 }
@@ -222,6 +223,10 @@ struct FocusSettingsView: View {
         .background(colorScheme == .dark
             ? Color(red: 0.075, green: 0.075, blue: 0.075)
             : Color(nsColor: .windowBackgroundColor))
+        .onDisappear {
+            wallpaperImportTask?.cancel()
+            wallpaperImportTask = nil
+        }
     }
 
     // MARK: - Helper Row and Header Views
@@ -311,14 +316,20 @@ struct FocusSettingsView: View {
         panel.message = String(localized: "settings.breakAppearance.chooseImageMessage", defaultValue: "Mola ekranı için bir arka plan görseli seçin")
 
         if panel.runModal() == .OK, let url = panel.url {
-            do {
-                try controller.setCustomWallpaper(from: url)
-            } catch {
-                let alert = NSAlert()
-                alert.alertStyle = .warning
-                alert.messageText = localizedString("settings.wallpaper.copyFailed", locale: controller.locale)
-                alert.informativeText = localizedString("settings.wallpaper.copyFailed.description", locale: controller.locale)
-                alert.runModal()
+            wallpaperImportTask?.cancel()
+            wallpaperImportTask = Task {
+                do {
+                    try await controller.setCustomWallpaper(from: url)
+                } catch is CancellationError {
+                    // A newer import superseded this selection.
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    let alert = NSAlert()
+                    alert.alertStyle = .warning
+                    alert.messageText = localizedString("settings.wallpaper.copyFailed", locale: controller.locale)
+                    alert.informativeText = localizedString("settings.wallpaper.copyFailed.description", locale: controller.locale)
+                    alert.runModal()
+                }
             }
         }
     }

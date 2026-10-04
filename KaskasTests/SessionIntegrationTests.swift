@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import Kaskas
@@ -48,25 +49,30 @@ struct SessionIntegrationTests {
     }
 
     @Test
-    func wallpaperFailureKeepsPreviousFileAndSuccessReplacesIt() throws {
+    func wallpaperFailureKeepsPreviousFileAndSuccessCreatesPreparedRevision() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let source = directory.appendingPathComponent("source.png")
         let store = CustomWallpaperStore(directory: directory.appendingPathComponent("wallpapers"))
-        try Data("first image".utf8).write(to: source)
-        let saved = try store.save(from: source)
-        #expect(throws: (any Error).self) {
-            try store.save(from: directory.appendingPathComponent("missing.png"))
+        try CustomWallpaperTests().writeImage(to: source, width: 128, height: 64)
+        let saved = try await store.save(from: source)
+        let firstBytes = try Data(contentsOf: saved.url)
+        await #expect(throws: (any Error).self) {
+            try await store.save(from: directory.appendingPathComponent("missing.png"))
         }
-        #expect(try Data(contentsOf: saved) == Data("first image".utf8))
-        try Data("replacement image".utf8).write(to: source)
-        #expect(try store.save(from: source) == saved)
-        #expect(try Data(contentsOf: saved) == Data("replacement image".utf8))
+        #expect(try Data(contentsOf: saved.url) == firstBytes)
+        try CustomWallpaperTests().writeImage(to: source, width: 64, height: 128)
+        let replacement = try await store.save(from: source)
+        #expect(replacement.url != saved.url)
+        #expect(replacement.thumbnail.height == 128)
+        #expect(try Data(contentsOf: saved.url) == firstBytes)
         // Selecting the existing wallpaper must not delete it before copying.
-        #expect(try store.save(from: saved) == saved)
-        #expect(try Data(contentsOf: saved) == Data("replacement image".utf8))
-        #expect(try FileManager.default.contentsOfDirectory(atPath: store.directory.path) == [saved.lastPathComponent])
+        let reselected = try await store.save(from: replacement.url)
+        #expect(try Data(contentsOf: reselected.url) == Data(contentsOf: replacement.url))
+        await store.removeOwnedFile(at: saved.url)
+        await store.removeOwnedFile(at: replacement.url)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: reselected.url.deletingLastPathComponent().path) == [reselected.url.lastPathComponent])
     }
 
     @Test

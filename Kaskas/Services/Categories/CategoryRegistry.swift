@@ -25,6 +25,7 @@ public final class CategoryRegistry {
 
     private func didChange() {
         cachedResolver = nil
+        rebuildInstalledRules()
         onChange?()
     }
 
@@ -47,12 +48,21 @@ public final class CategoryRegistry {
     }
 
     private static var cachedApps: [DiscoveredApp]?
-    private static let iconCache = NSCache<NSString, NSImage>()
-    private static var installedIdentifiersCache: Set<String>?
+    private static var cachedInstallation: [String: Bool] = [:]
+    private static var discoveryGeneration = 0
+    private static var discoveryTask: Task<CategoryApplicationWorker.InstallationSnapshot, Never>?
+    private static let applicationWorker = CategoryApplicationWorker()
+
+    private(set) var installationRevision = 0
+    /// Includes explicit false results for absent default applications.
+    public private(set) var installationSnapshot: [String: Bool] = [:]
+    public private(set) var installedRules: [CategoryRule] = []
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         loadCustomData()
+        installationSnapshot = Self.cachedInstallation
+        rebuildInstalledRules()
     }
 
     // MARK: - Categories
@@ -173,87 +183,38 @@ public final class CategoryRegistry {
         return merged.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
     }
 
-    /// Returns only rules for applications that are installed on this Mac (or user custom rules).
-    public var installedRules: [CategoryRule] {
-        allRules.filter { rule in
-            if !rule.isDefault { return true }
-            return Self.isAppInstalled(bundleId: rule.appIdentifier, appName: rule.displayName)
+    private func rebuildInstalledRules() {
+        installedRules = allRules.filter {
+            !$0.isDefault || installationSnapshot[$0.appIdentifier.lowercased()] == true
         }
     }
 
+    /// Presentation refresh only. Cancellation prevents publication to a departed view;
+    /// shared discovery can finish and populate the cache for another consumer.
+    public func refreshInstalledApplications(forceRefresh: Bool = false) async {
+        _ = await Self.discoverInstalledApplicationsAsync(forceRefresh: forceRefresh)
+        guard !Task.isCancelled else { return }
+        installationSnapshot = Self.cachedInstallation
+        installationRevision += 1
+        rebuildInstalledRules()
+    }
+
+    /// A cache-only query: installation checks never run from a rendering getter.
     public static func isAppInstalled(bundleId: String, appName: String) -> Bool {
-        let lowBundle = bundleId.lowercased()
-        let lowName = appName.lowercased()
-
-        if lowBundle == Bundle.main.bundleIdentifier?.lowercased() { return true }
-
-        if let cache = installedIdentifiersCache {
-            if (!lowBundle.isEmpty && cache.contains(lowBundle)) || (!lowName.isEmpty && cache.contains(lowName)) { return true }
-            return !bundleId.isEmpty && NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) != nil
-        }
-
-        // Build set cache for all subsequent lookups
-        var identifiers = Set<String>()
-        let apps = cachedApps ?? []
-        for app in apps {
-            if !app.bundleId.isEmpty { identifiers.insert(app.bundleId.lowercased()) }
-            if !app.name.isEmpty { identifiers.insert(app.name.lowercased()) }
-        }
-        installedIdentifiersCache = identifiers
-
-        if (!lowBundle.isEmpty && identifiers.contains(lowBundle)) || (!lowName.isEmpty && identifiers.contains(lowName)) {
-            return true
-        }
-
-        // Fallback: workspace check for system utilities that might not be in query index
-        if !bundleId.isEmpty, NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) != nil {
-            return true
-        }
-
-        return false
+        if bundleId.caseInsensitiveCompare(mainAppBundleIdentifier) == .orderedSame { return true }
+        if cachedApps?.contains(where: {
+            (!bundleId.isEmpty && $0.bundleId.caseInsensitiveCompare(bundleId) == .orderedSame) ||
+            (!appName.isEmpty && $0.name.caseInsensitiveCompare(appName) == .orderedSame)
+        }) == true { return true }
+        return cachedInstallation[bundleId.lowercased()] ?? false
     }
 
-    public static func iconForApp(bundleId: String, appName: String, path: String? = nil) -> NSImage? {
-        let cacheKey = (!bundleId.isEmpty ? bundleId : ((path != nil && !path!.isEmpty) ? path! : appName)).lowercased() as NSString
-        if let cached = iconCache.object(forKey: cacheKey) {
-            return cached
-        }
-
-        var image: NSImage?
-        if let path, !path.isEmpty, FileManager.default.fileExists(atPath: path) {
-            image = NSWorkspace.shared.icon(forFile: path)
-        } else if !bundleId.isEmpty, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
-            image = NSWorkspace.shared.icon(forFile: url.path)
-        } else if let app = NSWorkspace.shared.runningApplications.first(where: {
-            $0.bundleIdentifier == bundleId || $0.localizedName == appName
-        }) {
-            image = app.icon
-        } else {
-            let searchName = appName.hasSuffix(".app") ? appName : "\(appName).app"
-            let standardPaths = AppDiscoveryService.standardApplicationDirectories
-            for basePath in standardPaths {
-                let appPath = (basePath as NSString).appendingPathComponent(searchName)
-                if FileManager.default.fileExists(atPath: appPath) {
-                    image = NSWorkspace.shared.icon(forFile: appPath)
-                    break
-                }
-            }
-            if image == nil {
-                let lowBundle = bundleId.lowercased()
-                let lowName = appName.lowercased()
-                if let found = cachedApps?.first(where: {
-                    (!bundleId.isEmpty && $0.bundleId.lowercased() == lowBundle) ||
-                    (!appName.isEmpty && $0.name.lowercased() == lowName)
-                }), !found.path.isEmpty, FileManager.default.fileExists(atPath: found.path) {
-                    image = NSWorkspace.shared.icon(forFile: found.path)
-                }
-            }
-        }
-
-        if let image {
-            iconCache.setObject(image, forKey: cacheKey)
-        }
-        return image
+    static func loadIcon(for request: CategoryApplicationWorker.IconRequest) async -> NSImage? {
+        guard !Task.isCancelled else { return nil }
+        let thumbnail = await applicationWorker.icon(for: request)
+        guard !Task.isCancelled, let thumbnail else { return nil }
+        // The worker has already rasterized the icon. AppKit UI objects stay on MainActor.
+        return NSImage(cgImage: thumbnail, size: NSSize(width: 32, height: 32))
     }
 
     nonisolated public struct DiscoveredApp: Identifiable, Hashable, Sendable {
@@ -270,39 +231,47 @@ public final class CategoryRegistry {
         }
     }
 
-    public static func discoverInstalledApplications(forceRefresh: Bool = false) -> [DiscoveredApp] {
-        if !forceRefresh, let cached = cachedApps { return cached }
-        return finalizeDiscoveredApps(AppDiscoveryService.performDiskDiscovery())
+    public static func discoverInstalledApplications(forceRefresh: Bool = false) async -> [DiscoveredApp] {
+        await discoverInstalledApplicationsAsync(forceRefresh: forceRefresh)
     }
 
     public static func discoverInstalledApplicationsAsync(forceRefresh: Bool = false) async -> [DiscoveredApp] {
-        if !forceRefresh, let cached = cachedApps { return cached }
-        let diskApps = await Task.detached(priority: .userInitiated) {
-            AppDiscoveryService.performDiskDiscovery()
-        }.value
-        return finalizeDiscoveredApps(diskApps)
+        // Check in-flight work before the cache so forced refresh callers also coalesce.
+        if discoveryTask == nil {
+            if !forceRefresh, let cached = cachedApps { return cached }
+            discoveryGeneration += 1
+            let rules = Self.defaultRules
+            discoveryTask = Task {
+                await applicationWorker.discover(rules: rules, forceRefresh: forceRefresh)
+            }
+        }
+        guard let task = discoveryTask else { return cachedApps ?? [] }
+        let generation = discoveryGeneration
+        let snapshot = await task.value
+        guard generation == discoveryGeneration else { return cachedApps ?? snapshot.apps }
+        cachedApps = snapshot.apps
+        cachedInstallation = snapshot.installed
+        // A completed waiter must not clear a newer refresh started by another waiter.
+        discoveryTask = nil
+        return snapshot.apps
     }
 
-    private static func finalizeDiscoveredApps(_ diskApps: [DiscoveredApp]) -> [DiscoveredApp] {
-        installedIdentifiersCache = nil
-        var apps = diskApps
-        mergeRunningApplications(into: &apps)
-        apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        cachedApps = apps
-        return apps
-    }
-
-    private static func mergeRunningApplications(into apps: inout [DiscoveredApp]) {
+    nonisolated static func mergeRunningApplications(into apps: inout [DiscoveredApp]) {
         var existingBundleIds = Set(apps.map { $0.bundleId.lowercased() })
 
         // Include our own accessory app even when Xcode launches it from DerivedData.
         // Keep the disk scan's build-artifact filters intact for other applications.
-        if let id = Bundle.main.bundleIdentifier,
-           existingBundleIds.insert(id.lowercased()).inserted {
+        if let id = Bundle.main.bundleIdentifier {
             let name = (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
                 ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String)
                 ?? "Kaskas"
-            apps.append(DiscoveredApp(id: id, name: name, bundleId: id, path: Bundle.main.bundleURL.path))
+            let ownApp = DiscoveredApp(id: id, name: name, bundleId: id, path: Bundle.main.bundleURL.path)
+            if let index = apps.firstIndex(where: { $0.bundleId.caseInsensitiveCompare(id) == .orderedSame }) {
+                apps[index] = ownApp
+            } else {
+                apps.append(ownApp)
+            }
+            existingBundleIds.insert(id.lowercased())
         }
 
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {

@@ -104,7 +104,7 @@ struct CategoryRegistryTests {
 
     @Test
     func discoversInstalledApplicationsAndCachesResults() async {
-        let apps = CategoryRegistry.discoverInstalledApplications(forceRefresh: true)
+        let apps = await CategoryRegistry.discoverInstalledApplications(forceRefresh: true)
         #expect(!apps.isEmpty)
 
         // Verifies common standard macOS app is found
@@ -131,6 +131,38 @@ struct CategoryRegistryTests {
         #expect(ownApp?.path == Bundle.main.bundleURL.path)
         #expect(apps.filter { $0.bundleId == Bundle.main.bundleIdentifier }.count == 1)
         #expect(CategoryRegistry.isAppInstalled(bundleId: Bundle.main.bundleIdentifier!, appName: "Kaskas"))
+    }
+
+    @Test
+    func installationSnapshotKeepsCustomRulesAndUpdatesAfterEdits() async {
+        let suiteName = "test_installation_snapshot_\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let registry = CategoryRegistry(defaults: defaults)
+        await registry.refreshInstalledApplications()
+        #expect(registry.installationSnapshot.count == CategoryRegistry.defaultRules.count)
+        let absent = "test.definitely.absent.application"
+        registry.addOrUpdateRule(appIdentifier: absent, displayName: "Absent", categoryId: "coding")
+        #expect(registry.installedRules.contains { $0.appIdentifier == absent })
+        registry.addOrUpdateRule(appIdentifier: absent, displayName: "Absent", categoryId: "design")
+        #expect(registry.installedRules.first { $0.appIdentifier == absent }?.categoryId == "design")
+        let rule = registry.customRules.first { $0.appIdentifier == absent }!
+        registry.removeRule(id: rule.id)
+        #expect(!registry.installedRules.contains { $0.appIdentifier == absent })
+    }
+
+    @Test
+    func cancelledRefreshDoesNotPublishPresentationState() async {
+        let suiteName = "test_cancelled_categories_\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let registry = CategoryRegistry(defaults: defaults)
+        let before = registry.installationSnapshot
+        let task = Task { await registry.refreshInstalledApplications() }
+        task.cancel()
+        await task.value
+        #expect(registry.installationSnapshot == before)
+        #expect(registry.installationRevision == 0)
     }
 
     @Test

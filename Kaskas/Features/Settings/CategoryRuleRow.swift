@@ -82,14 +82,32 @@ struct CategoryRuleRow: View {
 struct CategoryAppIconView: View {
     let bundleId: String
     let appName: String
+    var path: String? = nil
+    var size: CGFloat = 32
+    @State private var icon: NSImage?
+    @State private var loadedRequest: IconLoadID?
+    @Environment(\.categoryApplicationRevision) private var installationRevision
+
+    private struct IconLoadID: Equatable {
+        let request: CategoryApplicationWorker.IconRequest
+        let revision: Int
+    }
+
+    private var loadID: IconLoadID {
+        IconLoadID(request: request, revision: installationRevision)
+    }
+
+    private var request: CategoryApplicationWorker.IconRequest {
+        .init(bundleId: bundleId, appName: appName, path: path)
+    }
 
     var body: some View {
         Group {
-            if let icon = CategoryRegistry.iconForApp(bundleId: bundleId, appName: appName) {
+            if loadedRequest == loadID, let icon {
                 Image(nsImage: icon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 32, height: 32)
+                    .frame(width: size, height: size)
                     .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                     .shadow(color: .black.opacity(0.08), radius: 1, y: 1)
             } else {
@@ -100,8 +118,15 @@ struct CategoryAppIconView: View {
                         .font(.system(size: 15))
                         .foregroundStyle(.secondary)
                 }
-                .frame(width: 32, height: 32)
+                .frame(width: size, height: size)
             }
+        }
+        .task(id: loadID) {
+            let requested = loadID
+            let loaded = await CategoryRegistry.loadIcon(for: requested.request)
+            guard !Task.isCancelled else { return }
+            icon = loaded
+            loadedRequest = requested
         }
     }
 }
@@ -130,5 +155,16 @@ struct HeaderActionButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
             .animation(.easeInOut(duration: 0.15), value: isHovered)
             .onHover { isHovered = $0 }
+    }
+}
+
+private struct CategoryApplicationRevisionKey: EnvironmentKey {
+    static let defaultValue = 0
+}
+
+extension EnvironmentValues {
+    var categoryApplicationRevision: Int {
+        get { self[CategoryApplicationRevisionKey.self] }
+        set { self[CategoryApplicationRevisionKey.self] = newValue }
     }
 }

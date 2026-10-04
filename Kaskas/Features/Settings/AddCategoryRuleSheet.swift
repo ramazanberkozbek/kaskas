@@ -339,6 +339,7 @@ struct AddCategoryRuleSheet: View {
             if installedApps.isEmpty {
                 isLoadingApps = true
                 let apps = await CategoryRegistry.discoverInstalledApplicationsAsync()
+                guard !Task.isCancelled else { return }
                 installedApps = apps
                 isLoadingApps = false
             }
@@ -346,19 +347,7 @@ struct AddCategoryRuleSheet: View {
     }
 
     private func appIcon(for app: CategoryRegistry.DiscoveredApp) -> some View {
-        Group {
-            if let icon = CategoryRegistry.iconForApp(bundleId: app.bundleId, appName: app.name, path: app.path) {
-                Image(nsImage: icon)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-            } else {
-                Image(systemName: "app.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundStyle(.secondary.opacity(0.6))
-            }
-        }
+        CategoryAppIconView(bundleId: app.bundleId, appName: app.name, path: app.path, size: 24)
     }
 
     private func saveRule() {
