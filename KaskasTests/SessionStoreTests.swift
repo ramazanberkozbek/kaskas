@@ -93,16 +93,16 @@ struct SessionStoreTests {
         let configuration = SessionStore(defaults: defaults).loadConfiguration()
         #expect(configuration.focusDuration == 3600)
         #expect(configuration.breakBackground == .aurora)
-        #expect(configuration.breakLayout == .horizon)
-        #expect(configuration.breakSoundEnabled == false)
+        #expect(configuration.breakLayout == .gentleBar)
+        #expect(configuration.breakSoundEnabled == true)
         #expect(configuration.breakSound == .glass)
-        #expect(configuration.breakEndSoundEnabled == false)
+        #expect(configuration.breakEndSoundEnabled == true)
         #expect(configuration.breakEndSound == .glass)
         #expect(configuration.longBreakEnabled == false)
         #expect(configuration.longBreakFrequency == 3)
         #expect(configuration.longBreakDuration == 10 * 60)
         #expect(configuration.microReminderMascot == .flame)
-        #expect(configuration.microReminderColor == .peach)
+        #expect(configuration.microReminderColor == .white)
         #expect(configuration.menuBarDisplayMode == .iconAndTimer)
         #expect(configuration.showInDock == false)
         #expect(configuration.idleDetectionEnabled == true)
@@ -192,7 +192,7 @@ struct SessionStoreTests {
         let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
         let checkpoint = start.addingTimeInterval(25 * 60)
         let relaunch = checkpoint.addingTimeInterval(2 * 60)
-        let original = SessionEngine(now: start)
+        let original = SessionEngine(configuration: FocusConfiguration(focusDuration: 45 * 60), now: start)
         store.save(state: original.state, observedAt: checkpoint)
 
         var restored = SessionEngine(
@@ -214,7 +214,7 @@ struct SessionStoreTests {
 
         let store = SessionStore(defaults: defaults)
         let startDate = Date(timeIntervalSinceReferenceDate: 1_000_000)
-        let engine = SessionEngine(now: startDate)
+        let engine = SessionEngine(configuration: FocusConfiguration(focusDuration: 45 * 60), now: startDate)
         store.save(configuration: engine.configuration)
         store.save(state: engine.state)
 
@@ -269,5 +269,31 @@ struct SessionStoreTests {
 
         let reloaded = store.loadConfiguration()
         #expect(reloaded.appLanguage == .turkish)
+    }
+
+    @Test
+    func defaultConfigurationHasExpectedValues() {
+        let config = FocusConfiguration()
+        #expect(config.focusDuration == 25 * 60)
+        #expect(config.breakDuration == 5 * 60)
+        #expect(config.snoozeDuration == 5 * 60)
+        #expect(config.longBreakEnabled == false)
+        #expect(config.breakBackground == .snowPeaks)
+        #expect(config.breakLayout == .gentleBar)
+        #expect(config.breakSoundEnabled == true)
+        #expect(config.breakSound == .glass)
+        #expect(config.breakEndSoundEnabled == true)
+        #expect(config.breakEndSound == .glass)
+        #expect(config.microReminderInterval == 20 * 60)
+        #expect(config.microReminderMascot == .flame)
+        #expect(config.microReminderColor == .white)
+        #expect(config.breakWarningEnabled == true)
+        #expect(config.breakWarningLeadTime == 20)
+        #expect(config.notificationPosition == .center)
+        #expect(config.idleDetectionEnabled == true)
+        #expect(config.idleThreshold == 3 * 60)
+        #expect(config.menuBarDisplayMode == .iconAndTimer)
+        #expect(config.showInDock == false)
+        #expect(config.appLanguage == .system)
     }
 }

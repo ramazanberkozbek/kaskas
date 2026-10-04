@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 struct FocusSettingsView: View {
     let controller: SessionController
     @Environment(\.colorScheme) private var colorScheme
-    private let focusDurations: [TimeInterval] = [20, 30, 45, 60].map { $0 * 60 }
+    private let focusDurations: [TimeInterval] = [15, 20, 25, 30, 45, 60].map { $0 * 60 }
     private let breakDurations: [TimeInterval] = [1, 3, 5, 10].map { $0 * 60 }
     private let longBreakDurations: [TimeInterval] = [5, 10, 15, 30].map { $0 * 60 }
     private let snoozeDurations: [TimeInterval] = [3, 5, 10, 15].map { $0 * 60 }

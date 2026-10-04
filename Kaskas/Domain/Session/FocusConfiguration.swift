@@ -200,21 +200,21 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var appLanguage: AppLanguage
 
     init(
-        focusDuration: TimeInterval = 45 * 60,
+        focusDuration: TimeInterval = 25 * 60,
         microReminderInterval: TimeInterval = 20 * 60,
         breakDuration: TimeInterval = 5 * 60,
         longBreakEnabled: Bool = false,
         longBreakFrequency: Int = 3,
         longBreakDuration: TimeInterval = 10 * 60,
         snoozeDuration: TimeInterval = 5 * 60,
-        breakBackground: BreakBackground = .mountainLake,
-        breakLayout: BreakLayout = .horizon,
-        breakSoundEnabled: Bool = false,
+        breakBackground: BreakBackground = .snowPeaks,
+        breakLayout: BreakLayout = .gentleBar,
+        breakSoundEnabled: Bool = true,
         breakSound: BreakSound = .glass,
-        breakEndSoundEnabled: Bool = false,
+        breakEndSoundEnabled: Bool = true,
         breakEndSound: BreakSound = .glass,
         microReminderMascot: MicroReminderMascot = .flame,
-        microReminderColor: MicroReminderColor = .peach,
+        microReminderColor: MicroReminderColor = .white,
         customWallpaperPath: String? = nil,
         pauseDuringMeetings: Bool = true,
         idleDetectionEnabled: Bool = true,
@@ -294,15 +294,15 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             breakBackground: try container.decodeIfPresent(
                 BreakBackground.self,
                 forKey: .breakBackground
-            ) ?? .mountainLake,
+            ) ?? .snowPeaks,
             breakLayout: try container.decodeIfPresent(
                 BreakLayout.self,
                 forKey: .breakLayout
-            ) ?? .horizon,
+            ) ?? .gentleBar,
             breakSoundEnabled: try container.decodeIfPresent(
                 Bool.self,
                 forKey: .breakSoundEnabled
-            ) ?? false,
+            ) ?? true,
             breakSound: try container.decodeIfPresent(
                 BreakSound.self,
                 forKey: .breakSound
@@ -310,7 +310,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             breakEndSoundEnabled: try container.decodeIfPresent(
                 Bool.self,
                 forKey: .breakEndSoundEnabled
-            ) ?? false,
+            ) ?? true,
             breakEndSound: try container.decodeIfPresent(
                 BreakSound.self,
                 forKey: .breakEndSound
@@ -322,7 +322,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             microReminderColor: try container.decodeIfPresent(
                 MicroReminderColor.self,
                 forKey: .microReminderColor
-            ) ?? .peach,
+            ) ?? .white,
             customWallpaperPath: try container.decodeIfPresent(
                 String.self,
                 forKey: .customWallpaperPath
