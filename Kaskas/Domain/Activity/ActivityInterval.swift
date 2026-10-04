@@ -1,6 +1,6 @@
 import Foundation
 
-enum ActivityKind: String, Codable, CaseIterable, Sendable {
+nonisolated enum ActivityKind: String, Codable, CaseIterable, Sendable {
     case studying
     case breakTime
     case computerInactive
@@ -8,7 +8,7 @@ enum ActivityKind: String, Codable, CaseIterable, Sendable {
     case meeting
 }
 
-struct ActivityInterval: Codable, Equatable, Identifiable, Sendable {
+nonisolated struct ActivityInterval: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let kind: ActivityKind
     let startedAt: Date

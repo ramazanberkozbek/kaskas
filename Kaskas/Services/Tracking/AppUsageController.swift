@@ -53,6 +53,12 @@ final class AppUsageController {
         return segments
     }
 
+    func segmentsAsync(from start: Date, to end: Date, now: Date) async -> [AppUsageSegment] {
+        let segments = await tracker.segmentsAsync(from: start, to: end, now: now)
+        storageFailed = tracker.storageFailed
+        return segments
+    }
+
     private func synchronize(at now: Date) {
         let shouldMonitor = isEnabled && isWorking
         if shouldMonitor && !isMonitoring {

@@ -1,14 +1,14 @@
 import Foundation
 
-struct StatisticsChartSnapshot {
-    struct DistributionPoint: Identifiable {
+nonisolated struct StatisticsChartSnapshot: Sendable {
+    struct DistributionPoint: Identifiable, Sendable {
         let date: Date
         let kind: ActivityKind
         let hours: Double
         var id: String { "\(date.timeIntervalSinceReferenceDate)-\(kind.rawValue)" }
     }
 
-    struct HourlyPoint: Identifiable {
+    struct HourlyPoint: Identifiable, Sendable {
         let date: Date
         let hour: Int
         let minutes: Double
@@ -38,24 +38,48 @@ struct StatisticsChartSnapshot {
     static func make(intervals: [ActivityInterval], trendWindow: (start: Date, end: Date),
                      distributionWindow: (start: Date, end: Date), hourlyWindow: (start: Date, end: Date),
                      year: Int, calendar: Calendar = .current) -> Self {
-        let trendDays = ActivityStatistics.days(from: trendWindow.start, through: trendWindow.end, intervals: intervals, calendar: calendar)
-        let distributionDays = ActivityStatistics.days(from: distributionWindow.start, through: distributionWindow.end, intervals: intervals, calendar: calendar)
-        let hourlyDays = ActivityStatistics.days(from: hourlyWindow.start, through: hourlyWindow.end, intervals: intervals, calendar: calendar)
+        let yearStart = calendar.date(from: DateComponents(year: year, month: 1, day: 1))
+        let yearEnd = calendar.date(from: DateComponents(year: year, month: 12, day: 31))
+        let averageStart = calendar.date(byAdding: .day, value: -6, to: trendWindow.start) ?? trendWindow.start
+        let first = min(averageStart, distributionWindow.start, hourlyWindow.start, yearStart ?? averageStart)
+        let last = max(trendWindow.end, distributionWindow.end, hourlyWindow.end, yearEnd ?? trendWindow.end)
+        // One daily aggregation supplies every chart and the rolling-average history.
+        let history = ActivityStatistics.days(from: first, through: last, intervals: intervals, calendar: calendar)
+        func days(in window: (start: Date, end: Date)) -> [DailyActivity] {
+            let start = calendar.startOfDay(for: window.start)
+            let end = calendar.startOfDay(for: window.end)
+            return history.filter { $0.date >= start && $0.date <= end }
+        }
+        let trendDays = days(in: trendWindow)
+        let distributionDays = days(in: distributionWindow)
+        let hourlyDays = days(in: hourlyWindow)
+        let minutesByDay = ActivityStatistics.focusMinutesByDay(from: hourlyWindow.start, through: hourlyWindow.end,
+            intervals: intervals, calendar: calendar)
         let hourlyPoints = hourlyDays.flatMap { day in
-            ActivityStatistics.focusMinutesByHour(on: day.date, intervals: intervals, calendar: calendar).enumerated().map { hour, minutes in
+            (minutesByDay[day.date] ?? Array(repeating: 0, count: 24)).enumerated().map { hour, minutes in
                 HourlyPoint(date: day.date, hour: hour, minutes: minutes)
             }
         }
-        let yearDays: [DailyActivity]
-        if let start = calendar.date(from: DateComponents(year: year, month: 1, day: 1)),
-           let end = calendar.date(from: DateComponents(year: year, month: 12, day: 31)) {
-            yearDays = ActivityStatistics.days(from: start, through: end, intervals: intervals, calendar: calendar)
-        } else { yearDays = [] }
-        return Self(trend: .make(days: trendDays, intervals: intervals, calendar: calendar),
+        let yearDays = if let yearStart, let yearEnd { days(in: (yearStart, yearEnd)) } else { [DailyActivity]() }
+        return Self(trend: .make(days: trendDays, history: history, calendar: calendar),
                     distributionDays: distributionDays,
                     distributionPoints: distributionDays.flatMap { day in
                         ActivityKind.allCases.map { DistributionPoint(date: day.date, kind: $0, hours: day.duration(for: $0) / 3600) }
                     }, hourlyDays: hourlyDays, hourlyPoints: hourlyPoints,
                     year: .make(year: year, days: yearDays, calendar: calendar))
+    }
+}
+
+nonisolated struct StatisticsRefreshSnapshot: Sendable {
+    let categories: CategoryUsageSummary
+    let chart: StatisticsChartSnapshot
+
+    @concurrent static func make(intervals: [ActivityInterval], usage: [AppUsageSegment],
+                                window: (start: Date, end: Date), categoryEnd: Date,
+                                year: Int, calendar: Calendar) async throws -> Self {
+        try Task.checkCancellation()
+        return Self(categories: .make(intervals: intervals, usage: usage, from: window.start, to: categoryEnd),
+             chart: .make(intervals: intervals, trendWindow: window, distributionWindow: window,
+                          hourlyWindow: window, year: year, calendar: calendar))
     }
 }

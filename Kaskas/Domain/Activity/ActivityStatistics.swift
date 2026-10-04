@@ -1,6 +1,6 @@
 import Foundation
 
-struct DailyActivity: Identifiable, Equatable {
+nonisolated struct DailyActivity: Identifiable, Equatable, Sendable {
     let date: Date
     var studying: TimeInterval = 0
     var breakTime: TimeInterval = 0
@@ -31,7 +31,7 @@ struct DailyActivity: Identifiable, Equatable {
     }
 }
 
-enum ActivityStatistics {
+nonisolated enum ActivityStatistics {
     static func focusRanges(
         on date: Date,
         intervals: [ActivityInterval],
@@ -94,6 +94,28 @@ enum ActivityStatistics {
             }
         }
         return days
+    }
+
+    /// Merges focus history once for the entire window, then splits it into
+    /// calendar hours. Repeated DST hours accumulate in the same display bucket.
+    static func focusMinutesByDay(from start: Date, through end: Date,
+                                  intervals: [ActivityInterval], calendar: Calendar = .current) -> [Date: [Double]] {
+        let first = calendar.startOfDay(for: start)
+        let last = calendar.startOfDay(for: end)
+        guard first <= last,
+              let exclusiveEnd = calendar.date(byAdding: .day, value: 1, to: last) else { return [:] }
+        var result: [Date: [Double]] = [:]
+        for range in mergedRanges(of: .studying, from: first, to: exclusiveEnd, intervals: intervals) {
+            var cursor = range.start
+            while cursor < range.end {
+                guard let hour = calendar.dateInterval(of: .hour, for: cursor) else { break }
+                let sliceEnd = min(range.end, hour.end)
+                let day = calendar.startOfDay(for: cursor)
+                result[day, default: Array(repeating: 0, count: 24)][calendar.component(.hour, from: cursor)] += sliceEnd.timeIntervalSince(cursor) / 60
+                cursor = sliceEnd
+            }
+        }
+        return result
     }
 
     private static func mergedRanges(

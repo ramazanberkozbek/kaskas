@@ -77,6 +77,32 @@ final class ActivityTracker {
             .sorted { $0.startedAt < $1.startedAt }
     }
 
+
+    func intervalsAsync(from start: Date, to end: Date, now: Date) async -> [ActivityInterval] {
+        var live = journal.pending
+        if let cursor = journal.cursor { live.append(ActivityInterval(kind: cursor.kind, startedAt: cursor.startedAt,
+                endedAt: cursor.kind == .studying || cursor.kind == .breakTime ? max(cursor.checkpointAt, now) : now)) }
+        var persisted: [ActivityInterval] = []
+        do {
+            if let activityStore { persisted = try await activityStore.intervalsAsync(from: start, to: end) }
+        } catch is CancellationError {
+            return []
+        } catch {
+            storageFailed = true
+            NSLog("Kaskas: Failed to read history: %@", String(describing: error))
+        }
+        guard !Task.isCancelled else { return [] }
+        return await Self.merge(persisted: persisted, live: live, from: start, to: end)
+    }
+
+    @concurrent private static func merge(persisted: [ActivityInterval], live: [ActivityInterval], from start: Date, to end: Date) async -> [ActivityInterval] {
+        var byID: [String: ActivityInterval] = [:]
+        for value in persisted { byID[value.id] = value }
+        for value in live { byID[value.id] = value }
+        return byID.values.filter { $0.startedAt < end && $0.endedAt > start }
+            .sorted { $0.startedAt < $1.startedAt }
+    }
+
     private func append(_ kind: ActivityKind, from start: Date, to end: Date) {
         guard end > start else { return }
         journal.pending.append(ActivityInterval(kind: kind, startedAt: start, endedAt: end))

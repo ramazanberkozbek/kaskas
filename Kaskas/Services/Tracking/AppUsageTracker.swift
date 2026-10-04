@@ -59,6 +59,31 @@ final class AppUsageTracker {
             .sorted { $0.startedAt < $1.startedAt }
     }
 
+
+    func segmentsAsync(from start: Date, to end: Date, now: Date) async -> [AppUsageSegment] {
+        var live = journal.pending
+        if let cursor = journal.cursor { live.append(cursor.segment(endingAt: now)) }
+        var persisted: [AppUsageSegment] = []
+        do {
+            if let usageStore { persisted = try await usageStore.segmentsAsync(from: start, to: end) }
+        } catch is CancellationError {
+            return []
+        } catch {
+            storageFailed = true
+            NSLog("Kaskas: Failed to read history: %@", String(describing: error))
+        }
+        guard !Task.isCancelled else { return [] }
+        return await Self.merge(persisted: persisted, live: live, from: start, to: end)
+    }
+
+    @concurrent private static func merge(persisted: [AppUsageSegment], live: [AppUsageSegment], from start: Date, to end: Date) async -> [AppUsageSegment] {
+        var byID: [UUID: AppUsageSegment] = [:]
+        for value in persisted { byID[value.id] = value }
+        for value in live { byID[value.id] = value }
+        return byID.values.filter { $0.startedAt < end && $0.endedAt > start }
+            .sorted { $0.startedAt < $1.startedAt }
+    }
+
     private func append(_ cursor: AppUsageCursor, endingAt end: Date) {
         guard end > cursor.startedAt else { return }
         journal.pending.append(cursor.segment(endingAt: end))

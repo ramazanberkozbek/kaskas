@@ -1,7 +1,7 @@
 import Foundation
 
-struct StudySession: Identifiable {
-    struct Segment: Identifiable {
+nonisolated struct StudySession: Identifiable, Sendable {
+    struct Segment: Identifiable, Sendable {
         let start: Date
         var end: Date
 
@@ -34,7 +34,7 @@ struct StudySession: Identifiable {
     }
 }
 
-enum StudySessionGrouping {
+nonisolated enum StudySessionGrouping {
     static let maximumInterruption: TimeInterval = 4 * 60
     static let minimumCountedInterruption: TimeInterval = 30
     static let minimumDefaultDuration: TimeInterval = 5 * 60

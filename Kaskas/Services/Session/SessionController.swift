@@ -238,6 +238,19 @@ final class SessionController {
         return intervals
     }
 
+    func activityIntervalsAsync(from start: Date, to end: Date, now: Date) async -> [ActivityInterval] {
+        let intervals = await activityTracker.intervalsAsync(from: start, to: end, now: now)
+        if activityStorageFailed != activityTracker.storageFailed {
+            activityStorageFailed = activityTracker.storageFailed
+        }
+        return intervals
+    }
+
+    func breakEntriesAsync(from start: Date, through end: Date) async -> [BreakHistoryEntry] {
+        guard let breakHistoryStore else { return [] }
+        return (try? await breakHistoryStore.entriesAsync(from: start, to: end.addingTimeInterval(0.001))) ?? []
+    }
+
     func annotation(for interval: ActivityInterval) -> SessionAnnotation {
         store.annotation(for: interval)
     }

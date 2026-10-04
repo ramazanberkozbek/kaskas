@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class BreakRecord {
+nonisolated final class BreakRecord {
     @Attribute(.unique) var recordID: String
     var occurredAt: Date
     var startedAt: Date?
@@ -45,8 +45,10 @@ protocol BreakHistoryRecording {
 @MainActor
 final class BreakHistoryStore: BreakHistoryRecording {
     private let context: ModelContext
+    private let container: ModelContainer
 
     init(container: ModelContainer) {
+        self.container = container
         context = ModelContext(container)
     }
 
@@ -76,5 +78,9 @@ final class BreakHistoryStore: BreakHistoryRecording {
             sortBy: [SortDescriptor(\.occurredAt)]
         )
         return try context.fetch(descriptor).compactMap(\.entry)
+    }
+
+    func entriesAsync(from start: Date, to end: Date) async throws -> [BreakHistoryEntry] {
+        try await HistoryReadWorker.entries(container: container, from: start, to: end)
     }
 }

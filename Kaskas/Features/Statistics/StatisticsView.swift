@@ -11,8 +11,7 @@ struct StatisticsView: View {
     @State private var categorySummary: CategoryUsageSummary = .empty
     @State private var chartSnapshot: StatisticsChartSnapshot = .empty
     @State private var loaded = false
-    @State private var loadedStart: Date?
-    @State private var loadedEnd: Date?
+    @State private var refreshTask: Task<Void, Never>?
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.locale) private var locale
 
@@ -105,7 +104,8 @@ struct StatisticsView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear { reload(force: true) }
+        .onAppear { reload() }
+        .onDisappear { refreshTask?.cancel() }
         .onChange(of: period) { _, _ in resetSelectionAndReload() }
         .onChange(of: endDate) { _, _ in resetSelectionAndReload() }
         .onReceive(refreshClock) { date in
@@ -113,7 +113,7 @@ struct StatisticsView: View {
             now = date
             let today = Calendar.current.startOfDay(for: date)
             if endDate == previousToday { endDate = today }
-            reload(force: true)
+            reload()
         }
     }
 
@@ -161,25 +161,32 @@ struct StatisticsView: View {
         reload()
     }
 
-    private func reload(force: Bool = false) {
-        let trace = PerformanceTrace.begin("Statistics reload")
-        defer { PerformanceTrace.end(trace) }
+    private func reload() {
+        refreshTask?.cancel()
         let calendar = Calendar.current
-        let trendStart = calendar.date(byAdding: .day, value: -6, to: selectedWindow.start) ?? selectedWindow.start
-        let yearStart = calendar.date(from: DateComponents(year: selectedYear, month: 1, day: 1)) ?? now
+        let window = selectedWindow
+        let year = selectedYear
+        let refreshNow = now
+        let trendStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
+        let yearStart = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) ?? window.start
+        let yearEnd = calendar.date(byAdding: .year, value: 1, to: yearStart) ?? refreshNow
+        let categoryEnd = calendar.date(byAdding: .day, value: 1, to: window.end) ?? refreshNow
         let start = min(trendStart, yearStart)
-        let end = calendar.date(byAdding: .day, value: 1, to: now) ?? now
-        let categoryEnd = calendar.date(byAdding: .day, value: 1, to: selectedWindow.end) ?? now
-        let coversWindow = loadedStart.map { start >= $0 } == true && loadedEnd.map { end <= $0 } == true
-        if force || !coversWindow {
-            intervals = controller.activityIntervals(from: start, to: end, now: now)
-            loadedStart = start
-            loadedEnd = end
+        let end = min(max(yearEnd, categoryEnd), refreshNow)
+        refreshTask = Task {
+            let trace = PerformanceTrace.begin("Statistics reload")
+            defer { PerformanceTrace.end(trace) }
+            let history = await controller.activityIntervalsAsync(from: start, to: end, now: refreshNow)
+            guard !Task.isCancelled else { return }
+            let usage = await controller.appUsage.segmentsAsync(from: window.start, to: min(categoryEnd, refreshNow), now: refreshNow)
+            guard !Task.isCancelled else { return }
+            guard let snapshot = try? await StatisticsRefreshSnapshot.make(intervals: history, usage: usage,
+                window: window, categoryEnd: categoryEnd, year: year, calendar: calendar) else { return }
+            guard !Task.isCancelled else { return }
+            intervals = history
+            categorySummary = snapshot.categories
+            chartSnapshot = snapshot.chart
             loaded = true
         }
-        let appUsage = controller.appUsage.segments(from: selectedWindow.start, to: categoryEnd, now: now)
-        categorySummary = .make(intervals: intervals, usage: appUsage, from: selectedWindow.start, to: categoryEnd)
-        chartSnapshot = .make(intervals: intervals, trendWindow: selectedWindow,
-                              distributionWindow: selectedWindow, hourlyWindow: selectedWindow, year: selectedYear)
     }
 }

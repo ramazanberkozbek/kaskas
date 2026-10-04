@@ -111,7 +111,7 @@ struct MeetingActivityMonitorTests {
         monitor.start { _ in }
         try await waitUntil { hardware.snapshot.discoveries >= 2 }
         hardware.state.withLock { $0.deviceListListenerInstalled = true }
-        try await waitUntil { hardware.snapshot.listenerSynchronizations >= 3 }
+        try await waitUntil { hardware.snapshot.successfulSynchronizations >= 1 }
         let discoveries = hardware.snapshot.discoveries
         let probes = hardware.snapshot.probes
         try await waitUntil { hardware.snapshot.probes >= probes + 2 }
@@ -155,6 +155,7 @@ nonisolated private final class FakeMeetingHardware: MeetingActivityHardware, Se
         var discoveries = 0
         var probes = 0
         var listenerSynchronizations = 0
+        var successfulSynchronizations = 0
         var stops = 0
         var allOperationsOffMain = true
         var deviceListListenerInstalled = true
@@ -192,6 +193,9 @@ nonisolated private final class FakeMeetingHardware: MeetingActivityHardware, Se
         return state.withLock {
             $0.allOperationsOffMain = $0.allOperationsOffMain && !Thread.isMainThread
             $0.listenerSynchronizations += 1
+            if $0.deviceListListenerInstalled {
+                $0.successfulSynchronizations += 1
+            }
             $0.queue = queue
             $0.callback = onChange
             return $0.deviceListListenerInstalled

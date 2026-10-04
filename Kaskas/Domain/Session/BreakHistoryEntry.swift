@@ -20,7 +20,7 @@ struct BreakHistoryEntry: Codable, Equatable, Sendable {
     let outcome: Outcome
     let source: Source
 
-    var isSessionBoundary: Bool {
+    nonisolated var isSessionBoundary: Bool {
         startedAt != nil && source != .smartPause
     }
 

@@ -13,6 +13,7 @@ struct DashboardView: View {
     @State private var selectedSession: DashboardCategorySnapshot.Session?
     @State private var showingCalendar = false
     @State private var annotationsRevision = 0
+    @State private var refreshTask: Task<Void, Never>?
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -205,6 +206,7 @@ struct DashboardView: View {
             reload()
         }
         .onAppear(perform: reload)
+        .onDisappear { refreshTask?.cancel() }
         .onChange(of: endDate) { _, newDate in
             let normalized = Calendar.current.startOfDay(for: newDate)
             if endDate != normalized {
@@ -371,35 +373,31 @@ struct DashboardView: View {
     }
 
     private func reload() {
-        let trace = PerformanceTrace.begin("Dashboard refresh")
-        defer { PerformanceTrace.end(trace) }
+        refreshTask?.cancel()
+        let date = endDate
+        let refreshNow = now
         let calendar = Calendar.current
-        let selectedDay = calendar.startOfDay(for: endDate)
-        let averageStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: selectedDay) ?? selectedDay
-        let today = calendar.startOfDay(for: now)
-        let start = min(averageStart, yesterday, today, selectedDay)
-        let intervals = controller.activityIntervals(from: start, to: now, now: now)
-        let appUsage = controller.appUsage.segments(from: start, to: now, now: now)
-
-        // Both periods share the same source window. Switching the picker only
-        // selects prepared data; it must not fetch history or rebuild charts.
-        let sessionEnd = calendar.date(byAdding: .day, value: 1, to: selectedDay) ?? now
-        let breakEntries = controller.breakEntries(from: window.start, through: min(sessionEnd, now))
-        let timeline = CategoryUsageSummary.Timeline(usage: appUsage)
-        func categories(from start: Date) -> DashboardCategorySnapshot {
-            let targetIntervals = intervals.filter {
-                $0.kind == .studying && $0.startedAt >= start && $0.startedAt < sessionEnd
-            }
-            // Group each period independently: a session spanning midnight may
-            // have different source intervals in the day and week views.
-            let sessions = Array(StudySessionGrouping.group(targetIntervals, breakEntries: breakEntries).reversed())
-            return .make(intervals: intervals, timeline: timeline, sessions: sessions,
-                         from: start, to: sessionEnd)
+        let weekStart = window.start
+        let selectedDay = calendar.startOfDay(for: date)
+        let start = calendar.date(byAdding: .day, value: -6, to: weekStart) ?? weekStart
+        let sessionEnd = calendar.date(byAdding: .day, value: 1, to: selectedDay) ?? refreshNow
+        let end = min(sessionEnd, refreshNow)
+        refreshTask = Task {
+            let trace = PerformanceTrace.begin("Dashboard refresh")
+            defer { PerformanceTrace.end(trace) }
+            let intervals = await controller.activityIntervalsAsync(from: start, to: end, now: refreshNow)
+            guard !Task.isCancelled else { return }
+            let usage = await controller.appUsage.segmentsAsync(from: weekStart, to: end, now: refreshNow)
+            guard !Task.isCancelled else { return }
+            let breaks = await controller.breakEntriesAsync(from: weekStart, through: end)
+            guard !Task.isCancelled else { return }
+            guard let snapshot = try? await DashboardRefreshSnapshot.make(intervals: intervals, usage: usage, breaks: breaks,
+                date: date, weekStart: weekStart, sessionEnd: sessionEnd, calendar: calendar) else { return }
+            guard !Task.isCancelled else { return }
+            dayCategorySnapshot = snapshot.day
+            weekCategorySnapshot = snapshot.week
+            chartSnapshot = snapshot.chart
         }
-        dayCategorySnapshot = categories(from: selectedDay)
-        weekCategorySnapshot = categories(from: window.start)
-        chartSnapshot = .make(intervals: intervals, date: endDate, weekStart: window.start)
     }
 
     private func dayHeader(_ date: Date, totalDuration: TimeInterval, isFirst: Bool) -> some View {

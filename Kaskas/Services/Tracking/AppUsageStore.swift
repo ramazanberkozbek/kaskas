@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class AppUsageRecord {
+nonisolated final class AppUsageRecord {
     @Attribute(.unique) var recordID: UUID
     var bundleID: String?
     var appName: String
@@ -34,14 +34,25 @@ final class AppUsageRecord {
 protocol AppUsageRecording {
     func insert(_ segment: AppUsageSegment) throws
     func segments(from start: Date, to end: Date) throws -> [AppUsageSegment]
+    func segmentsAsync(from start: Date, to end: Date) async throws -> [AppUsageSegment]
+}
+
+extension AppUsageRecording {
+    func segmentsAsync(from start: Date, to end: Date) async throws -> [AppUsageSegment] {
+        try segments(from: start, to: end)
+    }
 }
 
 /// Stores and fetches per-app usage segments using SwiftData.
 @MainActor
 final class AppUsageStore: AppUsageRecording {
     private let context: ModelContext
+    private let container: ModelContainer
 
-    init(container: ModelContainer) { context = ModelContext(container) }
+    init(container: ModelContainer) {
+        self.container = container
+        context = ModelContext(container)
+    }
 
     func insert(_ segment: AppUsageSegment) throws {
         let id = segment.id
@@ -56,5 +67,9 @@ final class AppUsageStore: AppUsageRecording {
         let query = FetchDescriptor<AppUsageRecord>(predicate: #Predicate { $0.startedAt < end && $0.endedAt > start },
             sortBy: [SortDescriptor(\.startedAt)])
         return try context.fetch(query).map(\.segment)
+    }
+
+    func segmentsAsync(from start: Date, to end: Date) async throws -> [AppUsageSegment] {
+        try await HistoryReadWorker.segments(container: container, from: start, to: end)
     }
 }

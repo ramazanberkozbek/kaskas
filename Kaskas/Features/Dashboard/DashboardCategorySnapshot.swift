@@ -1,8 +1,8 @@
 import Foundation
 
 /// Derived data refreshed with the source records, independent of note/UI state.
-struct DashboardCategorySnapshot {
-    struct Session: Identifiable {
+nonisolated struct DashboardCategorySnapshot: Sendable {
+    struct Session: Identifiable, Sendable {
         let value: StudySession
         let summary: StudySessionCategorySummary
         var id: String { value.id }

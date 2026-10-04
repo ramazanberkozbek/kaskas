@@ -1,8 +1,8 @@
 import Foundation
 
 /// Chart inputs prepared at data refresh, independent of hover/selection state.
-struct StudyTrendData {
-    struct Point: Identifiable, Equatable {
+nonisolated struct StudyTrendData: Sendable {
+    struct Point: Identifiable, Equatable, Sendable {
         let date: Date
         let hours: Double
         let averageHours: Double
@@ -16,6 +16,10 @@ struct StudyTrendData {
         guard let start = days.first?.date, let end = days.last?.date else { return .empty }
         let averageStart = calendar.date(byAdding: .day, value: -6, to: start) ?? start
         let history = ActivityStatistics.days(from: averageStart, through: end, intervals: intervals, calendar: calendar)
+        return make(days: days, history: history, calendar: calendar)
+    }
+
+    static func make(days: [DailyActivity], history: [DailyActivity], calendar: Calendar = .current) -> Self {
         let amounts = Dictionary(uniqueKeysWithValues: history.map { ($0.date, $0.studying) })
         return Self(points: days.map { day in
             let total = (0..<7).reduce(0.0) { result, distance in
@@ -27,7 +31,7 @@ struct StudyTrendData {
     }
 }
 
-struct YearHeatmapData {
+nonisolated struct YearHeatmapData: Sendable {
     let weeks: [[Date]]
     let activityByDate: [Date: TimeInterval]
     static let empty = Self(weeks: [], activityByDate: [:])

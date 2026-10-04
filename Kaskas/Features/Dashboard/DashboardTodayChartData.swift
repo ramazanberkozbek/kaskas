@@ -1,6 +1,6 @@
 import Foundation
 
-struct DashboardTodayChartData {
+nonisolated struct DashboardTodayChartData: Sendable {
     let date: Date
     let todayHours: [Double]
     let yesterdayHours: [Double]

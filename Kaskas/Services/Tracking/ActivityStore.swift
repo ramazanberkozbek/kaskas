@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class ActivityRecord {
+nonisolated final class ActivityRecord {
     @Attribute(.unique) var recordID: String
     var kind: String
     var startedAt: Date
@@ -25,14 +25,23 @@ final class ActivityRecord {
 protocol ActivityRecording {
     func insert(_ interval: ActivityInterval) throws
     func intervals(from start: Date, to end: Date) throws -> [ActivityInterval]
+    func intervalsAsync(from start: Date, to end: Date) async throws -> [ActivityInterval]
+}
+
+extension ActivityRecording {
+    func intervalsAsync(from start: Date, to end: Date) async throws -> [ActivityInterval] {
+        try intervals(from: start, to: end)
+    }
 }
 
 /// Stores and fetches activity intervals using SwiftData.
 @MainActor
 final class ActivityStore: ActivityRecording {
     private let context: ModelContext
+    private let container: ModelContainer
 
     init(container: ModelContainer) {
+        self.container = container
         context = ModelContext(container)
     }
 
@@ -60,5 +69,9 @@ final class ActivityStore: ActivityRecording {
         return try PerformanceTrace.measure("Activity history fetch") {
             try context.fetch(descriptor).compactMap(\.interval)
         }
+    }
+
+    func intervalsAsync(from start: Date, to end: Date) async throws -> [ActivityInterval] {
+        try await HistoryReadWorker.intervals(container: container, from: start, to: end)
     }
 }
