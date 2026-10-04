@@ -6,11 +6,12 @@ struct SettingsView: View {
 
     @State private var selection: SettingsPane = .dashboard
     @State private var navigationTrace = SettingsNavigationTrace()
+    @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationSplitView {
-            List(SettingsPane.allCases, selection: paneSelection) { pane in
+            List(availablePanes, selection: paneSelection) { pane in
                 sidebarLabel(pane)
                     .tag(pane)
             }
@@ -35,6 +36,21 @@ struct SettingsView: View {
         .navigationSplitViewStyle(.balanced)
         .scrollIndicators(.hidden)
         .background(SettingsWindowChrome(colorScheme: colorScheme))
+        .background {
+            Button("") {
+                withAnimation {
+                    isDeveloperModeEnabled.toggle()
+                    if isDeveloperModeEnabled {
+                        selection = .developer
+                    } else if selection == .developer {
+                        selection = .general
+                    }
+                }
+            }
+            .keyboardShortcut("d", modifiers: [.command, .option])
+            .opacity(0)
+            .allowsHitTesting(false)
+        }
         .environment(\.locale, controller.locale)
         .id(controller.configuration.appLanguage)
     }
@@ -59,6 +75,18 @@ struct SettingsView: View {
         case .general:
             GeneralSettingsView(controller: controller)
                 .onAppear { navigationTrace.appeared(SettingsPane.general.rawValue) }
+        case .developer:
+            DeveloperSettingsView(controller: controller)
+                .onAppear { navigationTrace.appeared(SettingsPane.developer.rawValue) }
+        }
+    }
+
+    private var availablePanes: [SettingsPane] {
+        SettingsPane.allCases.filter { pane in
+            if pane == .developer {
+                return isDeveloperModeEnabled
+            }
+            return true
         }
     }
 
@@ -86,6 +114,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
     case statistics
     case categories
     case general
+    case developer
 
     var id: Self { self }
 
@@ -97,6 +126,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         case .statistics: "settings.sidebar.statistics"
         case .categories: "settings.sidebar.categories"
         case .general: "settings.sidebar.general"
+        case .developer: "settings.sidebar.developer"
         }
     }
 
@@ -108,6 +138,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         case .statistics: "chart.bar.xaxis"
         case .categories: "square.grid.3x3.fill"
         case .general: "gearshape"
+        case .developer: "hammer.fill"
         }
     }
 }

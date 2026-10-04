@@ -2,6 +2,8 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     let controller: SessionController
+    @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
+    @State private var versionClickCount = 0
 
     var body: some View {
         Form {
@@ -112,10 +114,44 @@ struct GeneralSettingsView: View {
                 sectionHeader("settings.idle.section")
                     .settingsFormSectionHeader()
             }
+
+            Section {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 4) {
+                        Text(appVersionText)
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(.tertiary)
+                        if isDeveloperModeEnabled {
+                            Label("developer.banner.title", systemImage: "hammer.fill")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    versionClickCount += 1
+                    if versionClickCount >= 5 {
+                        versionClickCount = 0
+                        withAnimation {
+                            isDeveloperModeEnabled.toggle()
+                        }
+                    }
+                }
+                .listRowBackground(Color.clear)
+            }
         }
         .settingsGroupedFormLayout()
         .scrollIndicators(.hidden)
         .onAppear { controller.launchAtLogin.refresh() }
+    }
+
+    private var appVersionText: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        return "Kaskas v\(version)"
     }
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {

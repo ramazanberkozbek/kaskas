@@ -2,8 +2,19 @@ import AppKit
 import Foundation
 import Observation
 
-/// Coordinates session transitions, monitoring, persistence, and presentation.
-/// SessionEngine owns the state; this controller applies its effects to macOS services.
+/// The puppet master and central brain of Kaskas.
+///
+/// If this class breaks, the entire app has an existential crisis. It sits between
+/// pure mathematical state (`SessionEngine`) and the messy real world coordinating
+/// timers, spying on hardware, and ultimately deciding when you need to touch grass.
+///
+/// What the maestro actually does:
+/// - Dictates the focus & break lifecycle (and tolerates your desperate snooze clicks).
+/// - Keeps an eye on your camera and mic so it doesn't embarrass you during Zoom calls.
+/// - Detects when you abandon your Mac for coffee and counts it as a natural break.
+/// - Tracks which apps steal your focus and silently logs them to SwiftData.
+/// - Hijacks your screen when it's break time and locks it if you asked for tough love.
+/// - Survives system sleep, restarts, and random macOS panics without losing a second.
 @MainActor
 @Observable
 final class SessionController {
@@ -336,6 +347,50 @@ final class SessionController {
             color: configuration.microReminderColor,
             isPreview: true
         )
+    }
+
+    func previewBreakWarning() {
+        breakWarningPresenter.show(
+            endsAt: Date.now.addingTimeInterval(configuration.breakWarningLeadTime),
+            leadTime: configuration.breakWarningLeadTime,
+            position: configuration.notificationPosition,
+            isPreview: true,
+            onStart: { [weak self] in
+                self?.breakWarningPresenter.dismissPreview()
+                self?.previewBreak()
+            },
+            onPostpone: { [weak self] _ in
+                self?.breakWarningPresenter.dismissPreview()
+            },
+            onSkip: { [weak self] in
+                self?.breakWarningPresenter.dismissPreview()
+            }
+        )
+    }
+
+    func previewSkippedBreakReminder() {
+        skippedBreakNotifier.show(onStart: { [weak self] in self?.previewBreak() })
+    }
+
+    func previewIdleBreak() {
+        idleBreakNotifier.show(
+            duration: 300,
+            onAccept: { [weak self] in
+                self?.idleBreakNotifier.dismiss()
+                self?.previewBreak()
+            },
+            onDecline: { [weak self] in
+                self?.idleBreakNotifier.dismiss()
+            }
+        )
+    }
+
+    func dismissPreviews() {
+        microReminderPresenter.dismissPreview()
+        breakWarningPresenter.dismissPreview()
+        breakPresenter.dismissPreview()
+        skippedBreakNotifier.dismiss()
+        idleBreakNotifier.dismiss()
     }
 
 
