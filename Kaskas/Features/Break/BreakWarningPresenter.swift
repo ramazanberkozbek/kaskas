@@ -47,7 +47,7 @@ final class BreakWarningPresenter {
             backing: .buffered,
             defer: false
         )
-        let contentView = NSHostingView(rootView: BreakWarningView(
+        let contentView = NonactivatingHostingView(rootView: BreakWarningView(
             endsAt: endsAt,
             leadTime: leadTime,
             onStart: onStart,
@@ -64,7 +64,6 @@ final class BreakWarningPresenter {
         panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
         panel.isReleasedWhenClosed = false
         panel.orderFrontRegardless()
-        panel.makeKey()
 
         self.panel = panel
         presentedEndDate = endsAt
@@ -100,6 +99,12 @@ final class BreakWarningPresenter {
 }
 
 private final class BreakWarningPanel: NSPanel {
-    override var canBecomeKey: Bool { true }
+    override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+}
+
+private final class NonactivatingHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
 }

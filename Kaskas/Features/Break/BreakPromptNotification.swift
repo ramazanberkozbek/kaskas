@@ -66,7 +66,7 @@ final class BreakPromptPresenter {
             height: size.height
         )
         let expiresAt = Date.now.addingTimeInterval(configuration.displayDuration)
-        let panel = NSPanel(
+        let panel = BreakPromptPanel(
             contentRect: frame,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
@@ -78,7 +78,7 @@ final class BreakPromptPresenter {
             onSecondaryAction()
         }
 
-        panel.contentView = NSHostingView(rootView: BreakPromptView(
+        panel.contentView = NonactivatingHostingView(rootView: BreakPromptView(
             configuration: configuration,
             expiresAt: expiresAt,
             onPrimaryAction: { [weak self] in
@@ -95,7 +95,6 @@ final class BreakPromptPresenter {
         panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
         panel.isReleasedWhenClosed = false
         panel.orderFrontRegardless()
-        panel.makeKey()
         self.panel = panel
 
         dismissalTask = Task { @MainActor in
@@ -215,5 +214,16 @@ final class SkippedBreakNotifier {
 
     func dismiss() {
         presenter.dismiss()
+    }
+}
+
+private final class BreakPromptPanel: NSPanel {
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
+private final class NonactivatingHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
     }
 }
