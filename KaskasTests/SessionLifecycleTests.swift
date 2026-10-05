@@ -12,7 +12,6 @@ struct SessionLifecycleTests {
         snoozeDuration: 5 * 60
     )
 
-
     @Test
     func shortSleepPreservesRemainingFocusTime() {
         // Focus + short sleep (< breakDuration) preserves remaining time
@@ -95,7 +94,6 @@ struct SessionLifecycleTests {
         #expect(engine.breaksTakenToday(at: nextDay) == 0)
     }
 
-
     @Test
     func naturalBreakThresholdResetsFocusAfterLongAway() {
         // When away for >= breakDuration (5 mins), focus should NOT resume where left off.
@@ -133,9 +131,18 @@ struct SessionLifecycleTests {
             #expect(engine.session.phase == .focusing)
             #expect(engine.breaksTakenToday(at: returnedAt) == 1)
             #expect(effects.contains {
-                if case .persistSession(let record, _) = $0 { return record != nil }
+                if case .persistSession(let record, _) = $0 { return (record != nil) == !wasOnBreak }
                 return false
             })
+            if wasOnBreak {
+                let inputEffects = engine.send(.userActivity, at: returnedAt.addingTimeInterval(1))
+                #expect(inputEffects.contains {
+                    if case .persistSession(let record, _) = $0 {
+                        return record?.startedAt == startDate && record?.occurredAt == returnedAt.addingTimeInterval(1)
+                    }
+                    return false
+                })
+            }
         }
     }
 
@@ -182,8 +189,7 @@ struct SessionLifecycleTests {
 
     @Test
     func sleepDuringBreakLongerThanRemainingCompletesBreak() {
-        // If Mac sleeps during a break for longer than remaining break duration,
-        // break should be considered completed on wake, starting fresh focus.
+        // A break completed during sleep waits for new user input after wake.
         var engine = SessionEngine(configuration: configuration, now: startDate)
         engine.send(.startBreakNow, at: startDate)
         #expect(engine.session.phase == .onBreak)
@@ -216,7 +222,6 @@ struct SessionLifecycleTests {
         #expect(snapshot.remaining == 25 * 60) // Fresh cycle
     }
 
-
     @Test
     func effectOrderingStrictlyFollowsDismissShowSoundPersistSchedule() {
         // Test 1: Full break due on tick
@@ -243,7 +248,7 @@ struct SessionLifecycleTests {
         #expect(endRanks == endRanks.sorted())
         #expect(endEffects.first == .dismissBreak)
         #expect(endEffects.contains(.playBreakEndSound))
-        #expect(endEffects.last == .scheduleNextTick(at: breakEndDate.addingTimeInterval(10 * 60))) // micro reminder
+        #expect(endEffects.last == .cancelScheduler) // next focus waits for input
 
         // Test 3: Start break now
         var freshEngine = SessionEngine(configuration: configuration, now: startDate)
@@ -539,4 +544,141 @@ struct SessionLifecycleTests {
         #expect(engine.status.activityKind == .studying)
         #expect(!engine.status.isPaused)
     }
+
+    @Test
+    func completedBreakWaitsWithoutCountingWorkAndResumesOnlyOnceOnInput() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        let end = startDate.addingTimeInterval(configuration.breakDuration)
+        let effects = engine.send(.tick, at: end)
+        #expect(effects.contains(.dismissBreak))
+        #expect(effects.contains(.playBreakEndSound))
+        #expect(effects.contains {
+            if case .persistSession(let record, let kind) = $0 {
+                return record == nil && kind == .breakTime
+            }
+            return false
+        })
+        #expect(engine.status.isAwaitingReturn)
+        #expect(engine.nextEventDate == nil)
+        #expect(engine.snapshot(at: end.addingTimeInterval(600)).remaining == configuration.focusDuration)
+        #expect(engine.send(.userActivity, at: end).isEmpty)
+        #expect(engine.send(.tick, at: end.addingTimeInterval(600)) == [.cancelScheduler])
+        #expect(engine.breaksTakenToday(at: end) == 1)
+
+        let returned = end.addingTimeInterval(601)
+        let resumed = engine.send(.userActivity, at: returned)
+        #expect(!engine.status.isPaused)
+        #expect(engine.session.startedAt == returned)
+        #expect(engine.session.endsAt == returned.addingTimeInterval(configuration.focusDuration))
+        #expect(resumed.contains {
+            if case .persistSession(let record, let kind) = $0 {
+                return record?.startedAt == startDate && record?.occurredAt == returned && kind == .studying
+            }
+            return false
+        })
+        #expect(!resumed.contains(.playBreakEndSound))
+        #expect(engine.send(.userActivity, at: returned.addingTimeInterval(1)).isEmpty)
+        #expect(engine.breaksTakenToday(at: returned) == 1)
+    }
+
+    @Test
+    func returnWaitSurvivesLockSleepRelaunchAndMeeting() throws {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        let end = startDate.addingTimeInterval(configuration.breakDuration)
+        engine.send(.tick, at: end)
+        engine.send(.lock, at: end.addingTimeInterval(1))
+        engine.send(.systemResumed, at: end.addingTimeInterval(100))
+        engine.send(.sleep, at: end.addingTimeInterval(101))
+        engine.send(.systemResumed, at: end.addingTimeInterval(200))
+        engine.send(.quit, at: end.addingTimeInterval(201))
+        let state = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(engine.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: state,
+                                     lastActiveAt: end.addingTimeInterval(201), now: end.addingTimeInterval(500))
+        restored.send(.launch(meetingActive: true), at: end.addingTimeInterval(500))
+        #expect(restored.status.isAwaitingReturn)
+        #expect(restored.send(.userActivity, at: end.addingTimeInterval(501)).isEmpty)
+        restored.send(.setMeeting(active: false), at: end.addingTimeInterval(502))
+        #expect(restored.status.isAwaitingReturn)
+        restored.send(.userActivity, at: end.addingTimeInterval(503))
+        #expect(!restored.status.isPaused)
+        #expect(restored.breaksTakenToday(at: end.addingTimeInterval(503)) == 1)
+    }
+
+    @Test
+    func inputDoesNotOverrideManualPauseDuringReturnWait() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        let end = startDate.addingTimeInterval(configuration.breakDuration)
+        engine.send(.tick, at: end)
+        engine.send(.setManualPause(active: true), at: end.addingTimeInterval(1))
+        #expect(engine.send(.userActivity, at: end.addingTimeInterval(2)).isEmpty)
+        #expect(engine.status.isManualPaused)
+        engine.send(.setManualPause(active: false), at: end.addingTimeInterval(3))
+        #expect(!engine.status.isPaused)
+    }
+
+    @Test
+    func breakCompletedDuringSleepWaitsForInputAfterWake() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        engine.send(.sleep, at: startDate.addingTimeInterval(60))
+        let wake = startDate.addingTimeInterval(600)
+        let effects = engine.send(.systemResumed, at: wake)
+        #expect(engine.status.isAwaitingReturn)
+        #expect(engine.snapshot(at: wake.addingTimeInterval(600)).remaining == configuration.focusDuration)
+        #expect(effects.contains(.dismissBreak))
+        #expect(!effects.contains(.playBreakEndSound))
+        engine.send(.userActivity, at: wake.addingTimeInterval(1))
+        #expect(!engine.status.isPaused)
+    }
+
+
+    @Test
+    func fiveMinuteBreakWithThreeMinuteWaitProducesOneEightMinuteRecord() throws {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        let deadline = startDate.addingTimeInterval(5 * 60)
+        let endEffects = engine.send(.tick, at: deadline)
+        #expect(!endEffects.contains {
+            if case .persistSession(let record, _) = $0 { return record != nil }
+            return false
+        })
+        #expect(engine.status.activityKind == .breakTime)
+        let state = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(engine.state))
+        var restored = SessionEngine(configuration: configuration, restoredState: state)
+        restored.send(.launch, at: deadline.addingTimeInterval(60))
+        let returned = startDate.addingTimeInterval(8 * 60)
+        let effects = restored.send(.userActivity, at: returned)
+        let records = effects.compactMap { effect -> BreakHistoryEntry? in
+            if case .persistSession(let record, _) = effect { return record }
+            return nil
+        }
+        let record = try #require(records.first)
+        #expect(records.count == 1)
+        #expect(record.startedAt == startDate)
+        #expect(record.occurredAt.timeIntervalSince(startDate) == 8 * 60)
+        #expect(record.outcome == .completed)
+        #expect(restored.breaksTakenToday(at: returned) == 1)
+        #expect(restored.session.startedAt == returned)
+        #expect(restored.send(.userActivity, at: returned.addingTimeInterval(1)).isEmpty)
+    }
+
+    @Test
+    func manuallyPausingClosesExtendedBreakWithoutLosingHistory() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        engine.send(.startBreakNow, at: startDate)
+        engine.send(.tick, at: startDate.addingTimeInterval(5 * 60))
+        let pause = startDate.addingTimeInterval(8 * 60)
+        let effects = engine.send(.setManualPause(active: true), at: pause)
+        #expect(effects.contains {
+            if case .persistSession(let record, let kind) = $0 {
+                return record?.startedAt == startDate && record?.occurredAt == pause && kind == .kaskasPaused
+            }
+            return false
+        })
+        #expect(engine.status.isManualPaused)
+    }
+
 }

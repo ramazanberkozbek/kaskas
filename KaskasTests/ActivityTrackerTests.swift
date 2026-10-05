@@ -142,4 +142,25 @@ struct ActivityTrackerTests {
 
         #expect(try store.intervals(from: start, to: start.addingTimeInterval(1200)) == [interval])
     }
+
+    @Test
+    func restartingWhileWaitingForReturnKeepsGapWithinTheSameBreak() throws {
+        let (sessionStore, defaults, suiteName) = try makeSessionStore()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let original = ActivityTracker(sessionStore: sessionStore, activityStore: nil)
+        original.resume(as: .breakTime, at: start)
+        original.update(to: .breakTime, at: start.addingTimeInterval(5 * 60))
+        let reopened = start.addingTimeInterval(7 * 60)
+        let returned = start.addingTimeInterval(8 * 60)
+        let restored = ActivityTracker(sessionStore: sessionStore, activityStore: nil)
+        restored.resume(as: .breakTime, at: reopened, preservingBreak: true)
+        restored.update(to: .studying, at: returned)
+        let intervals = restored.intervals(from: start, to: returned, now: returned)
+        #expect(total(.breakTime, in: intervals) == 8 * 60)
+        #expect(total(.studying, in: intervals) == 0)
+        #expect(total(.kaskasPaused, in: intervals) == 0)
+        #expect(total(.computerInactive, in: intervals) == 0)
+    }
+
 }

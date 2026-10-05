@@ -25,6 +25,7 @@ enum SuspendReason: String, Codable, Equatable, Sendable {
     case video
     case idle
     case system
+    case awaitingReturn
 }
 
 enum FrozenRun: Codable, Equatable, Sendable {
@@ -39,19 +40,22 @@ struct Suspension: Codable, Equatable, Sendable {
     // Optional for compatibility with saved sessions predating video protection.
     var videoPending: Bool?
     var meetingPending: Bool
+    var pendingBreak: BreakHistoryEntry?
 
     init(
         reason: SuspendReason,
         awaySince: Date,
         frozen: FrozenRun,
         meetingPending: Bool = false,
-        videoPending: Bool? = nil
+        videoPending: Bool? = nil,
+        pendingBreak: BreakHistoryEntry? = nil
     ) {
         self.reason = reason
         self.awaySince = awaySince
         self.frozen = frozen
         self.meetingPending = meetingPending
         self.videoPending = videoPending
+        self.pendingBreak = pendingBreak
     }
 
     var pendingProtectionReason: SuspendReason? {
@@ -96,6 +100,11 @@ enum SessionStatus: Codable, Equatable, Sendable {
         return false
     }
 
+    var isAwaitingReturn: Bool {
+        if case .suspended(let s) = self { return s.reason == .awaitingReturn }
+        return false
+    }
+
     var isSystemPaused: Bool {
         if case .suspended(let s) = self { return s.reason == .system }
         return false
@@ -125,6 +134,8 @@ enum SessionStatus: Codable, Equatable, Sendable {
             switch s.reason {
             case .system, .idle:
                 return .computerInactive
+            case .awaitingReturn:
+                return .breakTime
             case .manual, .video:
                 return .kaskasPaused
             case .meeting:

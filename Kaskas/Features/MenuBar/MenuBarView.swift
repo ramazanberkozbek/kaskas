@@ -46,6 +46,8 @@ struct MenuBarView: View {
                     self = .typingPause
                 case .video:
                     self = .videoPause
+                case .awaitingReturn:
+                    self = snapshot.nextBreakKind == .long ? .longBreak : .shortBreak
                 }
             case .onBreak:
                 self = .onBreak

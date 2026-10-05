@@ -7,6 +7,8 @@ final class CursorIdleMonitor {
     private var timer: Timer?
     private var state = IdleInputState(monitoringSince: Date())
 
+    private var activityState = HardwareInputState()
+    var onActivity: ((Date) -> Void)?
     var shouldDetectIdle: (() -> Bool)?
 
     var onIdle: ((Date) -> Void)?
@@ -15,6 +17,7 @@ final class CursorIdleMonitor {
     func start(threshold: TimeInterval) {
         stop()
         state = IdleInputState(monitoringSince: Date())
+        resetActivityBaseline()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.sample(threshold: threshold) }
         }
@@ -28,11 +31,17 @@ final class CursorIdleMonitor {
         state.reset()
     }
 
+    func resetActivityBaseline() {
+        let anyInput = CGEventType(rawValue: UInt32.max)!
+        activityState = HardwareInputState(eventCount: CGEventSource.counterForEventType(.hidSystemState, eventType: anyInput))
+    }
+
     func sample(threshold: TimeInterval, at now: Date = Date()) {
         guard timer != nil else { return }
         // The Swift overlay does not import kCGAnyInputEventType (defined as ~0 in the SDK).
         let anyInput = CGEventType(rawValue: UInt32.max)!
         let eventCount = CGEventSource.counterForEventType(.hidSystemState, eventType: anyInput)
+        if activityState.sample(eventCount: eventCount) { onActivity?(now) }
         if shouldDetectIdle?() == false {
             // Passive viewing is not proof that the user left their computer.
             state = IdleInputState(monitoringSince: now)
@@ -85,5 +94,18 @@ struct IdleInputState {
         idleStartedAt = lastInput
         eventCountAtIdle = eventCount
         return .idle(lastInput)
+    }
+}
+
+/// A baseline prevents input from before the break ended from starting the next focus.
+struct HardwareInputState {
+    private var eventCount: UInt32?
+
+    init(eventCount: UInt32? = nil) { self.eventCount = eventCount }
+
+    mutating func sample(eventCount: UInt32) -> Bool {
+        let changed = self.eventCount.map { $0 != eventCount } ?? false
+        self.eventCount = eventCount
+        return changed
     }
 }

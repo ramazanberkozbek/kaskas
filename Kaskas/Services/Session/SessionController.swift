@@ -185,7 +185,7 @@ final class SessionController {
         let now = Date()
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
         let effects = engine.send(.launch(meetingActive: meetingActive, videoActive: configuration.pauseDuringVideo && videoMonitor.sample()), at: now)
-        activityTracker.resume(as: currentActivityKind, at: now)
+        activityTracker.resume(as: currentActivityKind, at: now, preservingBreak: engine.status.isAwaitingReturn)
         appUsage.setWorking(currentActivityKind == .studying, at: now)
         apply(effects, at: now)
         startIdleMonitoringIfNeeded()
@@ -675,9 +675,13 @@ final class SessionController {
     }
 
     private func startIdleMonitoringIfNeeded() {
-        guard configuration.idleDetectionEnabled else { return }
         cursorIdleMonitor.shouldDetectIdle = { [weak self] in
             self?.engine.status.isProtectionPaused != true
+        }
+        cursorIdleMonitor.onActivity = { [weak self] now in
+            guard let self, self.engine.status.isAwaitingReturn else { return }
+            self.refreshProtection(at: now)
+            self.apply(self.engine.send(.userActivity, at: now), at: now)
         }
         cursorIdleMonitor.onIdle = { [weak self] startedAt in
             self?.beginIdleBreak(at: startedAt)
@@ -685,7 +689,9 @@ final class SessionController {
         cursorIdleMonitor.onReturn = { [weak self] _, returnedAt in
             self?.presentIdleBreak(returnedAt: returnedAt)
         }
-        cursorIdleMonitor.start(threshold: configuration.idleThreshold)
+        // Keep detecting post-break user activity even when idle detection is off.
+        // An infinite threshold disables only the transition into idle.
+        cursorIdleMonitor.start(threshold: configuration.idleDetectionEnabled ? configuration.idleThreshold : .infinity)
     }
 
     private func stopIdleMonitoring(at now: Date, preservingIdleState: Bool = false) {
@@ -770,6 +776,9 @@ final class SessionController {
         at now: Date = Date(),
         showsBreakWarning: Bool = true
     ) {
+        if engine.status.isAwaitingReturn && !sessionSnapshot.status.isAwaitingReturn {
+            cursorIdleMonitor.resetActivityBaseline()
+        }
         refreshSnapshot(at: now)
         for effect in effects {
             switch effect {

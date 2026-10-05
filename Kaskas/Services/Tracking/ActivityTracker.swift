@@ -22,9 +22,13 @@ final class ActivityTracker {
         storageFailed = activityStore == nil
     }
 
-    func resume(as kind: ActivityKind, at now: Date) {
+    func resume(as kind: ActivityKind, at now: Date, preservingBreak: Bool = false) {
         if let previous = journal.cursor {
-            if previous.kind == .studying || previous.kind == .breakTime || previous.kind == .meeting {
+            if preservingBreak, previous.kind == .breakTime {
+                // A restored return wait keeps the gap since the last checkpoint
+                // within the same break instead of classifying it as app downtime.
+                append(.breakTime, from: previous.startedAt, to: now)
+            } else if previous.kind == .studying || previous.kind == .breakTime || previous.kind == .meeting {
                 append(previous.kind, from: previous.startedAt, to: previous.checkpointAt)
                 append(.kaskasPaused, from: previous.checkpointAt, to: now)
             } else {

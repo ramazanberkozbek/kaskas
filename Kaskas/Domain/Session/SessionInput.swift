@@ -10,6 +10,7 @@ enum SessionInput: Equatable, Sendable {
     case launch(meetingActive: Bool, videoActive: Bool = false)
     case setTyping(active: Bool)
     case tick
+    case userActivity
     case toggleManualPause
     case setManualPause(active: Bool)
     case setMeeting(active: Bool)

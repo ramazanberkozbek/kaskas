@@ -34,4 +34,25 @@ struct IdleInputStateTests {
         #expect(state.sample(at: now, threshold: 180, secondsSinceInput: 2, eventCount: 50) == nil)
         #expect(state.idleStartedAt == nil)
     }
+
+    @Test
+    func hardwareActivityRequiresNewInputAfterBaseline() {
+        var state = HardwareInputState(eventCount: 42)
+        let unchanged = state.sample(eventCount: 42)
+        let changed = state.sample(eventCount: 43)
+        let repeated = state.sample(eventCount: 43)
+        #expect(!unchanged)
+        #expect(changed)
+        #expect(!repeated)
+        // Reset at break completion discards all input from within the break.
+        state = HardwareInputState(eventCount: 50)
+        let oldInput = state.sample(eventCount: 50)
+        let newInput = state.sample(eventCount: 51)
+        #expect(!oldInput)
+        #expect(newInput)
+        state = HardwareInputState(eventCount: UInt32.max)
+        let wrapped = state.sample(eventCount: 0)
+        #expect(wrapped)
+    }
+
 }

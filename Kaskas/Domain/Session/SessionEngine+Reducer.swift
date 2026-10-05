@@ -38,12 +38,25 @@ extension SessionEngine {
                 }
             }
 
+            if case .suspended(var s) = status, s.reason == .awaitingReturn {
+                s.meetingPending = meetingActive && configuration.pauseDuringMeetings
+                s.videoPending = videoActive && configuration.pauseDuringVideo
+                status = .suspended(s)
+            }
             if status.isProtectionPaused {
                 _ = send(.setProtection(meetingActive: meetingActive, videoActive: videoActive), at: now)
             }
             effects.dismissAllAlerts()
             // Restored breaks are recorded silently; their end was not observed live.
             effects.persist(record: naturalBreakEntry, kind: currentActivityKind(at: now))
+            effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
+
+        case .userActivity:
+            guard case .suspended(let s) = status, s.reason == .awaitingReturn,
+                  now > s.awaySince, s.pendingProtectionReason == nil else { return [] }
+            let record = finishPendingBreak(at: now)
+            resume(at: now)
+            effects.persist(record: record, kind: .studying)
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .setTyping(let active):
@@ -71,7 +84,6 @@ extension SessionEngine {
                 return [.cancelScheduler]
             }
 
-            let previousSession = self.session
             let events = process(at: now)
 
             for event in events {
@@ -96,10 +108,8 @@ extension SessionEngine {
                 case .breakEnded:
                     effects.dismiss(.dismissBreak)
                     effects.play(.playBreakEndSound)
-                    let completedBreak = BreakHistoryEntry.transition(
-                        from: previousSession, at: now, outcome: .completed, source: .scheduled
-                    )
-                    effects.persist(record: completedBreak, kind: currentActivityKind(at: now))
+                    // Keep the open break in durable session state until the user returns.
+                    effects.persist(kind: currentActivityKind(at: now))
                 }
             }
 
@@ -115,9 +125,10 @@ extension SessionEngine {
                     declineIdleBreak(at: now)
                     effects.dismiss(.dismissIdleBreakReminder)
                 }
+                let record = finishPendingBreak(at: now)
                 beginManualPause(at: now)
                 effects.dismissAllAlerts()
-                effects.persist(kind: .kaskasPaused)
+                effects.persist(record: record, kind: .kaskasPaused)
                 effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
             } else {
                 guard status.isManualPaused else { return [] }
@@ -272,15 +283,25 @@ extension SessionEngine {
         case .systemSuspended(let cause):
             suspend(reason: .system, at: now)
             effects.dismissAllAlerts()
-            let kind: ActivityKind = cause == .quit ? .kaskasPaused : .computerInactive
+            let kind: ActivityKind = status.isAwaitingReturn || (status.phase == .onBreak && !status.isManualPaused)
+                ? .breakTime
+                : (cause == .quit ? .kaskasPaused : .computerInactive)
             effects.persist(kind: kind)
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .systemResumed(let meetingActive, let videoActive):
+            if case .suspended(var s) = status, s.reason == .awaitingReturn {
+                s.meetingPending = meetingActive && configuration.pauseDuringMeetings
+                s.videoPending = videoActive && configuration.pauseDuringVideo
+                status = .suspended(s)
+                effects.persist(kind: .breakTime)
+                effects.schedule(nextEventDate: nil, isPaused: true)
+                break
+            }
             guard case .suspended(let s) = status, s.reason == .system else { return [] }
             let naturalBreakEntry = endSystemPause(at: now, meetingActive: meetingActive, videoActive: videoActive)
 
-            if naturalBreakEntry != nil {
+            if naturalBreakEntry != nil || status.isAwaitingReturn {
                 effects.dismiss(.dismissBreak)
                 // Do not replay a break-end alert after sleep or screen unlock.
             } else if case .onBreak(let r) = status {
@@ -291,6 +312,7 @@ extension SessionEngine {
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .startBreak(let scheduled):
+            let completedPendingBreak = finishPendingBreak(at: now)
             if case .suspended(let s) = status, s.reason == .idle {
                 declineIdleBreak(at: now)
                 effects.dismiss(.dismissIdleBreakReminder)
@@ -299,10 +321,11 @@ extension SessionEngine {
             startBreak(at: now, scheduled: scheduled)
             effects.present(.showBreak(endsAt: session.endsAt))
             effects.play(.playBreakStartSound)
-            effects.persist(kind: currentActivityKind(at: now))
+            effects.persist(record: completedPendingBreak, kind: currentActivityKind(at: now))
             effects.schedule(nextEventDate: session.endsAt, isPaused: false)
 
         case .completeBreak:
+            let pendingRecord = finishPendingBreak(at: now)
             let prev = session
             let wasOnBreak = prev.phase == .onBreak
             effects.dismiss(.dismissBreakWarning, .dismissBreak)
@@ -310,20 +333,21 @@ extension SessionEngine {
             if wasOnBreak {
                 effects.play(.playBreakEndSound)
             }
-            let record = wasOnBreak ? BreakHistoryEntry.transition(
+            let record = pendingRecord ?? (wasOnBreak ? BreakHistoryEntry.transition(
                 from: prev, at: now, outcome: .completed, source: .manual
-            ) : nil
+            ) : nil)
             effects.persist(record: record, kind: currentActivityKind(at: now))
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .skipBreak:
+            let pendingRecord = finishPendingBreak(at: now)
             let prev = session
             effects.dismiss(.dismissBreakWarning, .dismissBreak)
             let shouldSuggest = skipBreak(at: now)
             if shouldSuggest {
                 effects.present(.showSkippedBreakReminder)
             }
-            let record = BreakHistoryEntry.transition(
+            let record = pendingRecord ?? BreakHistoryEntry.transition(
                 from: prev, at: now, outcome: .skipped, source: .manual
             )
             effects.persist(record: record, kind: currentActivityKind(at: now))
@@ -336,9 +360,10 @@ extension SessionEngine {
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .snoozeBreak:
+            let record = finishPendingBreak(at: now)
             snoozeBreak(at: now)
             effects.dismiss(.dismissBreak)
-            effects.persist(kind: currentActivityKind(at: now))
+            effects.persist(record: record, kind: currentActivityKind(at: now))
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .postponeBreak(let duration):
@@ -388,7 +413,7 @@ fileprivate extension SessionEngine {
         guard !status.isPaused else { return }
         switch status {
         case .onBreak:
-            startFocus(at: now)
+            prepareFocusForReturn(at: now)
         case .focusing(var run):
             if (configuration.breakWarningEnabled
                 && run.endsAt.timeIntervalSince(now) <= configuration.breakWarningLeadTime)
@@ -500,7 +525,7 @@ fileprivate extension SessionEngine {
             }
 
             recordCompletedBreak(at: now)
-            startFocus(at: now)
+            prepareFocusForReturn(at: now)
             return [.breakEnded]
 
         case .suspended:
@@ -574,6 +599,32 @@ fileprivate extension SessionEngine {
         ))
     }
 
+    mutating func prepareFocusForReturn(at now: Date) {
+        // Freeze the next focus until new input arrives; keep the completed break
+        // pending so its history includes the time spent waiting for the user.
+        let pendingBreak = BreakHistoryEntry.transition(
+            from: session, at: now, outcome: .completed, source: .scheduled
+        )
+        startFocus(at: now)
+        suspend(reason: .awaitingReturn, at: now)
+        if case .suspended(var suspension) = status {
+            suspension.pendingBreak = pendingBreak
+            status = .suspended(suspension)
+        }
+    }
+
+    mutating func finishPendingBreak(at now: Date) -> BreakHistoryEntry? {
+        guard case .suspended(var suspension) = status,
+              let pending = suspension.pendingBreak else { return nil }
+        suspension.pendingBreak = nil
+        status = .suspended(suspension)
+        return BreakHistoryEntry(
+            id: pending.id, occurredAt: now, startedAt: pending.startedAt,
+            focusStartedAt: pending.focusStartedAt, focusedDuration: pending.focusedDuration,
+            outcome: pending.outcome, source: pending.source
+        )
+    }
+
     mutating func startFocus(at now: Date) {
         ignoresProtectionForCycle = false
         if activeConfiguration.longBreakEnabled != configuration.longBreakEnabled
@@ -603,7 +654,8 @@ fileprivate extension SessionEngine {
                 suspension.videoPending = suspension.reason == .video || suspension.videoPending == true
                 suspension.reason = .system
                 status = .suspended(suspension)
-            } else if suspension.reason != .manual {
+            } else if suspension.reason != .manual
+                        && (suspension.reason != .awaitingReturn || reason != .system) {
                 suspension.reason = reason
                 status = .suspended(suspension)
             }
@@ -746,16 +798,9 @@ fileprivate extension SessionEngine {
 
         case .breakTime(_, let remaining, _):
             if awayDuration >= remaining {
-                let entry = BreakHistoryEntry.transition(
-                    from: session,
-                    startedAt: suspension.awaySince,
-                    at: now,
-                    outcome: .completed,
-                    source: .scheduled
-                )
                 recordCompletedBreak(at: now)
-                startFocus(at: now)
-                return entry
+                prepareFocusForReturn(at: now)
+                return nil
             }
 
             resume(at: now)
