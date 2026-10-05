@@ -7,6 +7,8 @@ struct CategorySettingsView: View {
 
     @State private var searchText: String = ""
     @State private var showingAddSheet: Bool = false
+    @State private var showingExclusionsSheet = false
+    private static let exclusionsExpansionID = "app-exclusions"
     @State private var categoryForNewRule: AppCategory? = nil
     @State private var showingAddCategorySheet: Bool = false
     @State private var showingResetAlert: Bool = false
@@ -30,7 +32,8 @@ struct CategorySettingsView: View {
     @State private var totalMatchingCount = 0
 
     private func rebuildGrouping() {
-        let snapshot = CategoryRuleGrouping(rules: registry.installedRules, searchText: searchText)
+        let excluded = controller.appUsage.exclusions.snapshot()
+        let snapshot = CategoryRuleGrouping(rules: registry.installedRules.filter { !excluded.contains(bundleID: $0.appIdentifier) }, searchText: searchText)
         groupedFilteredRules = snapshot.groups
         totalMatchingCount = snapshot.count
     }
@@ -101,6 +104,17 @@ struct CategorySettingsView: View {
                     }
                 }
 
+                ExcludedApplicationsCard(
+                    preferences: controller.appUsage.exclusions,
+                    searchText: searchText,
+                    isExpanded: isCategoryExpanded(Self.exclusionsExpansionID),
+                    onToggleExpand: { toggleCategory(Self.exclusionsExpansionID) },
+                    onAdd: {
+                        expandedCategories.insert(Self.exclusionsExpansionID)
+                        saveExpansionState()
+                        showingExclusionsSheet = true
+                    })
+
                 // Bottom Footer: Reset to defaults
                 resetToDefaultsFooter
                     .padding(.top, 4)
@@ -113,6 +127,11 @@ struct CategorySettingsView: View {
         .task { await registry.refreshInstalledApplications(forceRefresh: true) }
         .onChange(of: registry.installedRules, initial: true) { rebuildGrouping() }
         .onChange(of: searchText) { rebuildGrouping() }
+        .onChange(of: controller.appUsage.exclusions.revision) { rebuildGrouping() }
+        .sheet(isPresented: $showingExclusionsSheet) {
+            AddExcludedApplicationsSheet(preferences: controller.appUsage.exclusions)
+                .environment(\.locale, controller.locale)
+        }
         .sheet(isPresented: $showingAddSheet) {
             AddCategoryRuleSheet(registry: registry, initialCategory: categoryForNewRule) {
                 if let cat = categoryForNewRule {
@@ -220,7 +239,7 @@ struct CategorySettingsView: View {
                 categoryForNewRule = nil
                 showingAddSheet = true
             } label: {
-                Label("Kural Ekle", systemImage: "plus")
+                Label("categories.apps.add", systemImage: "plus")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
@@ -289,7 +308,7 @@ struct CategorySettingsView: View {
     }
 
     private var areAllExpanded: Bool {
-        expandedCategories.count >= registry.categories.count
+        expandedCategories.isSuperset(of: Set(registry.categories.map(\.id)).union([Self.exclusionsExpansionID]))
     }
 
     private func toggleAllCategories() {
@@ -297,7 +316,7 @@ struct CategorySettingsView: View {
             if areAllExpanded {
                 expandedCategories.removeAll()
             } else {
-                expandedCategories = Set(registry.categories.map(\.id))
+                expandedCategories = Set(registry.categories.map(\.id)).union([Self.exclusionsExpansionID])
             }
             saveExpansionState()
         }

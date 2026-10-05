@@ -84,10 +84,12 @@ nonisolated struct StatisticsRefreshSnapshot: Sendable {
 
     @concurrent static func make(intervals: [ActivityInterval], usage: [AppUsageSegment],
                                 window: (start: Date, end: Date), categoryEnd: Date,
-                                year: Int, calendar: Calendar, period: StatisticsPeriod) async throws -> Self {
+                                year: Int, calendar: Calendar, period: StatisticsPeriod,
+                                excluded: [ExcludedUsageInterval] = [], exclusions: AppExclusionSnapshot = .empty) async throws -> Self {
         try Task.checkCancellation()
-        return Self(categories: .make(intervals: intervals, usage: usage, from: window.start, to: categoryEnd),
-             chart: .make(intervals: intervals, trendWindow: window, distributionWindow: window,
+        let projection = StudyTimeProjection(intervals: intervals, usage: usage, excluded: excluded, exclusions: exclusions)
+        return Self(categories: projection.timeline.summary(intervals: projection.intervals, from: window.start, to: categoryEnd),
+             chart: .make(intervals: projection.intervals, trendWindow: window, distributionWindow: window,
                           hourlyWindow: window, year: year, calendar: calendar, period: period))
     }
 }

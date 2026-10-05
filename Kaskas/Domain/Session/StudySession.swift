@@ -11,11 +11,13 @@ nonisolated struct StudySession: Identifiable, Sendable {
 
     let intervals: [ActivityInterval]
     let segments: [Segment]
+    // Only report durations change; raw intervals preserve session IDs and notes.
+    var effectiveSegments: [Segment]? = nil
 
     var id: String { intervals[0].sessionKey }
     var startedAt: Date { segments[0].start }
     var endedAt: Date { segments[segments.count - 1].end }
-    var focusedDuration: TimeInterval { segments.reduce(0) { $0 + $1.duration } }
+    var focusedDuration: TimeInterval { (effectiveSegments ?? segments).reduce(0) { $0 + $1.duration } }
     var interruptionCount: Int {
         zip(segments, segments.dropFirst()).reduce(0) { count, pair in
             count + (pair.1.start.timeIntervalSince(pair.0.end) >= StudySessionGrouping.minimumCountedInterruption ? 1 : 0)

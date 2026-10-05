@@ -61,14 +61,24 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
 
         DispatchQueue.main.async {
+            NSApp.unhide(nil)
             NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
             window.makeKeyAndOrderFront(nil)
         }
     }
 
     func setDockVisibility(_ visible: Bool) {
+        let policy: NSApplication.ActivationPolicy = visible ? .regular : .accessory
+        guard NSApp.activationPolicy() != policy else { return }
+        let visibleWindow = window.flatMap { $0.isVisible && !$0.isMiniaturized ? $0 : nil }
         if visible { ensureMainMenu() }
-        NSApp.setActivationPolicy(visible ? .regular : .accessory)
+        guard NSApp.setActivationPolicy(policy) else { return }
+
+        // Removing the Dock icon can deactivate/hide the app. Restore the
+        // settings window after AppKit finishes the policy transition.
+        if let visibleWindow {
+            bringToFront(visibleWindow)
+        }
     }
 
     // MARK: - Main Menu Support

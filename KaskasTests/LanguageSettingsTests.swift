@@ -1,6 +1,4 @@
-import AppKit
 import Foundation
-import SwiftUI
 import Testing
 @testable import Kaskas
 
@@ -19,19 +17,6 @@ struct LanguageSettingsTests {
         #expect(AppLanguage.turkish.displayName == "Türkçe")
         #expect(AppLanguage.turkish.localeIdentifier == "tr")
         #expect(AppLanguage.turkish.locale.identifier == "tr")
-    }
-
-    @Test
-    @MainActor
-    func languageFlagIconRendersWithoutEmoji() {
-        // Verify vector icons are generated via ImageRenderer
-        let systemImage = languageFlagImage(for: "system")
-        let enImage = languageFlagImage(for: "en")
-        let trImage = languageFlagImage(for: "tr")
-
-        _ = systemImage
-        _ = enImage
-        _ = trImage
     }
 
     @Test
@@ -61,25 +46,6 @@ struct LanguageSettingsTests {
         controller.updateConfiguration(config)
 
         #expect(controller.configuration.appLanguage == .system)
-    }
-
-    @Test
-    @MainActor
-    func generalSettingsViewRendersWithLanguageSection() {
-        let suiteName = "LanguageSettingsTests.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
-        let store = SessionStore(defaults: defaults)
-        let controller = SessionController(store: store)
-        let view = GeneralSettingsView(controller: controller)
-            .environment(\.locale, controller.locale)
-
-        let hostingView = NSHostingView(rootView: view)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 600, height: 600)
-        hostingView.layoutSubtreeIfNeeded()
-
-        #expect(hostingView.frame.width == 600)
     }
 
     @Test

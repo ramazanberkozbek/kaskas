@@ -62,6 +62,11 @@ struct FlameMascotView: View {
             didFinish = false
             startedAt = Date()
         }
+        .onChange(of: animated) { _, isAnimated in
+            guard isAnimated else { return }
+            didFinish = false
+            startedAt = Date()
+        }
         .onChange(of: mascot) { _, _ in
             guard animated else { return }
             didFinish = false

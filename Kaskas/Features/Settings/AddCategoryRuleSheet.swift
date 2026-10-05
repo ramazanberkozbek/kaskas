@@ -48,16 +48,12 @@ struct AddCategoryRuleSheet: View {
         installedApps.filter { selectedAppIDs.contains($0.id) }
     }
 
-    private var selectedAppHasExistingRule: Bool {
-        selectedApps.count == 1 && selectedApps.first.map { existingCategory(for: $0) != nil } == true
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Yeni Kural Ekle")
+                    Text("categories.apps.add")
                         .font(.headline)
                     Text("Mac'inizdeki uygulamaları seçin ve ortak kategorilerini belirleyin.")
                         .font(.caption)
@@ -346,7 +342,7 @@ struct AddCategoryRuleSheet: View {
 
                 Spacer()
 
-                Button(selectedAppHasExistingRule ? "Kuralı Güncelle" : "Kuralı Kaydet") {
+                Button("Kaydet") {
                     saveRule()
                 }
                 .buttonStyle(.borderedProminent)

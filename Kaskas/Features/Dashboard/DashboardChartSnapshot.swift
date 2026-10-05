@@ -21,16 +21,18 @@ nonisolated struct DashboardRefreshSnapshot: Sendable {
     let chart: DashboardChartSnapshot
 
     @concurrent static func make(intervals: [ActivityInterval], usage: [AppUsageSegment], breaks: [BreakHistoryEntry],
-                                date: Date, weekStart: Date, sessionEnd: Date, calendar: Calendar) async throws -> Self {
+                                date: Date, weekStart: Date, sessionEnd: Date, calendar: Calendar,
+                                excluded: [ExcludedUsageInterval] = [], exclusions: AppExclusionSnapshot = .empty) async throws -> Self {
         try Task.checkCancellation()
         let selectedDay = calendar.startOfDay(for: date)
-        let timeline = CategoryUsageSummary.Timeline(usage: usage)
+        let projection = StudyTimeProjection(intervals: intervals, usage: usage, excluded: excluded, exclusions: exclusions)
+        let timeline = projection.timeline
         func categories(from start: Date) -> DashboardCategorySnapshot {
             let target = intervals.filter { $0.kind == .studying && $0.startedAt >= start && $0.startedAt < sessionEnd }
-            let sessions = Array(StudySessionGrouping.group(target, breakEntries: breaks).reversed())
-            return .make(intervals: intervals, timeline: timeline, sessions: sessions, from: start, to: sessionEnd)
+            let sessions = Array(StudySessionGrouping.group(target, breakEntries: breaks).compactMap { projection.session($0) }.reversed())
+            return .make(intervals: projection.intervals, timeline: timeline, sessions: sessions, from: start, to: sessionEnd)
         }
         return Self(day: categories(from: selectedDay), week: categories(from: weekStart),
-                    chart: .make(intervals: intervals, date: date, weekStart: weekStart, calendar: calendar))
+                    chart: .make(intervals: projection.intervals, date: date, weekStart: weekStart, calendar: calendar))
     }
 }

@@ -10,10 +10,12 @@ final class SessionStore {
         static let lastActiveAt = "lastActiveAt"
         static let activityJournal = "activityJournal"
         static let appUsageJournal = "appUsageJournal"
+        static let excludedUsageJournal = "excludedUsageJournal"
         static let automaticCategories = "automaticCategoryDetectionEnabled"
         static let sessionAnnotations = "sessionAnnotations"
     }
 
+    let appExclusions: AppExclusionPreferences
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -21,11 +23,22 @@ final class SessionStore {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        appExclusions = AppExclusionPreferences(defaults: defaults)
     }
 
     var automaticCategoryDetectionEnabled: Bool {
         get { defaults.object(forKey: Key.automaticCategories) == nil ? true : defaults.bool(forKey: Key.automaticCategories) }
         set { defaults.set(newValue, forKey: Key.automaticCategories) }
+    }
+
+    func loadExcludedUsageJournal() -> ExcludedUsageJournal {
+        guard let data = defaults.data(forKey: Key.excludedUsageJournal) else { return .init() }
+        return (try? decoder.decode(ExcludedUsageJournal.self, from: data)) ?? .init()
+    }
+
+    func save(excludedUsageJournal: ExcludedUsageJournal) {
+        guard let data = try? encoder.encode(excludedUsageJournal) else { return }
+        defaults.set(data, forKey: Key.excludedUsageJournal)
     }
 
     func loadAppUsageJournal() -> AppUsageJournal {

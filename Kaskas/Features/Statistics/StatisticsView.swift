@@ -110,6 +110,7 @@ struct StatisticsView: View {
         .onDisappear { refreshTask?.cancel() }
         .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
+        .onChange(of: controller.appUsage.exclusions.revision) { _, _ in reload() }
         .onChange(of: period) { _, _ in resetSelectionAndReload() }
         .onChange(of: endDate) { _, _ in resetSelectionAndReload() }
         .onReceive(refreshClock) { date in
@@ -196,15 +197,18 @@ struct StatisticsView: View {
         let categoryEnd = calendar.date(byAdding: .day, value: 1, to: window.end) ?? refreshNow
         let start = min(trendStart, yearStart)
         let end = min(max(yearEnd, categoryEnd), refreshNow)
+        let exclusions = controller.appUsage.exclusions.snapshot()
         refreshTask = Task {
             let trace = PerformanceTrace.begin("Statistics reload")
             defer { PerformanceTrace.end(trace) }
             let history = await controller.activityIntervalsAsync(from: start, to: end, now: refreshNow)
             guard !Task.isCancelled else { return }
-            let usage = await controller.appUsage.segmentsAsync(from: window.start, to: min(categoryEnd, refreshNow), now: refreshNow)
+            let usage = await controller.appUsage.segmentsAsync(from: start, to: end, now: refreshNow)
+            guard !Task.isCancelled else { return }
+            let excluded = await controller.appUsage.excludedIntervalsAsync(from: start, to: end, now: refreshNow)
             guard !Task.isCancelled else { return }
             guard let snapshot = try? await StatisticsRefreshSnapshot.make(intervals: history, usage: usage,
-                window: window, categoryEnd: categoryEnd, year: year, calendar: calendar, period: refreshPeriod) else { return }
+                window: window, categoryEnd: categoryEnd, year: year, calendar: calendar, period: refreshPeriod, excluded: excluded, exclusions: exclusions) else { return }
             guard !Task.isCancelled else { return }
             categorySummary = snapshot.categories
             chartSnapshot = snapshot.chart

@@ -243,7 +243,7 @@ struct CategoryFolderCard: View {
                 .foregroundStyle(.tertiary)
             Spacer()
             Button(action: onStartAddRule) {
-                Label("Kural Ekle", systemImage: "plus")
+                Label("categories.apps.add", systemImage: "plus")
             }
             .buttonStyle(.bordered)
             .controlSize(.small)

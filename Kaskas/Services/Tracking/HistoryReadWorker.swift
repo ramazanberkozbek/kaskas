@@ -24,6 +24,14 @@ nonisolated enum HistoryReadWorker {
         return try context.fetch(query).map(\.segment)
     }
 
+    @concurrent static func excludedIntervals(container: ModelContainer, from start: Date, to end: Date) async throws -> [ExcludedUsageInterval] {
+        try Task.checkCancellation()
+        let context = ModelContext(container)
+        let query = FetchDescriptor<ExcludedUsageRecord>(predicate: #Predicate { $0.startedAt < end && $0.endedAt > start },
+                                                        sortBy: [SortDescriptor(\.startedAt)])
+        return try context.fetch(query).map(\.interval)
+    }
+
     @concurrent static func entries(container: ModelContainer, from start: Date, to end: Date) async throws -> [BreakHistoryEntry] {
         try Task.checkCancellation()
         let context = ModelContext(container)

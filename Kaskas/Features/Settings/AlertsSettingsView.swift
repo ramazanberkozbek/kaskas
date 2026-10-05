@@ -11,6 +11,7 @@ struct AlertsSettingsView: View {
     private let reminderIntervals: [TimeInterval] = [5, 10, 20, 30].map { $0 * 60 }
     @State private var showingMascotPicker = false
     @State private var previewMascotKey = UUID()
+    @State private var isMascotPreviewVisible = false
 
     var body: some View {
         ScrollView {
@@ -144,7 +145,7 @@ struct AlertsSettingsView: View {
                                 mascot: controller.configuration.microReminderMascot,
                                 color: controller.configuration.microReminderColor,
                                 size: 110,
-                                animated: true,
+                                animated: isMascotPreviewVisible,
                                 looping: true
                             )
                             .id(previewMascotKey)
@@ -152,6 +153,9 @@ struct AlertsSettingsView: View {
                         .frame(height: 240)
                         .frame(maxWidth: .infinity)
                         .clipped()
+                        .onScrollVisibilityChange(threshold: 0.1) { isVisible in
+                            isMascotPreviewVisible = isVisible
+                        }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             previewMascotKey = UUID()

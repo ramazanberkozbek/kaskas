@@ -51,7 +51,16 @@ nonisolated struct CategoryUsageSummary: Equatable, Sendable {
     /// Reusable, nonoverlapping usage timeline. Sorting and resolving replayed/overlapping
     /// records happens once; multiple session/window summaries can share the result.
     struct Timeline: Sendable {
-        private let segments: [AppUsageSegment]
+        let segments: [AppUsageSegment]
+
+        private init(segments: [AppUsageSegment]) {
+            self.segments = segments
+        }
+
+        /// Filtering winner slices preserves their order and nonoverlap.
+        func filter(_ isIncluded: (AppUsageSegment) -> Bool) -> Self {
+            Self(segments: segments.filter(isIncluded))
+        }
 
         init(usage: [AppUsageSegment]) {
             let ordered = usage.sorted {

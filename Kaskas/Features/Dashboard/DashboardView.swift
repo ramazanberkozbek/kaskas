@@ -210,6 +210,7 @@ struct DashboardView: View {
         .onDisappear { refreshTask?.cancel() }
         .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
+        .onChange(of: controller.appUsage.exclusions.revision) { _, _ in reload() }
         .onChange(of: endDate) { _, newDate in
             let normalized = Calendar.current.startOfDay(for: newDate)
             if endDate != normalized {
@@ -385,24 +386,26 @@ struct DashboardView: View {
         let start = calendar.date(byAdding: .day, value: -6, to: weekStart) ?? weekStart
         let sessionEnd = calendar.date(byAdding: .day, value: 1, to: selectedDay) ?? refreshNow
         let end = min(sessionEnd, refreshNow)
+        let exclusions = controller.appUsage.exclusions.snapshot()
         refreshTask = Task {
             let trace = PerformanceTrace.begin("Dashboard refresh")
             defer { PerformanceTrace.end(trace) }
             let intervals = await controller.activityIntervalsAsync(from: start, to: end, now: refreshNow)
             guard !Task.isCancelled else { return }
-            let usage = await controller.appUsage.segmentsAsync(from: weekStart, to: end, now: refreshNow)
+            let usage = await controller.appUsage.segmentsAsync(from: start, to: end, now: refreshNow)
+            guard !Task.isCancelled else { return }
+            let excluded = await controller.appUsage.excludedIntervalsAsync(from: start, to: end, now: refreshNow)
             guard !Task.isCancelled else { return }
             let breaks = await controller.breakEntriesAsync(from: weekStart, through: end)
             guard !Task.isCancelled else { return }
             guard let snapshot = try? await DashboardRefreshSnapshot.make(intervals: intervals, usage: usage, breaks: breaks,
-                date: date, weekStart: weekStart, sessionEnd: sessionEnd, calendar: calendar) else { return }
+                date: date, weekStart: weekStart, sessionEnd: sessionEnd, calendar: calendar, excluded: excluded, exclusions: exclusions) else { return }
             guard !Task.isCancelled else { return }
             dayCategorySnapshot = snapshot.day
             weekCategorySnapshot = snapshot.week
             chartSnapshot = snapshot.chart
-            if let selected = selectedSession,
-               let refreshed = (snapshot.day.sessions + snapshot.week.sessions).first(where: { $0.id == selected.id }) {
-                selectedSession = refreshed
+            if let selected = selectedSession {
+                selectedSession = (snapshot.day.sessions + snapshot.week.sessions).first { $0.id == selected.id }
             }
         }
     }

@@ -104,6 +104,7 @@ final class SessionController {
         historyStore: (any BreakHistoryRecording)? = nil,
         activityStore: (any ActivityRecording)? = nil,
         appUsageStore: (any AppUsageRecording)? = nil,
+        excludedUsageStore: (any ExcludedUsageRecording)? = nil,
         categoryRegistry: CategoryRegistry = CategoryRegistry(),
         scheduler: SessionScheduler = SessionScheduler(),
         microReminderPresenter: MicroReminderPresenter = MicroReminderPresenter(),
@@ -123,7 +124,7 @@ final class SessionController {
         self.customWallpaperStore = customWallpaperStore
         self.meetingMonitor = meetingMonitor
         self.categoryRegistry = categoryRegistry
-        appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore)
+        appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore, excludedUsageStore: excludedUsageStore)
         persistence = SessionPersistence(store: store, historyStore: historyStore)
         activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
         breakHistoryStore = historyStore as? BreakHistoryStore

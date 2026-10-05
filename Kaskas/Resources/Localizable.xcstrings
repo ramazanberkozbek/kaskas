@@ -1,23 +1,6 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    "categories.usage.smallCategories" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other categories"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diğer kategoriler"
-          }
-        }
-      }
-    },
     "" : {
 
     },
@@ -457,6 +440,23 @@
         }
       }
     },
+    "categories.apps.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama Ekle"
+          }
+        }
+      }
+    },
     "categories.newCategoryFallback" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -586,6 +586,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu dönemde çalışma kaydı yok."
+          }
+        }
+      }
+    },
+    "categories.usage.smallCategories" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other categories"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer kategoriler"
           }
         }
       }
@@ -2227,6 +2244,159 @@
         }
       }
     },
+    "exclusions.about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About excluded applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hariç tutulan uygulamalar hakkında"
+          }
+        }
+      }
+    },
+    "exclusions.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama Ekle"
+          }
+        }
+      }
+    },
+    "exclusions.collapsed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapsed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daraltıldı"
+          }
+        }
+      }
+    },
+    "exclusions.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exclude Selected Applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçilen Uygulamaları Hariç Tut"
+          }
+        }
+      }
+    },
+    "exclusions.expanded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genişletildi"
+          }
+        }
+      }
+    },
+    "exclusions.historyExplanation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time in these apps is excluded from study statistics and sessions, including past reports. Break reminders continue."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu uygulamalarda geçen süre, geçmiş dahil çalışma istatistiklerinden ve oturumlardan çıkarılır. Mola hatırlatmaları devam eder."
+          }
+        }
+      }
+    },
+    "exclusions.include" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include Again"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Dahil Et"
+          }
+        }
+      }
+    },
+    "exclusions.noMatches" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eşleşen uygulama bulunamadı"
+          }
+        }
+      }
+    },
+    "exclusions.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluded Applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hariç Tutulan Uygulamalar"
+          }
+        }
+      }
+    },
     "Geri Al" : {
       "localizations" : {
         "en" : {
@@ -2566,6 +2736,7 @@
       }
     },
     "Kural Ekle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2576,6 +2747,7 @@
       }
     },
     "Kuralı Güncelle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2586,6 +2758,7 @@
       }
     },
     "Kuralı Kaydet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6750,6 +6923,7 @@
       }
     },
     "Yeni Kural Ekle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

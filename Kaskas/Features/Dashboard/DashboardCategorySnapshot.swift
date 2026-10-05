@@ -24,7 +24,9 @@ nonisolated struct DashboardCategorySnapshot: Sendable {
         return Self(usage: timeline.summary(intervals: intervals, from: start, to: end),
                     sessions: sessions.map { session in
                         Session(value: session, summary: .init(usage: timeline.summary(
-                            intervals: session.intervals, from: session.startedAt, to: session.endedAt)))
+                            intervals: (session.effectiveSegments ?? session.segments).map {
+                                ActivityInterval(kind: .studying, startedAt: $0.start, endedAt: $0.end)
+                            }, from: session.startedAt, to: session.endedAt)))
                     })
     }
 }

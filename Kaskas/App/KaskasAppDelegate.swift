@@ -11,22 +11,26 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
         let historyStore: BreakHistoryStore?
         let activityStore: ActivityStore?
         let appUsageStore: AppUsageStore?
+        let excludedUsageStore: ExcludedUsageStore?
         do {
-            let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, AppUsageRecord.self)
+            let container = try ModelContainer(for: BreakRecord.self, ActivityRecord.self, AppUsageRecord.self, ExcludedUsageRecord.self)
             historyStore = BreakHistoryStore(container: container)
             activityStore = ActivityStore(container: container)
             appUsageStore = AppUsageStore(container: container)
+            excludedUsageStore = ExcludedUsageStore(container: container)
         } catch {
             NSLog("Kaskas: Failed to open local history: %@", String(describing: error))
             historyStore = nil
             activityStore = nil
             appUsageStore = nil
+            excludedUsageStore = nil
         }
         sessionController = SessionController(
             store: sessionStore,
             historyStore: historyStore,
             activityStore: activityStore,
-            appUsageStore: appUsageStore
+            appUsageStore: appUsageStore,
+            excludedUsageStore: excludedUsageStore
         )
         super.init()
     }
@@ -110,6 +114,11 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         sessionController.openSettings()
         return false
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        // The session and menu bar must outlive the settings window.
+        false
     }
 
     func applicationWillTerminate(_ notification: Notification) {
