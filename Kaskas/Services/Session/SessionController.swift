@@ -49,6 +49,8 @@ final class SessionController {
     @ObservationIgnored private let skippedBreakNotifier = SkippedBreakNotifier()
     @ObservationIgnored private let idleBreakNotifier = IdleBreakNotifier()
     @ObservationIgnored private let typingMonitor: any TypingActivityMonitoring
+    @ObservationIgnored private let meetingPauseIndicator = CursorBreakCountdownPresenter()
+    @ObservationIgnored private var lastProtectionIndicatorAt: Date?
     @ObservationIgnored private let cursorIdleMonitor = CursorIdleMonitor()
     @ObservationIgnored private let meetingMonitor: any MeetingActivityMonitoring
     @ObservationIgnored private let videoMonitor: any VideoActivityMonitoring
@@ -737,6 +739,8 @@ final class SessionController {
     }
 
     private func refreshSnapshot(at now: Date = Date()) {
+        let wasProtectionPaused = sessionSnapshot.status.isProtectionPaused
+        let previousKind = sessionSnapshot.status.activityKind
         sessionSnapshot = engine.snapshot(at: now)
         let watchesTyping = hasStarted && configuration.pauseWhileTyping && configuration.breakWarningEnabled
             && (engine.status.isTypingPaused || (!engine.status.isPaused && engine.status.phase == .focusing
@@ -747,6 +751,17 @@ final class SessionController {
             }
         } else {
             typingMonitor.stop()
+        }
+        let indicatorEnabled = sessionSnapshot.status.isMeetingPaused ? configuration.meetingPauseIndicatorEnabled
+            : (sessionSnapshot.status.isVideoPaused && configuration.videoPauseIndicatorEnabled)
+        if !hasStarted || !indicatorEnabled || !sessionSnapshot.status.isProtectionPaused {
+            meetingPauseIndicator.dismiss()
+        } else if (!wasProtectionPaused || previousKind != sessionSnapshot.status.activityKind),
+                  lastProtectionIndicatorAt.map({ now.timeIntervalSince($0) >= 60 }) ?? true {
+            // Shared presentation-only cooldown: detection and timer transitions
+            // still run on every signal, including repeated video play/pause.
+            lastProtectionIndicatorAt = now
+            meetingPauseIndicator.showMeetingPause()
         }
     }
 

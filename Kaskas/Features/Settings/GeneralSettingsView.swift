@@ -76,19 +76,11 @@ struct GeneralSettingsView: View {
             }
             MenuBarAppearanceSettingsView(controller: controller)
             Section {
-                Group {
-                    Toggle(isOn: pauseDuringMeetings) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("settings.meetings.enabled")
-                            Text("settings.meetings.description")
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .settingsFormRow()
+                ProtectionSettingsCardsView(controller: controller)
+                    .settingsFormRow()
+                    .padding(.vertical, 6)
             } header: {
-                sectionHeader("settings.meetings.section")
+                sectionHeader("settings.protection.section")
                     .settingsFormSectionHeader()
             }
             Section {
@@ -186,16 +178,6 @@ struct GeneralSettingsView: View {
             controller.launchAtLogin.isEnabled
         } set: { enabled in
             controller.launchAtLogin.setEnabled(enabled)
-        }
-    }
-
-    private var pauseDuringMeetings: Binding<Bool> {
-        Binding {
-            controller.configuration.pauseDuringMeetings
-        } set: { enabled in
-            var configuration = controller.configuration
-            configuration.pauseDuringMeetings = enabled
-            controller.updateConfiguration(configuration)
         }
     }
 

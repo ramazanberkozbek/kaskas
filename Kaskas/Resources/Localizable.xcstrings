@@ -5023,6 +5023,40 @@
         }
       }
     },
+    "settings.meetings.indicator.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Briefly show a silent pause icon when Meeting Protection pauses the timer."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplantı koruması süreyi duraklattığında kısa süreli, sessiz bir duraklatma simgesi göster."
+          }
+        }
+      }
+    },
+    "settings.meetings.indicator.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show pause icon beside cursor"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fare yanında duraklatma simgesi göster"
+          }
+        }
+      }
+    },
     "settings.meetings.section" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5529,6 +5563,446 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odak süresi değişince sayaç yeni süreyle baştan başlar. Diğer değişiklikler sonraki odak döngüsünde uygulanır."
+          }
+        }
+      }
+    },
+    "settings.protection.addApp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add application…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama ekle…"
+          }
+        }
+      }
+    },
+    "settings.protection.camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also detect camera use"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera kullanımını da algıla"
+          }
+        }
+      }
+    },
+    "settings.protection.comingSoon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coming soon"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yakında"
+          }
+        }
+      }
+    },
+    "settings.protection.cursorEffect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor effect"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fare efekti"
+          }
+        }
+      }
+    },
+    "settings.protection.devices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devices allowed to trigger detection"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algılamayı tetikleyebilen cihazlar"
+          }
+        }
+      }
+    },
+    "settings.protection.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamam"
+          }
+        }
+      }
+    },
+    "settings.protection.exclusions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluded applications"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hariç tutulan uygulamalar"
+          }
+        }
+      }
+    },
+    "settings.protection.invalidApp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a valid application."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli bir uygulama seçin."
+          }
+        }
+      }
+    },
+    "settings.protection.meeting.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone detection is used by default. Camera use can also come from apps outside meetings. Audio and video are never recorded."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varsayılan olarak mikrofon kullanımı algılanır. Kamera kullanımı toplantı dışındaki uygulamalardan da kaynaklanabilir. Ses ve görüntü kaydedilmez."
+          }
+        }
+      }
+    },
+    "settings.protection.meeting.rowSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detected using microphone activity"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon kullanımıyla algılanır"
+          }
+        }
+      }
+    },
+    "settings.protection.meeting.rowTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During calls and meetings"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arama ve toplantı sırasında"
+          }
+        }
+      }
+    },
+    "settings.protection.meeting.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause breaks while your microphone or camera is in use."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon veya kamera kullanılırken molaları ertele."
+          }
+        }
+      }
+    },
+    "settings.protection.notification.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapalı"
+          }
+        }
+      }
+    },
+    "settings.protection.notification.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Açık"
+          }
+        }
+      }
+    },
+    "settings.protection.options" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detection options…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algılama seçenekleri…"
+          }
+        }
+      }
+    },
+    "settings.protection.removeApp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove exclusion"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İstisnayı kaldır"
+          }
+        }
+      }
+    },
+    "settings.protection.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic Pause"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik duraklatma"
+          }
+        }
+      }
+    },
+    "settings.protection.triggers.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose when to pause reminders. Hover over the bell to preview the cursor effect."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hatırlatıcıların ne zaman duraklayacağını seçin. Efekti görmek için bildirim düğmesinin üzerine gelin."
+          }
+        }
+      }
+    },
+    "settings.protection.typing.rowSubtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delays your break until you finish typing."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazmayı bitirene kadar molayı erteler."
+          }
+        }
+      }
+    },
+    "settings.protection.typing.rowTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause while typing"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazarken duraklat"
+          }
+        }
+      }
+    },
+    "settings.protection.video.rowSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauses reminders while video plays in a supported foreground browser"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desteklenen tarayıcı ön planda video oynatırken hatırlatıcıları duraklatır"
+          }
+        }
+      }
+    },
+    "settings.protection.video.rowTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During video playback"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video izlerken"
+          }
+        }
+      }
+    },
+    "settings.protection.video.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep breaks from interrupting your viewing."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video izlerken molalarla bölünme."
+          }
+        }
+      }
+    },
+    "settings.protection.video.support" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detects video playback in foreground Safari, Chrome, Edge, Brave, Arc, Opera and Chromium. Audio-only playback does not trigger a pause. Safari videos that do not emit a display-sleep signal (such as looping Shorts) and other players are currently excluded."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öndeki Safari, Chrome, Edge, Brave, Arc, Opera ve Chromium uygulamalarında video oynatımını algılar. Yalnızca ses oynatımı duraklatmayı tetiklemez. Safari’de ekran uyku sinyali üretmeyen videolar (örneğin döngüdeki Shorts) ve diğer oynatıcılar şu an kapsam dışıdır."
+          }
+        }
+      }
+    },
+    "settings.protection.video.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video Protection"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video koruması"
+          }
+        }
+      }
+    },
+    "settings.protection.virtualMics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include virtual microphones"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanal mikrofonları dahil et"
           }
         }
       }
