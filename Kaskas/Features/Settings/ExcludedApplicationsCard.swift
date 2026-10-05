@@ -34,7 +34,7 @@ struct ExcludedApplicationsCard: View {
                             .foregroundStyle(.red)
                             .frame(width: 18)
                         Text("exclusions.title")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(CategorySettingsTypography.label)
                             .foregroundStyle(.primary)
                         Text("\(applications.count)")
                             .font(.system(size: 12))
@@ -83,9 +83,10 @@ struct ExcludedApplicationsCard: View {
                         Spacer()
                         Button(action: onAdd) {
                             Label("exclusions.add", systemImage: "plus")
+                                .font(CategorySettingsTypography.label)
                         }
                         .buttonStyle(.bordered)
-                        .controlSize(.small)
+                        .controlSize(.regular)
                     }
                     .padding(.horizontal, SettingsPageLayout.cardInset)
                     .padding(.vertical, 10)
@@ -95,7 +96,7 @@ struct ExcludedApplicationsCard: View {
                             CategoryAppIconView(bundleId: app.bundleID, appName: app.name)
                                 .frame(width: 32, height: 32)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(app.name).font(.system(size: 13, weight: .semibold))
+                                Text(app.name).font(CategorySettingsTypography.label)
                                 Text(app.bundleID)
                                     .font(.system(size: 11, design: .monospaced))
                                     .foregroundStyle(.tertiary)
@@ -103,7 +104,8 @@ struct ExcludedApplicationsCard: View {
                             }
                             Spacer()
                             Button("exclusions.include") { preferences.remove(bundleID: app.bundleID) }
-                                .controlSize(.small)
+                                .font(CategorySettingsTypography.label)
+                                .controlSize(.regular)
                         }
                         .padding(.horizontal, SettingsPageLayout.cardInset)
                         .padding(.vertical, 9)

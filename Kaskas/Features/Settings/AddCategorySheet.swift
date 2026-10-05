@@ -16,10 +16,9 @@ struct AddCategorySheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Yeni Kategori Ekle")
+                    Text("categories.rules.newCategory")
                         .font(.headline)
                     Text("Özel bir çalışma kategorisi oluşturun.")
                         .font(.caption)
@@ -36,20 +35,20 @@ struct AddCategorySheet: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help(Text("categories.actions.close"))
+                .accessibilityLabel(Text("categories.actions.close"))
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
 
             Divider()
 
-            // Content: single-line icon picker + text field (matches AddCategoryRuleSheet)
             VStack(alignment: .leading, spacing: 8) {
                 Text("Kategori")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
                 HStack(spacing: 8) {
-                    // Icon picker trigger button
                     Button {
                         showingIconPickerPopover.toggle()
                     } label: {
@@ -70,7 +69,6 @@ struct AddCategorySheet: View {
                         }
                     }
 
-                    // Category name text field
                     HStack {
                         TextField("Kategori adı", text: $categoryName)
                             .textFieldStyle(.plain)
@@ -104,18 +102,19 @@ struct AddCategorySheet: View {
 
             Divider()
 
-            // Footer
             HStack {
                 Button("İptal") {
                     dismiss()
                 }
+                .font(CategorySettingsTypography.label)
                 .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
-                Button("Kategoriyi Kaydet") {
+                Button("categories.actions.add") {
                     saveCategory()
                 }
+                .font(CategorySettingsTypography.label)
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(!isValid)

@@ -36,3 +36,10 @@ extension View {
         padding(.horizontal, SettingsPageLayout.cardInset - SettingsPageLayout.formContentInset)
     }
 }
+
+/// Shared text styles for category names and actions, including native button labels.
+enum CategorySettingsTypography {
+    static let label = Font.system(size: 13, weight: .medium)
+    static let body = Font.system(size: 13)
+    static let secondary = Font.system(size: 12)
+}

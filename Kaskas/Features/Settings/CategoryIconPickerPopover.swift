@@ -14,7 +14,6 @@ struct CategoryIconPickerPopover: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // Search field
             HStack {
                 Image(systemName: "magnifyingglass")
                     .font(.caption)
@@ -39,7 +38,6 @@ struct CategoryIconPickerPopover: View {
             .padding(.vertical, 6)
             .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 6))
 
-            // Grid of icons
             ScrollView {
                 LazyVGrid(columns: Array(repeating: GridItem(.fixed(34), spacing: 6), count: 6), spacing: 6) {
                     ForEach(filteredIcons, id: \.self) { icon in

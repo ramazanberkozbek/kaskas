@@ -56,13 +56,16 @@ struct AddExcludedApplicationsSheet: View {
             .frame(height: 270)
             Divider()
             HStack {
-                Button("İptal") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("İptal") { dismiss() }
+                    .font(CategorySettingsTypography.label)
+                    .keyboardShortcut(.cancelAction)
                 Spacer()
                 Button("exclusions.confirm") {
                     preferences.add(applications.filter { selected.contains($0.bundleId) }
                         .map { ExcludedApplication(bundleID: $0.bundleId, name: $0.name) })
                     dismiss()
                 }
+                .font(CategorySettingsTypography.label)
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(selected.isEmpty)

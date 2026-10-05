@@ -47,6 +47,7 @@
       }
     },
     "%@ kategorisinde tanımlı" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -101,6 +102,7 @@
 
     },
     "%lld uygulama" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -210,6 +212,7 @@
       }
     },
     "Atanacak Kategori" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -421,6 +424,7 @@
       }
     },
     "Bu kategoriyi düzenle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -431,11 +435,148 @@
       }
     },
     "Bu kategoriyi sil" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete this category"
+          }
+        }
+      }
+    },
+    "categories.actions.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekle"
+          }
+        }
+      }
+    },
+    "categories.actions.assign" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ata"
+          }
+        }
+      }
+    },
+    "categories.actions.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapat"
+          }
+        }
+      }
+    },
+    "categories.actions.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sil"
+          }
+        }
+      }
+    },
+    "categories.actions.deleteCategory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Category"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategoriyi Sil"
+          }
+        }
+      }
+    },
+    "categories.actions.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Category"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategoriyi Düzenle"
+          }
+        }
+      }
+    },
+    "categories.actions.reset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıfırla"
+          }
+        }
+      }
+    },
+    "categories.actions.restoreDefaults" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Defaults"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varsayılanlara Dön"
           }
         }
       }
@@ -446,7 +587,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Applications"
+            "value" : "Add Apps"
           }
         },
         "tr" : {
@@ -508,34 +649,87 @@
         }
       }
     },
-    "categories.rules.removeOverride" : {
+    "categories.rules.chooseCategory" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove custom assignment"
+            "value" : "Choose a Category"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Özel atamayı kaldır"
+            "value" : "Kategori Seç"
+          }
+        }
+      }
+    },
+    "categories.rules.chooseIcon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Icon"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simge Seç"
+          }
+        }
+      }
+    },
+    "categories.rules.newCategory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Category"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni Kategori"
+          }
+        }
+      }
+    },
+    "categories.rules.removeOverride" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Custom Assignment"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel Atamayı Kaldır"
           }
         }
       }
     },
     "categories.rules.removeRule" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove rule"
+            "value" : "Remove Rule"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kuralı kaldır"
+            "value" : "Kuralı Kaldır"
           }
         }
       }
@@ -2250,13 +2444,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About excluded applications"
+            "value" : "About Excluded Apps"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hariç tutulan uygulamalar hakkında"
+            "value" : "Hariç Tutulan Uygulamalar Hakkında"
           }
         }
       }
@@ -2267,7 +2461,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Applications"
+            "value" : "Add Apps"
           }
         },
         "tr" : {
@@ -2301,13 +2495,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exclude Selected Applications"
+            "value" : "Exclude"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seçilen Uygulamaları Hariç Tut"
+            "value" : "Hariç Tut"
           }
         }
       }
@@ -2386,7 +2580,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Excluded Applications"
+            "value" : "Excluded Apps"
           }
         },
         "tr" : {
@@ -2576,6 +2770,7 @@
       }
     },
     "İkonu değiştir" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2664,6 +2859,7 @@
       }
     },
     "Kategori Ekle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2674,6 +2870,7 @@
       }
     },
     "Kategoriyi Kaydet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2684,6 +2881,7 @@
       }
     },
     "Kategoriyi Sil" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2780,6 +2978,7 @@
       }
     },
     "Mac'inizdeki uygulamaları seçin ve ortak kategorilerini belirleyin." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3215,6 +3414,7 @@
       }
     },
     "Mevcut: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6676,6 +6876,7 @@
       }
     },
     "Tüm Özel Kuralları Sıfırla" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6748,6 +6949,7 @@
       }
     },
     "Varsayılana Sıfırla" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6768,6 +6970,7 @@
       }
     },
     "Vazgeç" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6913,6 +7116,7 @@
       }
     },
     "Yeni Kategori Ekle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6960,6 +7164,7 @@
       }
     },
     "Yüklü Uygulamaları Seçin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

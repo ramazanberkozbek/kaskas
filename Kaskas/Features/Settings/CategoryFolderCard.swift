@@ -16,7 +16,6 @@ struct CategoryFolderCard: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    // Inline category editing state
     @State private var isEditing: Bool = false
     @State private var editingName: String = ""
     @State private var editingIcon: String = ""
@@ -25,7 +24,6 @@ struct CategoryFolderCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Category Header (Folder style)
             Group {
                 if isEditing {
                     editingHeader
@@ -34,7 +32,6 @@ struct CategoryFolderCard: View {
                 }
             }
 
-            // Expanded Folder Content
             if isExpanded {
                 Divider()
                     .padding(.horizontal, SettingsPageLayout.cardInset)
@@ -96,7 +93,7 @@ struct CategoryFolderCard: View {
                         .frame(width: 18)
 
                     Text(category.localizedName(for: locale))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(CategorySettingsTypography.label)
                         .foregroundStyle(.primary)
 
                     Text("\(rules.count)")
@@ -113,20 +110,21 @@ struct CategoryFolderCard: View {
             }
             .buttonStyle(.plain)
 
-            // Action buttons (edit, delete)
             HStack(spacing: 4) {
                 Button(action: startEditing) {
                     Image(systemName: "pencil")
                 }
                 .buttonStyle(HeaderActionButtonStyle())
-                .accessibilityLabel("Bu kategoriyi düzenle")
+                .accessibilityLabel(Text("categories.actions.edit"))
+                .help(Text("categories.actions.edit"))
 
                 if category.id != "other" {
                     Button(action: onDeleteCategory) {
                         Image(systemName: "trash")
                     }
                     .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
-                    .accessibilityLabel("Bu kategoriyi sil")
+                    .accessibilityLabel(Text("categories.actions.deleteCategory"))
+                    .help(Text("categories.actions.deleteCategory"))
                 }
             }
             .padding(.trailing, SettingsPageLayout.cardInset)
@@ -149,7 +147,6 @@ struct CategoryFolderCard: View {
             }
             .buttonStyle(.plain)
 
-            // Icon picker trigger
             Button {
                 showingIconPopover.toggle()
             } label: {
@@ -176,12 +173,12 @@ struct CategoryFolderCard: View {
                     showingIconPopover = false
                 }
             }
-            .accessibilityLabel("İkonu değiştir")
+            .accessibilityLabel(Text("categories.rules.chooseIcon"))
+            .help(Text("categories.rules.chooseIcon"))
 
-            // Name field
             TextField("Kategori adı", text: $editingName)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .semibold))
+                .font(CategorySettingsTypography.label)
                 .focused($isNameFieldFocused)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
@@ -205,7 +202,6 @@ struct CategoryFolderCard: View {
 
             Spacer()
 
-            // Save button
             Button(action: saveEditing) {
                 Image(systemName: "checkmark")
                     .font(.system(size: 10, weight: .bold))
@@ -216,9 +212,9 @@ struct CategoryFolderCard: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Kaydet")
+            .help(Text("Kaydet"))
             .disabled(editingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-            // Cancel button
             Button(action: cancelEditing) {
                 Image(systemName: "xmark")
                     .font(.system(size: 9, weight: .bold))
@@ -228,7 +224,8 @@ struct CategoryFolderCard: View {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Vazgeç")
+            .accessibilityLabel("İptal")
+            .help(Text("İptal"))
         }
         .padding(.horizontal, SettingsPageLayout.cardInset)
         .padding(.vertical, 10)
@@ -244,9 +241,10 @@ struct CategoryFolderCard: View {
             Spacer()
             Button(action: onStartAddRule) {
                 Label("categories.apps.add", systemImage: "plus")
+                    .font(CategorySettingsTypography.label)
             }
             .buttonStyle(.bordered)
-            .controlSize(.small)
+            .controlSize(.regular)
         }
         .padding(.horizontal, SettingsPageLayout.cardInset)
         .padding(.vertical, 10)

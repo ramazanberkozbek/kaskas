@@ -177,8 +177,7 @@ private struct SettingsPlaceholderView: View {
 // MARK: - Window Chrome
 
 /// Configures the Settings window so the title bar is transparent and the
-/// traffic lights sit inline with the sidebar, matching the SpacedRepetition
-/// project's MacWindowChromeConfigurator approach.
+/// traffic lights sit inline with the sidebar.
 private struct SettingsWindowChrome: NSViewRepresentable {
     var colorScheme: ColorScheme
 

@@ -72,6 +72,18 @@ struct LanguageSettingsTests {
     }
 
     @Test
+    @MainActor
+    func categoryApplicationCountUsesSelectedLanguageAndPluralForms() {
+        let english = Locale(identifier: "en")
+        let turkish = Locale(identifier: "tr")
+        #expect(CategorySettingsView.applicationCountLabel(0, locale: english) == "0 apps")
+        #expect(CategorySettingsView.applicationCountLabel(1, locale: english) == "1 app")
+        #expect(CategorySettingsView.applicationCountLabel(26, locale: english) == "26 apps")
+        #expect(CategorySettingsView.applicationCountLabel(1, locale: turkish) == "1 uygulama")
+        #expect(CategorySettingsView.applicationCountLabel(26, locale: turkish) == "26 uygulama")
+    }
+
+    @Test
     func dynamicLocalizationHelpersResolveCorrectLanguages() {
         let trLocale = Locale(identifier: "tr")
         let enLocale = Locale(identifier: "en")

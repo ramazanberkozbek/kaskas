@@ -10,17 +10,27 @@ struct AddCategoryRuleSheet: View {
     @State private var appSearchText: String = ""
     @State private var selectedAppIDs: Set<String> = []
     @State private var savedAppCount: Int = 0
+    private enum CategorySelection: Hashable {
+        case none
+        case existing(String)
+        case new
+    }
+
+    @State private var categorySelection: CategorySelection
+    @FocusState private var isCategoryNameFocused: Bool
     @State private var categoryName: String
     @State private var categoryIcon: String
     @State private var showingIconPickerPopover: Bool = false
     @State private var installedApps: [CategoryRegistry.DiscoveredApp] = []
     @State private var isLoadingApps: Bool = false
+    @State private var appCategories: [String: AppCategory] = [:]
 
     init(registry: CategoryRegistry, initialCategory: AppCategory? = nil, onSave: @escaping () -> Void) {
         self.registry = registry
         self.initialCategory = initialCategory
         self.onSave = onSave
-        _categoryName = State(initialValue: initialCategory?.localizedName ?? "")
+        _categorySelection = State(initialValue: initialCategory.map { .existing($0.id) } ?? .none)
+        _categoryName = State(initialValue: "")
         _categoryIcon = State(initialValue: initialCategory?.iconName ?? "folder.fill")
     }
 
@@ -33,15 +43,37 @@ struct AddCategoryRuleSheet: View {
         }
     }
 
-    private func existingCategory(for app: CategoryRegistry.DiscoveredApp) -> AppCategory? {
-        if let rule = registry.allRules.first(where: { $0.matches(bundleId: app.bundleId, appName: app.name) }) {
-            return registry.category(for: rule.categoryId) ?? AppCategory.defaultCategories.first { $0.id == rule.categoryId }
+    // Resolve once after discovery or a registry change, never while rendering rows.
+    private func refreshAppCategories() {
+        let rules = registry.allRules
+        let categories = Dictionary(uniqueKeysWithValues: registry.categories.map { ($0.id, $0) })
+        let defaults = Dictionary(uniqueKeysWithValues: AppCategory.defaultCategories.map { ($0.id, $0) })
+        let resolver = registry.resolverSnapshot()
+        var assignments: [String: AppCategory] = [:]
+        for app in installedApps {
+            if let rule = rules.first(where: { $0.matches(bundleId: app.bundleId, appName: app.name) }) {
+                assignments[app.id] = categories[rule.categoryId] ?? defaults[rule.categoryId]
+            } else {
+                let resolution = resolver.resolve(bundleID: app.bundleId, appName: app.name)
+                if resolution.isResolved {
+                    assignments[app.id] = categories[resolution.categoryID] ?? defaults[resolution.categoryID]
+                }
+            }
         }
-        let res = registry.resolution(bundleID: app.bundleId, appName: app.name)
-        if res.isResolved {
-            return registry.category(for: res.categoryID) ?? AppCategory.defaultCategories.first { $0.id == res.categoryID }
+        appCategories = assignments
+    }
+
+    private var selectedCategory: AppCategory? {
+        guard case .existing(let id) = categorySelection else { return nil }
+        return registry.category(for: id)
+    }
+
+    private var hasValidCategory: Bool {
+        switch categorySelection {
+        case .none: return false
+        case .existing: return selectedCategory != nil
+        case .new: return !categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        return nil
     }
 
     private var selectedApps: [CategoryRegistry.DiscoveredApp] {
@@ -49,16 +81,11 @@ struct AddCategoryRuleSheet: View {
     }
 
     var body: some View {
+        let visibleApps = filteredInstalledApps
         VStack(spacing: 0) {
-            // Header
             HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("categories.apps.add")
-                        .font(.headline)
-                    Text("Mac'inizdeki uygulamaları seçin ve ortak kategorilerini belirleyin.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text("categories.apps.add")
+                    .font(.headline)
                 Spacer()
                 Button {
                     dismiss()
@@ -70,6 +97,8 @@ struct AddCategoryRuleSheet: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help(Text("categories.actions.close"))
+                .accessibilityLabel(Text("categories.actions.close"))
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
@@ -77,12 +106,7 @@ struct AddCategoryRuleSheet: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 16) {
-                // Search installed apps
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Yüklü Uygulamaları Seçin")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .font(.caption)
@@ -108,7 +132,6 @@ struct AddCategoryRuleSheet: View {
                     .padding(.vertical, 7)
                     .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
 
-                    // App Selection List
                     ScrollView {
                         if isLoadingApps && installedApps.isEmpty {
                             VStack(spacing: 8) {
@@ -119,7 +142,7 @@ struct AddCategoryRuleSheet: View {
                                     .foregroundStyle(.secondary)
                             }
                             .frame(maxWidth: .infinity, minHeight: 180)
-                        } else if filteredInstalledApps.isEmpty {
+                        } else if visibleApps.isEmpty {
                             VStack(spacing: 6) {
                                 Image(systemName: "magnifyingglass")
                                     .font(.title3)
@@ -130,74 +153,35 @@ struct AddCategoryRuleSheet: View {
                             }
                             .frame(maxWidth: .infinity, minHeight: 180)
                         } else {
-                            LazyVStack(spacing: 4) {
-                                ForEach(filteredInstalledApps) { app in
-                                    let currentCategory = existingCategory(for: app)
+                            LazyVStack(spacing: 0) {
+                                ForEach(visibleApps) { app in
+                                    let currentCategory = appCategories[app.id]
                                     let isSelected = selectedAppIDs.contains(app.id)
 
-                                    Button {
+                                    CategoryApplicationSelectionRow(
+                                        app: app,
+                                        category: currentCategory,
+                                        isSelected: isSelected,
+                                        showsDivider: app.id != visibleApps.last?.id
+                                    ) {
                                         savedAppCount = 0
                                         if isSelected {
                                             selectedAppIDs.remove(app.id)
                                         } else {
                                             selectedAppIDs.insert(app.id)
-                                            if initialCategory == nil,
-                                               categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                                               let currentCategory {
-                                                categoryName = currentCategory.localizedName
-                                                categoryIcon = currentCategory.iconName
+                                            if categorySelection == .none, let currentCategory,
+                                               registry.category(for: currentCategory.id) != nil {
+                                                categorySelection = .existing(currentCategory.id)
                                             }
                                         }
-                                    } label: {
-                                        HStack(spacing: 10) {
-                                            appIcon(for: app)
-                                                .frame(width: 24, height: 24)
-
-                                            VStack(alignment: .leading, spacing: 1) {
-                                                Text(app.name)
-                                                    .font(.system(size: 13, weight: .medium))
-                                                    .foregroundStyle(.primary)
-                                                Text(app.bundleId)
-                                                    .font(.system(size: 10, design: .monospaced))
-                                                    .foregroundStyle(.tertiary)
-                                                    .lineLimit(1)
-                                            }
-
-                                            Spacer(minLength: 0)
-
-                                            if let currentCategory {
-                                                Image(systemName: currentCategory.iconName)
-                                                    .font(.system(size: 11, weight: .medium))
-                                                    .foregroundStyle(.secondary)
-                                                    .frame(width: 22, height: 22)
-                                                    .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                                                    .accessibilityLabel(String(format: String(localized: "%@ kategorisinde tanımlı"), currentCategory.localizedName))
-                                            }
-
-                                            if isSelected {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundStyle(Color.accentColor)
-                                            }
-                                        }
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(RoundedRectangle(cornerRadius: 8))
-                                        .background(
-                                            isSelected
-                                                ? Color.accentColor.opacity(0.12)
-                                                : Color.clear,
-                                            in: RoundedRectangle(cornerRadius: 8)
-                                        )
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
-                            .padding(.vertical, 4)
+                            .padding(4)
                         }
                     }
                     .scrollIndicators(.hidden)
-                    .frame(height: 190)
+                    .frame(height: 280)
                     .background(Color.primary.opacity(0.02), in: RoundedRectangle(cornerRadius: 8))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
@@ -205,116 +189,118 @@ struct AddCategoryRuleSheet: View {
                     )
                 }
 
-                // Target Category — single-line: icon picker + text field
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Atanacak Kategori")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                    Text("Kategori")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
 
-                        if selectedApps.count == 1, let selectedApp = selectedApps.first, let curCat = existingCategory(for: selectedApp) {
-                            Spacer()
-                            HStack(spacing: 4) {
-                                Image(systemName: curCat.iconName)
-                                    .font(.caption2)
-                                Text(String(format: String(localized: "Mevcut: %@"), curCat.localizedName))
-                                    .font(.caption2)
+                    Menu {
+                        Picker("Kategori", selection: $categorySelection) {
+                            if categorySelection == .none {
+                                Text("categories.rules.chooseCategory")
+                                    .tag(CategorySelection.none)
                             }
-                            .foregroundStyle(.secondary)
+                            ForEach(registry.categories) { category in
+                                Label {
+                                    Text(category.localizedName)
+                                } icon: {
+                                    Image(systemName: category.iconName)
+                                        .foregroundStyle(category.color)
+                                }
+                                .tag(CategorySelection.existing(category.id))
+                            }
+                            Divider()
+                            Label("categories.rules.newCategory", systemImage: "plus")
+                                .tag(CategorySelection.new)
                         }
+                        .pickerStyle(.inline)
+                        .labelsHidden()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if let category = selectedCategory {
+                                Image(systemName: category.iconName)
+                                    .foregroundStyle(category.color)
+                                Text(category.localizedName)
+                                    .lineLimit(1)
+                            } else if categorySelection == .new {
+                                Label("categories.rules.newCategory", systemImage: "plus")
+                            } else {
+                                Text("categories.rules.chooseCategory")
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 10)
+                        .frame(height: 32)
+                        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 7))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 7)
+                                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                        }
+                        .contentShape(RoundedRectangle(cornerRadius: 7))
                     }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .dropdownHoverEffect()
+                    .accessibilityLabel(Text("Kategori"))
 
-                    HStack(spacing: 8) {
-                        // Icon picker trigger button
-                        Button {
-                            showingIconPickerPopover.toggle()
-                        } label: {
-                            Image(systemName: categoryIcon)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.primary)
-                                .frame(width: 28, height: 28)
-                                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 7)
-                                        .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .popover(isPresented: $showingIconPickerPopover, arrowEdge: .bottom) {
-                            CategoryIconPickerPopover(selectedIcon: $categoryIcon) {
-                                showingIconPickerPopover = false
-                            }
-                        }
-
-                        // Category name text field
-                        HStack {
-                            TextField("Kategori adı", text: $categoryName)
-                                .textFieldStyle(.plain)
-                                .font(.system(size: 13))
-
+                    if categorySelection == .new {
+                        HStack(spacing: 8) {
                             Button {
-                                categoryName = ""
+                                showingIconPickerPopover.toggle()
                             } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                                    .frame(width: 24, height: 24)
-                                    .contentShape(Rectangle())
+                                Image(systemName: categoryIcon)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(Color.blue)
+                                    .frame(width: 28, height: 28)
+                                    .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 7)
+                                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                                    )
                             }
                             .buttonStyle(.plain)
-                            .opacity(categoryName.isEmpty ? 0 : 1)
-                            .disabled(categoryName.isEmpty)
-                            .accessibilityHidden(categoryName.isEmpty)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-                        )
-                    }
+                            .accessibilityLabel(Text("categories.rules.chooseIcon"))
+                            .help(Text("categories.rules.chooseIcon"))
+                            .popover(isPresented: $showingIconPickerPopover, arrowEdge: .bottom) {
+                                CategoryIconPickerPopover(selectedIcon: $categoryIcon) {
+                                    showingIconPickerPopover = false
+                                }
+                            }
 
-                    // Quick-select: existing categories as suggestion chips
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
-                            ForEach(registry.categories) { cat in
+                            HStack {
+                                TextField("Kategori adı", text: $categoryName)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13))
+                                    .focused($isCategoryNameFocused)
+
                                 Button {
-                                    categoryName = cat.localizedName
-                                    categoryIcon = cat.iconName
+                                    categoryName = ""
                                 } label: {
-                                    HStack(spacing: 5) {
-                                        Image(systemName: cat.iconName)
-                                            .font(.system(size: 11))
-                                        Text(cat.localizedName)
-                                            .font(.system(size: 12, weight: .medium))
-                                    }
-                                    .foregroundStyle(
-                                        categoryName == cat.localizedName ? Color.accentColor : .secondary
-                                    )
-                                    .padding(.horizontal, 11)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        categoryName == cat.localizedName
-                                            ? Color.accentColor.opacity(0.12)
-                                            : Color.primary.opacity(0.04),
-                                        in: Capsule()
-                                    )
-                                    .overlay(
-                                        Capsule()
-                                            .strokeBorder(
-                                                categoryName == cat.localizedName
-                                                    ? Color.accentColor.opacity(0.3)
-                                                    : Color.primary.opacity(0.08),
-                                                lineWidth: 1
-                                            )
-                                    )
-                                    .contentShape(Capsule())
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(.tertiary)
+                                        .frame(width: 24, height: 24)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
+                                .opacity(categoryName.isEmpty ? 0 : 1)
+                                .disabled(categoryName.isEmpty)
+                                .accessibilityHidden(categoryName.isEmpty)
                             }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                            )
                         }
-                        .padding(.horizontal, 1)
+
                     }
                 }
             }
@@ -323,11 +309,11 @@ struct AddCategoryRuleSheet: View {
 
             Divider()
 
-            // Footer
             HStack {
                 Button("İptal") {
                     dismiss()
                 }
+                .font(CategorySettingsTypography.label)
                 .keyboardShortcut(.cancelAction)
 
                 if savedAppCount > 0 {
@@ -342,62 +328,65 @@ struct AddCategoryRuleSheet: View {
 
                 Spacer()
 
-                Button("Kaydet") {
+                Button("categories.actions.assign") {
                     saveRule()
                 }
+                .font(CategorySettingsTypography.label)
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(selectedAppIDs.isEmpty || categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(selectedAppIDs.isEmpty || !hasValidCategory)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
         }
-        .frame(width: 500, height: 550)
+        .frame(width: 500)
         .task {
             if installedApps.isEmpty {
                 isLoadingApps = true
                 let apps = await CategoryRegistry.discoverInstalledApplicationsAsync()
                 guard !Task.isCancelled else { return }
                 installedApps = apps
+                refreshAppCategories()
                 isLoadingApps = false
             }
         }
-    }
-
-    private func appIcon(for app: CategoryRegistry.DiscoveredApp) -> some View {
-        CategoryAppIconView(bundleId: app.bundleId, appName: app.name, path: app.path, size: 24)
+        .onChange(of: categorySelection) { _, selection in
+            showingIconPickerPopover = false
+            isCategoryNameFocused = selection == .new
+        }
+        .onChange(of: registry.revision) { _, _ in
+            refreshAppCategories()
+        }
     }
 
     private func saveRule() {
         let apps = selectedApps
         guard !apps.isEmpty else { return }
-        let cleanCategoryName = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanCategoryName.isEmpty else { return }
+        guard hasValidCategory else { return }
 
-        // Check if this matches an existing category by name
-        var targetCategoryId: String
-        if let existingCategory = registry.categories.first(where: {
-            $0.localizedName.caseInsensitiveCompare(cleanCategoryName) == .orderedSame
-                || $0.name.caseInsensitiveCompare(cleanCategoryName) == .orderedSame
-        }) {
-            targetCategoryId = existingCategory.id
-            // If the user changed the icon, update the category's icon too
-            if categoryIcon != existingCategory.iconName {
-                registry.addOrUpdateCategory(
-                    name: existingCategory.name,
+        let targetCategoryId: String
+        switch categorySelection {
+        case .none:
+            return
+        case .existing(let id):
+            targetCategoryId = id
+        case .new:
+            let cleanName = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let existing = registry.categories.first(where: {
+                $0.localizedName.caseInsensitiveCompare(cleanName) == .orderedSame ||
+                $0.name.caseInsensitiveCompare(cleanName) == .orderedSame
+            }) {
+                targetCategoryId = existing.id
+            } else {
+                targetCategoryId = registry.addOrUpdateCategory(
+                    name: cleanName,
                     iconName: categoryIcon,
-                    colorName: existingCategory.colorName,
-                    id: existingCategory.id
-                )
+                    colorName: "blue"
+                ).id
             }
-        } else {
-            // Create a new category with the typed name and chosen icon
-            let newCategory = registry.addOrUpdateCategory(
-                name: cleanCategoryName,
-                iconName: categoryIcon,
-                colorName: "blue"
-            )
-            targetCategoryId = newCategory.id
+            categorySelection = .existing(targetCategoryId)
+            categoryName = ""
+            categoryIcon = "folder.fill"
         }
 
         for app in apps {
@@ -412,5 +401,67 @@ struct AddCategoryRuleSheet: View {
         selectedAppIDs.removeAll()
         savedAppCount = apps.count
         onSave()
+    }
+}
+
+// Local hover state avoids rebuilding the sheet and the other application rows.
+// A single root per ForEach element also lets LazyVStack defer offscreen rows.
+private struct CategoryApplicationSelectionRow: View {
+    let app: CategoryRegistry.DiscoveredApp
+    let category: AppCategory?
+    let isSelected: Bool
+    let showsDivider: Bool
+    let onSelect: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button(action: onSelect) {
+                HStack(spacing: 10) {
+                    CategoryAppIconView(bundleId: app.bundleId, appName: app.name, path: app.path, size: 24)
+                        .frame(width: 24, height: 24)
+
+                    Text(app.name)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    if let category {
+                        Image(systemName: category.iconName)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(category.color)
+                            .help(category.localizedName)
+                            .accessibilityLabel(category.localizedName)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 17))
+                        .foregroundStyle(isSelected ? Color.accentColor : Color.primary.opacity(0.18))
+                }
+                .padding(.horizontal, 10)
+                .frame(height: 46)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(RoundedRectangle(cornerRadius: 8))
+                .background(
+                    isSelected ? Color.accentColor.opacity(0.12)
+                        : (isHovered ? Color.primary.opacity(0.06) : Color.clear),
+                    in: RoundedRectangle(cornerRadius: 8)
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .onHover { isHovered = $0 }
+            .animation(.easeInOut(duration: 0.15), value: isHovered)
+            .animation(.easeInOut(duration: 0.15), value: isSelected)
+
+            if showsDivider {
+                Divider()
+                    .padding(.leading, 44)
+                    .padding(.trailing, 10)
+            }
+        }
     }
 }

@@ -47,17 +47,15 @@ struct CategorySettingsView: View {
             VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
                 SettingsPaneHeader(title: "settings.sidebar.categories")
 
-                // Search and category actions
                 HStack(spacing: 12) {
                     searchBar
                     Spacer()
                     actionButtons
                 }
 
-                // Sub-header Bar: Count & Expand/Collapse All
                 HStack(alignment: .center) {
-                    Text(String(format: String(localized: "%lld uygulama"), totalMatchingCount))
-                        .font(.system(size: 12, weight: .medium))
+                    Text(verbatim: Self.applicationCountLabel(totalMatchingCount, locale: controller.locale))
+                        .font(CategorySettingsTypography.secondary)
                         .foregroundStyle(.secondary)
 
                     Spacer()
@@ -65,7 +63,6 @@ struct CategorySettingsView: View {
                     toggleAllButton
                 }
 
-                // Folder-like Expandable Category Sections
                 VStack(spacing: 12) {
                     ForEach(registry.categories) { category in
                         CategoryFolderCard(
@@ -115,7 +112,6 @@ struct CategorySettingsView: View {
                         showingExclusionsSheet = true
                     })
 
-                // Bottom Footer: Reset to defaults
                 resetToDefaultsFooter
                     .padding(.top, 4)
             }
@@ -157,7 +153,7 @@ struct CategorySettingsView: View {
             ),
             titleVisibility: .visible
         ) {
-            Button("Kategoriyi Sil", role: .destructive) {
+            Button("categories.actions.delete", role: .destructive) {
                 if let cat = categoryToDelete {
                     registry.removeCategory(id: cat.id)
                     expandedCategories.remove(cat.id)
@@ -165,7 +161,7 @@ struct CategorySettingsView: View {
                     categoryToDelete = nil
                 }
             }
-            Button("Vazgeç", role: .cancel) {
+            Button("İptal", role: .cancel) {
                 categoryToDelete = nil
             }
         } message: {
@@ -176,15 +172,21 @@ struct CategorySettingsView: View {
             isPresented: $showingResetAlert,
             titleVisibility: .visible
         ) {
-            Button("Tüm Özel Kuralları Sıfırla", role: .destructive) {
+            Button("categories.actions.reset", role: .destructive) {
                 registry.resetToDefaults()
                 expandedCategories.removeAll()
                 saveExpansionState()
             }
-            Button("Vazgeç", role: .cancel) {}
+            Button("İptal", role: .cancel) {}
         } message: {
             Text("Eklediğiniz tüm özel uygulama kuralları kaldırılacak ve sistem varsayılanlarına dönülecektir.")
         }
+    }
+
+    static func applicationCountLabel(_ count: Int, locale: Locale) -> String {
+        // Locale controls formatting; the language bundle controls the translated plural forms.
+        let format = AppLanguage.localizedString("%lld uygulama", locale: locale)
+        return String(format: format, locale: locale, count)
     }
 
     // MARK: - Subviews
@@ -230,7 +232,11 @@ struct CategorySettingsView: View {
             Button {
                 showingAddCategorySheet = true
             } label: {
-                Label("Kategori Ekle", systemImage: "folder.badge.plus")
+                Label("categories.rules.newCategory", systemImage: "folder.badge.plus")
+                    .font(CategorySettingsTypography.label)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .fixedSize()
             }
             .buttonStyle(.bordered)
             .controlSize(.regular)
@@ -240,6 +246,10 @@ struct CategorySettingsView: View {
                 showingAddSheet = true
             } label: {
                 Label("categories.apps.add", systemImage: "plus")
+                    .font(CategorySettingsTypography.label)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .fixedSize()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
@@ -252,7 +262,7 @@ struct CategorySettingsView: View {
                 Image(systemName: areAllExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: 10, weight: .semibold))
                 Text(areAllExpanded ? "Tümünü Daralt" : "Tümünü Genişlet")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(CategorySettingsTypography.label)
             }
             .foregroundStyle(.secondary)
             .padding(.vertical, 4)
@@ -270,9 +280,9 @@ struct CategorySettingsView: View {
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 11, weight: .medium))
-                    Text("Varsayılana Sıfırla")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(CategorySettingsTypography.label)
+                    Text("categories.actions.restoreDefaults")
+                        .font(CategorySettingsTypography.label)
                 }
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)

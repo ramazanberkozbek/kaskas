@@ -10,24 +10,15 @@ struct CategoryRuleRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // App Icon (Fixed 32x32)
             CategoryAppIconView(bundleId: rule.appIdentifier, appName: rule.displayName)
                 .frame(width: 32, height: 32)
 
-            // App Name & Bundle ID
-            VStack(alignment: .leading, spacing: 2) {
-                Text(rule.displayName)
-                    .font(.system(size: 13, weight: .semibold))
-
-                Text(rule.appIdentifier)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-            }
+            Text(rule.displayName)
+                .font(CategorySettingsTypography.label)
+                .lineLimit(1)
 
             Spacer()
 
-            // Category Dropdown Picker
             let currentCategory = categories.first(where: { $0.id == rule.categoryId }) ?? .other
             Menu {
                 ForEach(categories) { cat in
@@ -49,7 +40,7 @@ struct CategoryRuleRow: View {
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     Text(currentCategory.localizedName(for: locale))
-                        .font(.system(size: 12, weight: .medium))
+                        .font(CategorySettingsTypography.label)
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 8, weight: .semibold))
@@ -68,12 +59,12 @@ struct CategoryRuleRow: View {
             .fixedSize()
             .dropdownHoverEffect()
 
-            // Delete Rule Button
             Button(action: onDeleteRule) {
                 Image(systemName: "trash")
             }
             .buttonStyle(HeaderActionButtonStyle(isDestructive: true))
-            .accessibilityLabel(rule.isDefault ? String(localized: "categories.rules.removeRule") : String(localized: "categories.rules.removeOverride"))
+            .accessibilityLabel(rule.isDefault ? String(localized: "categories.rules.removeRule", locale: locale) : String(localized: "categories.rules.removeOverride", locale: locale))
+            .help(Text(rule.isDefault ? LocalizedStringKey("categories.rules.removeRule") : LocalizedStringKey("categories.rules.removeOverride")))
         }
         .padding(.horizontal, SettingsPageLayout.cardInset)
         .padding(.vertical, 9)
