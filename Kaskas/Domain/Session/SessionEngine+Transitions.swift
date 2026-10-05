@@ -1,4 +1,4 @@
 import Foundation
 
-// State transitions have been encapsulated as fileprivate helpers within
-// SessionEngine+Reducer.swift to guarantee that state mutations only occur via send(_:at:).
+// Session input transitions are implemented in SessionEngine+Reducer.swift.
+// Simulation and reset helpers remain in SessionEngine.swift.

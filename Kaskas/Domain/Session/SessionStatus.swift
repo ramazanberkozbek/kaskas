@@ -21,6 +21,7 @@ struct BreakRun: Codable, Equatable, Sendable {
 enum SuspendReason: String, Codable, Equatable, Sendable {
     case manual
     case meeting
+    case video
     case idle
     case system
 }
@@ -34,18 +35,26 @@ struct Suspension: Codable, Equatable, Sendable {
     var reason: SuspendReason
     var awaySince: Date
     var frozen: FrozenRun
+    // Optional for compatibility with saved sessions predating video protection.
+    var videoPending: Bool?
     var meetingPending: Bool
 
     init(
         reason: SuspendReason,
         awaySince: Date,
         frozen: FrozenRun,
-        meetingPending: Bool = false
+        meetingPending: Bool = false,
+        videoPending: Bool? = nil
     ) {
         self.reason = reason
         self.awaySince = awaySince
         self.frozen = frozen
         self.meetingPending = meetingPending
+        self.videoPending = videoPending
+    }
+
+    var pendingProtectionReason: SuspendReason? {
+        meetingPending ? .meeting : (videoPending == true ? .video : nil)
     }
 }
 
@@ -68,6 +77,13 @@ enum SessionStatus: Codable, Equatable, Sendable {
         if case .suspended(let s) = self { return s.reason == .meeting }
         return false
     }
+
+    var isVideoPaused: Bool {
+        if case .suspended(let s) = self { return s.reason == .video }
+        return false
+    }
+
+    var isProtectionPaused: Bool { isMeetingPaused || isVideoPaused }
 
     var isIdlePaused: Bool {
         if case .suspended(let s) = self { return s.reason == .idle }
@@ -103,7 +119,7 @@ enum SessionStatus: Codable, Equatable, Sendable {
             switch s.reason {
             case .system, .idle:
                 return .computerInactive
-            case .manual:
+            case .manual, .video:
                 return .kaskasPaused
             case .meeting:
                 return .meeting

@@ -208,10 +208,10 @@ struct SessionEngineTests {
         #expect(engine.session.phase == .focusing)
 
         engine.endMeetingPause(at: meetingEnd)
-        #expect(engine.snapshot(at: meetingEnd).remaining == 90)
-        #expect(engine.process(at: meetingEnd.addingTimeInterval(69)).isEmpty)
-        #expect(engine.process(at: meetingEnd.addingTimeInterval(70)) == [.breakApproaching])
-        #expect(engine.process(at: meetingEnd.addingTimeInterval(90)) == [.fullBreakDue])
+        #expect(engine.snapshot(at: meetingEnd).remaining == 60)
+        #expect(engine.process(at: meetingEnd.addingTimeInterval(39)).isEmpty)
+        #expect(engine.process(at: meetingEnd.addingTimeInterval(40)) == [.breakApproaching])
+        #expect(engine.process(at: meetingEnd.addingTimeInterval(60)) == [.fullBreakDue])
     }
 
     @Test
@@ -226,9 +226,9 @@ struct SessionEngineTests {
         let endDate = engine.session.endsAt
         engine.endMeetingPause(at: meetingEnd.addingTimeInterval(20))
 
-        #expect(endDate == startDate.addingTimeInterval(56 * 60))
+        #expect(endDate == startDate.addingTimeInterval(55 * 60))
         #expect(engine.session.endsAt == endDate)
-        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(31 * 60))
+        #expect(engine.session.nextMicroReminderAt == startDate.addingTimeInterval(30 * 60))
     }
 
     @Test
@@ -345,7 +345,7 @@ struct SessionEngineTests {
         #expect(restored.process(at: launchDate).isEmpty)
         restored.endMeetingPause(at: launchDate)
         #expect(restored.session.phase == .focusing)
-        #expect(restored.snapshot(at: launchDate).remaining == 120)
+        #expect(restored.snapshot(at: launchDate).remaining == 60)
     }
 
     @Test
@@ -452,7 +452,7 @@ struct SessionEngineTests {
         #expect(restored.snapshot(at: reopenAt).remaining == 35 * 60)
         #expect(restored.process(at: reopenAt).isEmpty)
         restored.endMeetingPause(at: reopenAt.addingTimeInterval(10 * 60))
-        #expect(restored.snapshot(at: reopenAt.addingTimeInterval(10 * 60)).remaining == 36 * 60)
+        #expect(restored.snapshot(at: reopenAt.addingTimeInterval(10 * 60)).remaining == 35 * 60)
     }
 
     @Test

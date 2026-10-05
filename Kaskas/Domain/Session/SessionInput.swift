@@ -7,16 +7,18 @@ enum SystemCause: String, Codable, Equatable, Sendable {
 }
 
 enum SessionInput: Equatable, Sendable {
-    case launch(meetingActive: Bool)
+    case launch(meetingActive: Bool, videoActive: Bool = false)
     case tick
     case toggleManualPause
     case setManualPause(active: Bool)
     case setMeeting(active: Bool)
+    case setProtection(meetingActive: Bool, videoActive: Bool)
+    case ignoreProtectionForCycle
     case beginIdle(startedAt: Date)
     case idleReturned(returnedAt: Date)
     case resolveIdle(acceptedAsBreak: Bool, returnedAt: Date)
     case systemSuspended(cause: SystemCause)
-    case systemResumed(meetingActive: Bool)
+    case systemResumed(meetingActive: Bool, videoActive: Bool = false)
     case startBreak(scheduled: Bool)
     case completeBreak
     case skipBreak

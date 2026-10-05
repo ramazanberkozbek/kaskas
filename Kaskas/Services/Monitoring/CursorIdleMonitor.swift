@@ -7,6 +7,8 @@ final class CursorIdleMonitor {
     private var timer: Timer?
     private var state = IdleInputState(monitoringSince: Date())
 
+    var shouldDetectIdle: (() -> Bool)?
+
     var onIdle: ((Date) -> Void)?
     var onReturn: ((Date, Date) -> Void)?
 
@@ -31,6 +33,11 @@ final class CursorIdleMonitor {
         // The Swift overlay does not import kCGAnyInputEventType (defined as ~0 in the SDK).
         let anyInput = CGEventType(rawValue: UInt32.max)!
         let eventCount = CGEventSource.counterForEventType(.hidSystemState, eventType: anyInput)
+        if shouldDetectIdle?() == false {
+            // Passive viewing is not proof that the user left their computer.
+            state = IdleInputState(monitoringSince: now)
+            return
+        }
         let secondsSinceInput = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: anyInput)
         switch state.sample(at: now, threshold: threshold, secondsSinceInput: secondsSinceInput, eventCount: eventCount) {
         case .idle(let startedAt): onIdle?(startedAt)

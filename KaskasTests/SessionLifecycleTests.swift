@@ -12,11 +12,10 @@ struct SessionLifecycleTests {
         snoozeDuration: 5 * 60
     )
 
-    // MARK: - Characterization Tests (R1, R7, R8, R9, R10 - Existing Desired Invariants)
 
     @Test
     func shortSleepPreservesRemainingFocusTime() {
-        // R1: Focus + short sleep (< breakDuration) preserves remaining time
+        // Focus + short sleep (< breakDuration) preserves remaining time
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let sleepStart = startDate.addingTimeInterval(10 * 60)
         let wakeTime = sleepStart.addingTimeInterval(2 * 60) // 2 min sleep (< 5 min breakDuration)
@@ -32,7 +31,7 @@ struct SessionLifecycleTests {
 
     @Test
     func manualPauseIsPreservedAcrossSleepRegardlessOfDuration() {
-        // R8: Manual pause is explicitly initiated by the user and must NOT be auto-reset
+        // Manual pause is explicitly initiated by the user and must NOT be auto-reset
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let pauseTime = startDate.addingTimeInterval(10 * 60)
         engine.send(.setManualPause(active: true), at: pauseTime)
@@ -59,7 +58,7 @@ struct SessionLifecycleTests {
 
     @Test
     func meetingPauseSurvivesSleepAndResumesIfMeetingStillActive() {
-        // R9: Meeting + sleep -> resumes meeting if still active
+        // Meeting + sleep -> resumes meeting if still active
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let meetingStart = startDate.addingTimeInterval(5 * 60)
         engine.send(.setMeeting(active: true), at: meetingStart)
@@ -85,7 +84,7 @@ struct SessionLifecycleTests {
 
     @Test
     func midnightRolloverResetsDailyCountersWithoutStoppingActiveFocus() {
-        // R10: Midnight crossing resets completed breaks count for the day
+        // Midnight crossing resets completed breaks count for the day
         var engine = SessionEngine(configuration: configuration, now: startDate)
         engine.send(.startBreakNow, at: startDate)
         engine.send(.completeBreak, at: startDate)
@@ -96,11 +95,10 @@ struct SessionLifecycleTests {
         #expect(engine.breaksTakenToday(at: nextDay) == 0)
     }
 
-    // MARK: - Lifecycle Invariant Tests (R2, R4, R5, R6 - Target behaviors unlocked in Phase 3)
 
     @Test
     func naturalBreakThresholdResetsFocusAfterLongAway() {
-        // R2: When away for >= breakDuration (5 mins), focus should NOT resume where left off.
+        // When away for >= breakDuration (5 mins), focus should NOT resume where left off.
         // It should count natural break as taken and start a fresh focus session on return.
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let sleepStart = startDate.addingTimeInterval(10 * 60)
@@ -160,7 +158,7 @@ struct SessionLifecycleTests {
     @Test
     @MainActor
     func lockDuringBreakSuspendsUntilUnlock() {
-        // R4: If screen locks during break, break shouldn't expire silently into a studying session while locked
+        // If screen locks during break, break shouldn't expire silently into a studying session while locked
         let suiteName = "LockBreakTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -184,7 +182,7 @@ struct SessionLifecycleTests {
 
     @Test
     func sleepDuringBreakLongerThanRemainingCompletesBreak() {
-        // R5: If Mac sleeps during a break for longer than remaining break duration,
+        // If Mac sleeps during a break for longer than remaining break duration,
         // break should be considered completed on wake, starting fresh focus.
         var engine = SessionEngine(configuration: configuration, now: startDate)
         engine.send(.startBreakNow, at: startDate)
@@ -202,7 +200,7 @@ struct SessionLifecycleTests {
 
     @Test
     func idleFollowedBySleepMeasuresAwayDurationFromIdleStart() {
-        // R6: User idle at T, sleep at T+5m, wake at T+20m.
+        // User idle at T, sleep at T+5m, wake at T+20m.
         // Away duration should be measured from idle start (20m total >= 5m breakDuration)
         var engine = SessionEngine(configuration: configuration, now: startDate)
         let idleStart = startDate.addingTimeInterval(10 * 60)
@@ -218,7 +216,6 @@ struct SessionLifecycleTests {
         #expect(snapshot.remaining == 25 * 60) // Fresh cycle
     }
 
-    // MARK: - Phase 4 Tests: Effect Ordering & Meeting Reentrancy
 
     @Test
     func effectOrderingStrictlyFollowsDismissShowSoundPersistSchedule() {
@@ -278,7 +275,7 @@ struct SessionLifecycleTests {
         #expect(duplicateActiveEffects.isEmpty)
         #expect(engine.status.isMeetingPaused)
 
-        // 3. Meeting ends: resumes with grace delay (60s)
+        // 3. Meeting ends: resumes without extending a distant break
         let resumeTime = meetingTime.addingTimeInterval(10 * 60)
         let resumeEffects = engine.send(.setMeeting(active: false), at: resumeTime)
         #expect(!resumeEffects.isEmpty)
@@ -343,7 +340,7 @@ struct SessionLifecycleTests {
         #expect(engine.breaksTakenToday(at: wakeTime) == 0)
         #expect(!engine.status.isMeetingPaused)
         #expect(engine.session.phase == .focusing)
-        #expect(engine.snapshot(at: wakeTime).remaining == 21 * 60)
+        #expect(engine.snapshot(at: wakeTime).remaining == 20 * 60)
     }
 
     @Test
@@ -355,14 +352,14 @@ struct SessionLifecycleTests {
         #expect(engine.status.isManualPaused)
         #expect(engine.status.activityKind == .kaskasPaused)
 
-        // Meeting detected while manually paused -> complete no-op
+        // Manual pause remains active while the meeting signal is stored.
         let meetingEffects = engine.send(.setMeeting(active: true), at: pauseTime.addingTimeInterval(60))
         #expect(meetingEffects.isEmpty)
         #expect(engine.status.isManualPaused)
         #expect(!engine.status.isMeetingPaused)
         #expect(engine.status.activityKind == .kaskasPaused)
 
-        // Meeting ends while manually paused -> complete no-op
+        // The pending meeting signal is cleared without ending the manual pause.
         let endMeetingEffects = engine.send(.setMeeting(active: false), at: pauseTime.addingTimeInterval(120))
         #expect(endMeetingEffects.isEmpty)
         #expect(engine.status.isManualPaused)
@@ -473,7 +470,7 @@ struct SessionLifecycleTests {
         #expect(engine.status.activityKind == .meeting)
         #expect(engine.status.isPaused)
 
-        // 4. When meeting ends, focus resumes with grace delay
+        // 4. When meeting ends, focus resumes with the one-minute minimum
         let meetingEndTime = shortReturnTime.addingTimeInterval(10 * 60)
         let endMeetingEffects = engine.send(.setMeeting(active: false), at: meetingEndTime)
         #expect(!endMeetingEffects.isEmpty)

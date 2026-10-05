@@ -189,7 +189,15 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var microReminderMascot: MicroReminderMascot
     var microReminderColor: MicroReminderColor
     var customWallpaperPath: String?
+    var meetingPauseIndicatorEnabled: Bool
     var pauseDuringMeetings: Bool
+    var pauseDuringVideo: Bool
+    var videoPauseIndicatorEnabled: Bool
+    var meetingCameraDetectionEnabled: Bool
+    var meetingVirtualMicrophonesEnabled: Bool
+    var meetingExcludedDeviceUIDs: [String]
+    var meetingExcludedBundleIDs: [String]
+    var videoExcludedBundleIDs: [String]
     var idleDetectionEnabled: Bool
     var idleThreshold: TimeInterval
     var menuBarDisplayMode: MenuBarDisplayMode
@@ -217,6 +225,14 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         microReminderColor: MicroReminderColor = .white,
         customWallpaperPath: String? = nil,
         pauseDuringMeetings: Bool = true,
+        meetingPauseIndicatorEnabled: Bool = true,
+        pauseDuringVideo: Bool = false,
+        videoPauseIndicatorEnabled: Bool = true,
+        meetingCameraDetectionEnabled: Bool = false,
+        meetingVirtualMicrophonesEnabled: Bool = false,
+        meetingExcludedDeviceUIDs: [String] = [],
+        meetingExcludedBundleIDs: [String] = ["com.apple.QuickTimePlayerX", "com.apple.quicklook", "com.rogueamoeba.audiohijack", "com.rogueamoeba.Loopback", "com.apple.SpeechRecognitionCore.speechrecognitiond"],
+        videoExcludedBundleIDs: [String] = ["com.spotify.client", "com.apple.Music", "com.apple.FinalCut", "com.blackmagic-design.DaVinciResolve", "com.endel.endel"],
         idleDetectionEnabled: Bool = true,
         idleThreshold: TimeInterval = 3 * 60,
         menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer,
@@ -243,6 +259,14 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.microReminderColor = microReminderColor
         self.customWallpaperPath = customWallpaperPath
         self.pauseDuringMeetings = pauseDuringMeetings
+        self.meetingPauseIndicatorEnabled = meetingPauseIndicatorEnabled
+        self.pauseDuringVideo = pauseDuringVideo
+        self.videoPauseIndicatorEnabled = videoPauseIndicatorEnabled
+        self.meetingCameraDetectionEnabled = meetingCameraDetectionEnabled
+        self.meetingVirtualMicrophonesEnabled = meetingVirtualMicrophonesEnabled
+        self.meetingExcludedDeviceUIDs = meetingExcludedDeviceUIDs
+        self.meetingExcludedBundleIDs = meetingExcludedBundleIDs
+        self.videoExcludedBundleIDs = videoExcludedBundleIDs
         self.idleDetectionEnabled = idleDetectionEnabled
         self.idleThreshold = max(60, idleThreshold)
         self.menuBarDisplayMode = menuBarDisplayMode
@@ -271,6 +295,14 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case microReminderColor
         case customWallpaperPath
         case pauseDuringMeetings
+        case meetingPauseIndicatorEnabled
+        case pauseDuringVideo
+        case videoPauseIndicatorEnabled
+        case meetingCameraDetectionEnabled
+        case meetingVirtualMicrophonesEnabled
+        case meetingExcludedDeviceUIDs
+        case meetingExcludedBundleIDs
+        case videoExcludedBundleIDs
         case idleDetectionEnabled
         case idleThreshold
         case menuBarDisplayMode
@@ -311,6 +343,14 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             microReminderColor: value(.microReminderColor, fallback: defaults.microReminderColor),
             customWallpaperPath: value(.customWallpaperPath, fallback: defaults.customWallpaperPath),
             pauseDuringMeetings: value(.pauseDuringMeetings, fallback: defaults.pauseDuringMeetings),
+            meetingPauseIndicatorEnabled: value(.meetingPauseIndicatorEnabled, fallback: defaults.meetingPauseIndicatorEnabled),
+            pauseDuringVideo: value(.pauseDuringVideo, fallback: defaults.pauseDuringVideo),
+            videoPauseIndicatorEnabled: value(.videoPauseIndicatorEnabled, fallback: defaults.videoPauseIndicatorEnabled),
+            meetingCameraDetectionEnabled: value(.meetingCameraDetectionEnabled, fallback: defaults.meetingCameraDetectionEnabled),
+            meetingVirtualMicrophonesEnabled: value(.meetingVirtualMicrophonesEnabled, fallback: defaults.meetingVirtualMicrophonesEnabled),
+            meetingExcludedDeviceUIDs: value(.meetingExcludedDeviceUIDs, fallback: defaults.meetingExcludedDeviceUIDs),
+            meetingExcludedBundleIDs: value(.meetingExcludedBundleIDs, fallback: defaults.meetingExcludedBundleIDs),
+            videoExcludedBundleIDs: value(.videoExcludedBundleIDs, fallback: defaults.videoExcludedBundleIDs),
             idleDetectionEnabled: value(.idleDetectionEnabled, fallback: defaults.idleDetectionEnabled),
             idleThreshold: value(.idleThreshold, fallback: defaults.idleThreshold),
             menuBarDisplayMode: value(.menuBarDisplayMode, fallback: defaults.menuBarDisplayMode),

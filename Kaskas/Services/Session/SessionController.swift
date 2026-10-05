@@ -50,6 +50,7 @@ final class SessionController {
     @ObservationIgnored private let idleBreakNotifier = IdleBreakNotifier()
     @ObservationIgnored private let cursorIdleMonitor = CursorIdleMonitor()
     @ObservationIgnored private let meetingMonitor: any MeetingActivityMonitoring
+    @ObservationIgnored private let videoMonitor: any VideoActivityMonitoring
     @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
     private var cachedTodayBaseStudyingTime: TimeInterval = 0
@@ -112,6 +113,7 @@ final class SessionController {
         breakPresenter: BreakPresenter = BreakPresenter(),
         settingsPresenter: SettingsPresenter = SettingsPresenter(),
         meetingMonitor: any MeetingActivityMonitoring = MeetingActivityMonitor(),
+        videoMonitor: any VideoActivityMonitoring = VideoActivityMonitor(),
         now: Date = Date()
     ) {
         let configuration = store.loadConfiguration()
@@ -123,6 +125,7 @@ final class SessionController {
         self.store = store
         self.customWallpaperStore = customWallpaperStore
         self.meetingMonitor = meetingMonitor
+        self.videoMonitor = videoMonitor
         self.categoryRegistry = categoryRegistry
         appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore, excludedUsageStore: excludedUsageStore)
         persistence = SessionPersistence(store: store, historyStore: historyStore)
@@ -164,6 +167,8 @@ final class SessionController {
         }
 
         hasStarted = true
+        configureMeetingMonitor()
+        startVideoMonitoringIfNeeded()
         if configuration.pauseDuringMeetings {
             meetingMonitor.start { [weak self] active in
                 guard let self else { return }
@@ -174,7 +179,7 @@ final class SessionController {
         }
         let now = Date()
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
-        let effects = engine.send(.launch(meetingActive: meetingActive), at: now)
+        let effects = engine.send(.launch(meetingActive: meetingActive, videoActive: configuration.pauseDuringVideo && videoMonitor.sample()), at: now)
         activityTracker.resume(as: currentActivityKind, at: now)
         appUsage.setWorking(currentActivityKind == .studying, at: now)
         apply(effects, at: now)
@@ -192,6 +197,7 @@ final class SessionController {
         checkpointTimer?.invalidate()
         checkpointTimer = nil
         meetingMonitor.stop()
+        videoMonitor.stop()
         settingsPresenter.dismiss()
         let now = Date()
         appUsage.setWorking(false, at: now)
@@ -208,7 +214,7 @@ final class SessionController {
 
     func systemDidWake(at now: Date = Date()) {
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
-        let effects = engine.send(.systemResumed(meetingActive: meetingActive), at: now)
+        let effects = engine.send(.systemResumed(meetingActive: meetingActive, videoActive: configuration.pauseDuringVideo && videoMonitor.sample()), at: now)
         apply(effects, at: now)
         startIdleMonitoringIfNeeded()
     }
@@ -221,20 +227,17 @@ final class SessionController {
 
     func screenOrSessionDidUnlock(at now: Date = Date()) {
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
-        let effects = engine.send(.systemResumed(meetingActive: meetingActive), at: now)
+        let effects = engine.send(.systemResumed(meetingActive: meetingActive, videoActive: configuration.pauseDuringVideo && videoMonitor.sample()), at: now)
         apply(effects, at: now)
         startIdleMonitoringIfNeeded()
     }
 
     func reconcile(at now: Date = Date(), showsBreakWarning: Bool = true) {
-        if configuration.idleDetectionEnabled {
-            cursorIdleMonitor.sample(threshold: configuration.idleThreshold, at: now)
-        }
-        if configuration.pauseDuringMeetings {
-            let meetingActive = meetingMonitor.sample()
-            let meetingEffects = engine.send(.setMeeting(active: meetingActive), at: now)
-            apply(meetingEffects, at: now, showsBreakWarning: showsBreakWarning)
-        }
+        cursorIdleMonitor.sample(
+            threshold: configuration.idleDetectionEnabled ? configuration.idleThreshold : .infinity,
+            at: now
+        )
+        refreshProtection(at: now, showsBreakWarning: showsBreakWarning)
         let effects = engine.send(.tick, at: now)
         apply(effects, at: now, showsBreakWarning: showsBreakWarning)
     }
@@ -354,6 +357,8 @@ final class SessionController {
             AppLanguage.currentLocale = configuration.appLanguage.locale
         }
         let meetingDetectionEnabled = configuration.pauseDuringMeetings && !self.configuration.pauseDuringMeetings
+        let videoSettingsChanged = configuration.pauseDuringVideo != self.configuration.pauseDuringVideo
+            || configuration.videoExcludedBundleIDs != self.configuration.videoExcludedBundleIDs
         let dockVisibilityChanged = configuration.showInDock != self.configuration.showInDock
         if configuration.breakBackground != self.configuration.breakBackground
             || configuration.customWallpaperPath != self.configuration.customWallpaperPath {
@@ -361,6 +366,8 @@ final class SessionController {
         }
         self.configuration = configuration
         if dockVisibilityChanged { applyDockVisibility() }
+        configureMeetingMonitor()
+        if videoSettingsChanged { startVideoMonitoringIfNeeded() }
         if !configuration.pauseDuringMeetings {
             meetingMonitor.stop()
         } else if !self.engine.configuration.pauseDuringMeetings {
@@ -372,9 +379,8 @@ final class SessionController {
         let effects = engine.send(.updateConfiguration(configuration), at: now)
         store.save(configuration: configuration)
         apply(effects, at: now, showsBreakWarning: !warningSettingsChanged)
-        if meetingDetectionEnabled {
-            let meetingEffects = engine.send(.setMeeting(active: meetingMonitor.sample()), at: now)
-            apply(meetingEffects, at: now)
+        if meetingDetectionEnabled || videoSettingsChanged || engine.status.isProtectionPaused {
+            refreshProtection(at: now)
         }
         if idleSettingsChanged { startIdleMonitoringIfNeeded() }
         if warningSettingsChanged,
@@ -604,8 +610,42 @@ final class SessionController {
     }
 
     private func handleMeetingActivity(_ active: Bool) {
-        let effects = engine.send(.setMeeting(active: active), at: Date())
-        apply(effects)
+        guard hasStarted, configuration.pauseDuringMeetings else { return }
+        refreshProtection()
+    }
+
+    func availableMeetingDevices() async -> [MeetingInputDevice] {
+        await meetingMonitor.availableDevices()
+    }
+
+    private func configureMeetingMonitor() {
+        meetingMonitor.configure(MeetingDetectionOptions(
+            cameraEnabled: configuration.meetingCameraDetectionEnabled,
+            virtualMicrophonesEnabled: configuration.meetingVirtualMicrophonesEnabled,
+            excludedBundleIDs: configuration.meetingExcludedBundleIDs,
+            excludedDeviceUIDs: configuration.meetingExcludedDeviceUIDs
+        ))
+    }
+
+    private func startVideoMonitoringIfNeeded() {
+        videoMonitor.stop()
+        guard configuration.pauseDuringVideo else { return }
+        videoMonitor.start(excludedBundleIDs: configuration.videoExcludedBundleIDs) { [weak self] _ in
+            guard let self, self.hasStarted, self.configuration.pauseDuringVideo else { return }
+            self.refreshProtection()
+        }
+    }
+
+    func ignoreAutomaticPauseForCurrentCycle() {
+        apply(engine.send(.ignoreProtectionForCycle, at: Date()))
+    }
+
+    private func refreshProtection(at now: Date = Date(), showsBreakWarning: Bool = true) {
+        let effects = engine.send(.setProtection(
+            meetingActive: configuration.pauseDuringMeetings && meetingMonitor.sample(),
+            videoActive: configuration.pauseDuringVideo && videoMonitor.sample()
+        ), at: now)
+        apply(effects, at: now, showsBreakWarning: showsBreakWarning)
     }
 
     private func playBreakStartSound() {
@@ -627,6 +667,9 @@ final class SessionController {
 
     private func startIdleMonitoringIfNeeded() {
         guard configuration.idleDetectionEnabled else { return }
+        cursorIdleMonitor.shouldDetectIdle = { [weak self] in
+            self?.engine.status.isProtectionPaused != true
+        }
         cursorIdleMonitor.onIdle = { [weak self] startedAt in
             self?.beginIdleBreak(at: startedAt)
         }

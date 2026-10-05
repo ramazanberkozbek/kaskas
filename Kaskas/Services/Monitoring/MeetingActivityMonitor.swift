@@ -3,10 +3,40 @@ import CoreAudio
 import Foundation
 
 @MainActor
+// Contributor note: meeting detection is app-independent microphone activity,
+// not a Zoom/Teams/Meet allowlist or a guarantee that a call is in progress.
+// Calls in those apps can qualify while an eligible input process/device is active;
+// an open app, muted/listen-only call or camera-only call may not qualify.
+// Camera detection and virtual microphones are separate opt-ins. Application
+// exclusions currently cover microphone attribution; cameras use device exclusions.
+// For a missed call, report app/macOS versions, input device transport and the
+// attributed Core Audio process/device match before adding app-specific logic.
+// Validate connect/disconnect, sleep/wake, mute/unmute, exclusions and teardown.
+// Keep device discovery off the main actor.
 protocol MeetingActivityMonitoring {
     func start(onChange: @escaping (Bool) -> Void)
     func stop()
     func sample() -> Bool
+    func configure(_ options: MeetingDetectionOptions)
+    func availableDevices() async -> [MeetingInputDevice]
+}
+
+extension MeetingActivityMonitoring {
+    func configure(_ options: MeetingDetectionOptions) {}
+    func availableDevices() async -> [MeetingInputDevice] { [] }
+}
+
+nonisolated struct MeetingDetectionOptions: Equatable, Sendable {
+    var cameraEnabled = false
+    var virtualMicrophonesEnabled = false
+    var excludedBundleIDs: [String] = []
+    var excludedDeviceUIDs: [String] = []
+}
+
+
+nonisolated struct MeetingInputDevice: Identifiable, Sendable {
+    let id: String
+    let name: String
 }
 
 /// UI-facing cache. Hardware access belongs exclusively to the worker's serial executor.
@@ -18,6 +48,7 @@ final class MeetingActivityMonitor: MeetingActivityMonitoring {
     private var lastSample = false
     private var lastRevision: UInt64 = 0
     private var onChange: ((Bool) -> Void)?
+    private var options = MeetingDetectionOptions()
 
     init(worker: MeetingActivityWorker = MeetingActivityWorker()) {
         self.worker = worker
@@ -36,13 +67,15 @@ final class MeetingActivityMonitor: MeetingActivityMonitoring {
         generation = UUID()
         let generation = generation
         self.onChange = onChange
+        lastSample = false
         lastRevision = 0
         let previous = lifecycleTask
         let worker = worker
         let initialSample = lastSample
+        let options = options
         lifecycleTask = Task { [weak self] in
             await previous?.value
-            await worker.start(generation: generation, initialSample: initialSample) { [weak self] active, revision in
+            await worker.start(generation: generation, initialSample: initialSample, options: options) { [weak self] active, revision in
                 guard let self, self.generation == generation, self.onChange != nil else { return }
                 guard revision > self.lastRevision else { return }
                 self.lastRevision = revision
@@ -51,6 +84,14 @@ final class MeetingActivityMonitor: MeetingActivityMonitoring {
                 self.onChange?(active)
             }
         }
+    }
+
+    func availableDevices() async -> [MeetingInputDevice] { await worker.availableDevices() }
+
+    func configure(_ options: MeetingDetectionOptions) {
+        guard self.options != options else { return }
+        self.options = options
+        if let onChange { start(onChange: onChange) }
     }
 
     func stop() {
@@ -77,6 +118,11 @@ nonisolated protocol MeetingActivityHardware {
         onChange: @escaping @Sendable (_ inventoryChanged: Bool) -> Void
     ) -> Bool
     func stop()
+    func configure(_ options: MeetingDetectionOptions)
+}
+
+nonisolated extension MeetingActivityHardware {
+    func configure(_ options: MeetingDetectionOptions) {}
 }
 
 actor MeetingActivityWorker {
@@ -107,8 +153,13 @@ actor MeetingActivityWorker {
         self.makeHardware = makeHardware
     }
 
+    func availableDevices() -> [MeetingInputDevice] {
+        // Explicit settings read, not a render-time getter or polling operation.
+        CoreMeetingActivityHardware().availableDevices()
+    }
+
     func start(
-        generation: UUID, initialSample: Bool,
+        generation: UUID, initialSample: Bool, options: MeetingDetectionOptions = MeetingDetectionOptions(),
         publish: @escaping @MainActor @Sendable (Bool, UInt64) -> Void
     ) {
         stop()
@@ -117,6 +168,7 @@ actor MeetingActivityWorker {
         revision = 0
         self.publish = publish
         hardware = makeHardware()
+        hardware?.configure(options)
         inventoryDirty = true
         refresh(generation: generation)
         let interval = pollInterval
@@ -185,13 +237,86 @@ nonisolated private final class CoreMeetingActivityHardware: MeetingActivityHard
     private var observesDeviceList = false
     private var deviceListListener: AudioObjectPropertyListenerBlock?
     private var runningListener: AudioObjectPropertyListenerBlock?
-    private let cameras = AVCaptureDevice.DiscoverySession(
-        deviceTypes: [.builtInWideAngleCamera, .external], mediaType: .video, position: .unspecified
-    )
+    private var cameras: AVCaptureDevice.DiscoverySession?
+    private var options = MeetingDetectionOptions()
     private var listenerQueue: DispatchQueue?
 
+    func configure(_ options: MeetingDetectionOptions) {
+        self.options = options
+        cameras = options.cameraEnabled ? AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInWideAngleCamera, .external], mediaType: .video, position: .unspecified
+        ) : nil
+    }
+
     func isActive(inputs: [AudioDeviceID]) -> Bool {
-        inputs.contains { Self.isRunning($0) } || cameras.devices.contains { $0.isInUseByAnotherApplication }
+        if cameras?.devices.contains(where: { $0.isInUseByAnotherApplication && !options.excludedDeviceUIDs.contains($0.uniqueID) }) == true { return true }
+        let eligible = Set(inputs.filter { device in
+            guard let uid = readString(device, selector: kAudioDevicePropertyDeviceUID),
+                  !options.excludedDeviceUIDs.contains(uid) else { return false }
+            if options.virtualMicrophonesEnabled { return true }
+            let transport: UInt32? = readScalar(device, selector: kAudioDevicePropertyTransportType)
+            return transport != kAudioDeviceTransportTypeVirtual && transport != kAudioDeviceTransportTypeAggregate
+        })
+        guard !eligible.isEmpty else { return false }
+        guard let processes = readObjects(AudioObjectID(kAudioObjectSystemObject), selector: kAudioHardwarePropertyProcessObjectList) else {
+            // Never bypass exclusions when process attribution cannot be read.
+            return options.excludedBundleIDs.isEmpty && eligible.contains(where: Self.isRunning)
+        }
+        for process in processes {
+            let running: UInt32? = readScalar(process, selector: kAudioProcessPropertyIsRunningInput)
+            guard running == 1 else { continue }
+            var value: CFString?
+            var address = AudioObjectPropertyAddress(mSelector: kAudioProcessPropertyBundleID, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+            var size = UInt32(MemoryLayout<CFString?>.size)
+            guard AudioObjectGetPropertyData(process, &address, 0, nil, &size, &value) == noErr, let value else { continue }
+            let id = (value as String).lowercased()
+            guard !options.excludedBundleIDs.contains(where: { id == $0.lowercased() || id.hasPrefix($0.lowercased() + ".") }),
+                  !id.contains("quicklook"), !id.contains("speechrecognition"), !id.contains("dictation") else { continue }
+            guard let devices = readObjects(process, selector: kAudioProcessPropertyDevices),
+                  !eligible.isDisjoint(with: devices) else { continue }
+            return true
+        }
+        return false
+    }
+
+    func availableDevices() -> [MeetingInputDevice] {
+        var result = inputDevices().compactMap { device -> MeetingInputDevice? in
+            guard let uid = readString(device, selector: kAudioDevicePropertyDeviceUID),
+                  let name = readString(device, selector: kAudioObjectPropertyName) else { return nil }
+            return MeetingInputDevice(id: uid, name: name)
+        }
+        let discovery = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInWideAngleCamera, .external], mediaType: .video, position: .unspecified
+        )
+        result += discovery.devices.map { MeetingInputDevice(id: $0.uniqueID, name: $0.localizedName) }
+        return result
+    }
+
+    private func readString(_ object: AudioObjectID, selector: AudioObjectPropertySelector) -> String? {
+        var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var value: CFString?
+        var size = UInt32(MemoryLayout<CFString?>.size)
+        guard AudioObjectGetPropertyData(object, &address, 0, nil, &size, &value) == noErr else { return nil }
+        return value as String?
+    }
+
+    private func readScalar<T>(_ object: AudioObjectID, selector: AudioObjectPropertySelector) -> T? {
+        var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        let pointer = UnsafeMutableRawPointer.allocate(byteCount: MemoryLayout<T>.size, alignment: MemoryLayout<T>.alignment)
+        defer { pointer.deallocate() }
+        var size = UInt32(MemoryLayout<T>.size)
+        guard AudioObjectGetPropertyData(object, &address, 0, nil, &size, pointer) == noErr else { return nil }
+        return pointer.load(as: T.self)
+    }
+
+    private func readObjects(_ object: AudioObjectID, selector: AudioObjectPropertySelector) -> [AudioObjectID]? {
+        var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var size: UInt32 = 0
+        guard AudioObjectGetPropertyDataSize(object, &address, 0, nil, &size) == noErr else { return nil }
+        var values = [AudioObjectID](repeating: 0, count: Int(size) / MemoryLayout<AudioObjectID>.size)
+        guard !values.isEmpty else { return [] }
+        guard AudioObjectGetPropertyData(object, &address, 0, nil, &size, &values) == noErr else { return nil }
+        return values
     }
 
     func synchronizeListeners(

@@ -3124,6 +3124,23 @@
         }
       }
     },
+    "menu.badge.videoPause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watching video"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video izleniyor"
+          }
+        }
+      }
+    },
     "menu.break" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3188,6 +3205,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mola geçmişi kaydedilemedi. Yeniden denenecek."
+          }
+        }
+      }
+    },
+    "menu.ignoreProtectionForCycle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore automatic pause for this cycle"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu döngüde otomatik duraklatmayı yok say"
           }
         }
       }

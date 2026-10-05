@@ -12,6 +12,7 @@ struct SessionEngine: Sendable {
     var completedBreaksDay: Date?
     var consecutiveSkippedBreaks = 0
     var scheduledBreakCount = 0
+    var ignoresProtectionForCycle = false
 
     // MARK: - Initialization
 
@@ -259,6 +260,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func advanceDay(at now: Date = Date()) {
+        ignoresProtectionForCycle = false
         completedBreaks = 0
         completedBreaksDay = Calendar.current.date(byAdding: .day, value: -1, to: now)
         activeConfiguration = configuration
@@ -270,6 +272,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func resetFocus(at now: Date = Date()) {
+        ignoresProtectionForCycle = false
         activeConfiguration = configuration
         status = .focusing(Self.makeFocusRun(
             duration: activeConfiguration.focusDuration,

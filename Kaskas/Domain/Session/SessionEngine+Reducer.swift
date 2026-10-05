@@ -11,21 +11,24 @@ extension SessionEngine {
         var effects = EffectBatch()
 
         switch input {
-        case .launch(let meetingActive):
+        case .launch(let meetingActive, let videoActive):
             var naturalBreakEntry: BreakHistoryEntry?
 
             if case .suspended(let s) = status, s.reason == .system {
-                naturalBreakEntry = endSystemPause(at: now, meetingActive: meetingActive)
+                naturalBreakEntry = endSystemPause(at: now, meetingActive: meetingActive, videoActive: videoActive)
                 if status.phase == .onBreak {
                     prepareForLaunch(at: now)
                 }
             } else if !status.isPaused {
                 prepareForLaunch(at: now)
-                if meetingActive {
-                    beginMeetingPause(at: now)
+                if let reason = protectionReason(meetingActive: meetingActive, videoActive: videoActive) {
+                    suspend(reason: reason, at: now)
                 }
             }
 
+            if status.isProtectionPaused {
+                _ = send(.setProtection(meetingActive: meetingActive, videoActive: videoActive), at: now)
+            }
             effects.dismissAllAlerts()
             // Restored breaks are recorded silently; their end was not observed live.
             effects.persist(record: naturalBreakEntry, kind: currentActivityKind(at: now))
@@ -86,7 +89,11 @@ extension SessionEngine {
                 effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
             } else {
                 guard status.isManualPaused else { return [] }
+                let pendingReason: SuspendReason?
+                if case .suspended(let s) = status { pendingReason = s.pendingProtectionReason }
+                else { pendingReason = nil }
                 endManualPause(at: now)
+                if let pendingReason, case .focusing = status { suspend(reason: pendingReason, at: now) }
                 if status.phase == .onBreak {
                     effects.present(.showBreak(endsAt: session.endsAt))
                 }
@@ -95,30 +102,53 @@ extension SessionEngine {
             }
 
         case .setMeeting(let active):
-            if active {
-                if case .focusing = status {
-                    beginMeetingPause(at: now)
-                    effects.dismiss(.dismissMicroReminder, .dismissBreakWarning)
-                    effects.persist(kind: .meeting)
-                    effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
-                } else if case .suspended(var s) = status, s.reason == .idle {
-                    s.meetingPending = true
-                    status = .suspended(s)
-                    return []
-                } else {
-                    return []
-                }
-            } else {
-                if case .suspended(var s) = status, s.reason == .idle, s.meetingPending {
-                    s.meetingPending = false
-                    status = .suspended(s)
-                    return []
-                }
-                guard status.isMeetingPaused else { return [] }
-                endMeetingPause(at: now)
-                effects.persist(kind: currentActivityKind(at: now))
-                effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
+            let videoActive: Bool
+            if case .suspended(let s) = status { videoActive = s.videoPending == true || s.reason == .video }
+            else { videoActive = false }
+            let wasOtherPause = status.isPaused && !status.isProtectionPaused
+            let effects = send(.setProtection(meetingActive: active, videoActive: videoActive), at: now)
+            // Preserve the legacy meeting event's no-presentation contract while
+            // storing pending signals. The combined event persists live changes.
+            return wasOtherPause ? [] : effects
+
+        case .setProtection(let meetingActive, let videoActive):
+            let meeting = meetingActive && configuration.pauseDuringMeetings && !ignoresProtectionForCycle
+            let video = videoActive && configuration.pauseDuringVideo && !ignoresProtectionForCycle
+            let reason = protectionReason(meetingActive: meeting, videoActive: video)
+            if case .suspended(let s) = status, s.reason == .idle, video {
+                // Watching is not a natural break. Preserve remaining time instead of
+                // crediting the video as time away when the pointer hasn't moved.
+                declineIdleBreak(at: now)
+                effects.dismiss(.dismissIdleBreakReminder)
             }
+            switch status {
+            case .focusing:
+                guard let reason else { return [] }
+                status = .suspended(Suspension(reason: reason, awaySince: now, frozen: freeze(at: now),
+                                               meetingPending: meeting, videoPending: video))
+                effects.dismiss(.dismissMicroReminder, .dismissBreakWarning)
+            case .suspended(var s):
+                let wasProtectionPaused = status.isProtectionPaused
+                let previous = s
+                s.meetingPending = meeting
+                s.videoPending = video
+                if wasProtectionPaused {
+                    if let reason { s.reason = reason }
+                    status = .suspended(s)
+                    if reason == nil { resume(at: now, grace: protectionResumeGrace) }
+                } else {
+                    status = .suspended(s)
+                }
+                if case .suspended(let current) = status, current == previous { return [] }
+            case .onBreak:
+                return []
+            }
+            effects.persist(kind: currentActivityKind(at: now))
+            effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
+
+        case .ignoreProtectionForCycle:
+            ignoresProtectionForCycle = true
+            return send(.setProtection(meetingActive: false, videoActive: false), at: now)
 
         case .beginIdle(let startedAt):
             guard case .focusing = status else { return [] }
@@ -139,24 +169,25 @@ extension SessionEngine {
                     from: prev, startedAt: s.awaySince, returnedAt: returnedAt
                 )
                 effects.dismiss(.dismissIdleBreakReminder)
-                if s.meetingPending {
-                    beginMeetingPause(at: returnedAt)
-                    effects.persist(record: record, kind: .meeting)
+                if let reason = s.pendingProtectionReason {
+                    suspend(reason: reason, at: returnedAt)
+                    effects.persist(record: record, kind: currentActivityKind(at: returnedAt))
                 } else {
                     effects.play(.playBreakEndSound)
                     effects.persist(record: record, kind: .studying)
                 }
                 effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
             } else {
-                if s.meetingPending {
+                if let reason = s.pendingProtectionReason {
                     status = .suspended(Suspension(
-                        reason: .meeting,
+                        reason: reason,
                         awaySince: returnedAt,
                         frozen: s.frozen,
-                        meetingPending: false
+                        meetingPending: s.meetingPending,
+                        videoPending: s.videoPending
                     ))
                     effects.dismiss(.dismissIdleBreakReminder)
-                    effects.persist(kind: .meeting)
+                    effects.persist(kind: currentActivityKind(at: returnedAt))
                     effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
                 } else {
                     effects.present(.showIdleBreakPrompt(duration: awayDuration))
@@ -173,22 +204,23 @@ extension SessionEngine {
                 let record = BreakHistoryEntry.idleBreak(
                     from: prev, startedAt: s.awaySince, returnedAt: returnedAt
                 )
-                if s.meetingPending {
-                    beginMeetingPause(at: returnedAt)
-                    effects.persist(record: record, kind: .meeting)
+                if let reason = s.pendingProtectionReason {
+                    suspend(reason: reason, at: returnedAt)
+                    effects.persist(record: record, kind: currentActivityKind(at: returnedAt))
                 } else {
                     effects.play(.playBreakEndSound)
                     effects.persist(record: record, kind: .studying)
                 }
             } else {
-                if s.meetingPending {
+                if let reason = s.pendingProtectionReason {
                     status = .suspended(Suspension(
-                        reason: .meeting,
+                        reason: reason,
                         awaySince: returnedAt,
                         frozen: s.frozen,
-                        meetingPending: false
+                        meetingPending: s.meetingPending,
+                        videoPending: s.videoPending
                     ))
-                    effects.persist(kind: .meeting)
+                    effects.persist(kind: currentActivityKind(at: returnedAt))
                 } else {
                     declineIdleBreak(at: returnedAt)
                     effects.persist(kind: .studying)
@@ -203,9 +235,9 @@ extension SessionEngine {
             effects.persist(kind: kind)
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
-        case .systemResumed(let meetingActive):
+        case .systemResumed(let meetingActive, let videoActive):
             guard case .suspended(let s) = status, s.reason == .system else { return [] }
-            let naturalBreakEntry = endSystemPause(at: now, meetingActive: meetingActive)
+            let naturalBreakEntry = endSystemPause(at: now, meetingActive: meetingActive, videoActive: videoActive)
 
             if naturalBreakEntry != nil {
                 effects.dismiss(.dismissBreak)
@@ -295,6 +327,13 @@ extension SessionEngine {
 // MARK: - Private State Transitions & Lifecycle Helpers
 
 fileprivate extension SessionEngine {
+    func protectionReason(meetingActive: Bool, videoActive: Bool) -> SuspendReason? {
+        guard !ignoresProtectionForCycle else { return nil }
+        if meetingActive && configuration.pauseDuringMeetings { return .meeting }
+        if videoActive && configuration.pauseDuringVideo { return .video }
+        return nil
+    }
+
     mutating func prepareForLaunch(at now: Date = Date()) {
         guard !status.isPaused else { return }
         switch status {
@@ -359,8 +398,9 @@ fileprivate extension SessionEngine {
             }
         }
         self.configuration = configuration
-        if !configuration.pauseDuringMeetings, status.isMeetingPaused {
-            endMeetingPause(at: now)
+        if case .suspended(let s) = status {
+            _ = send(.setProtection(meetingActive: s.meetingPending || s.reason == .meeting,
+                                   videoActive: s.videoPending == true || s.reason == .video), at: now)
         }
     }
 
@@ -485,6 +525,7 @@ fileprivate extension SessionEngine {
     }
 
     mutating func startFocus(at now: Date) {
+        ignoresProtectionForCycle = false
         if activeConfiguration.longBreakEnabled != configuration.longBreakEnabled
             || activeConfiguration.longBreakFrequency != configuration.longBreakFrequency {
             scheduledBreakCount = 0
@@ -507,9 +548,10 @@ fileprivate extension SessionEngine {
             let frozen = freeze(at: now)
             status = .suspended(Suspension(reason: reason, awaySince: now, frozen: frozen))
         case .suspended(var suspension):
-            if suspension.reason == .meeting && reason == .system {
+            if (suspension.reason == .meeting || suspension.reason == .video) && reason == .system {
+                suspension.meetingPending = suspension.reason == .meeting || suspension.meetingPending
+                suspension.videoPending = suspension.reason == .video || suspension.videoPending == true
                 suspension.reason = .system
-                suspension.meetingPending = true
                 status = .suspended(suspension)
             } else if suspension.reason != .manual {
                 suspension.reason = reason
@@ -544,6 +586,13 @@ fileprivate extension SessionEngine {
         }
     }
 
+    // Protection freezes focus time; only top up an imminent break to one minute.
+    private var protectionResumeGrace: TimeInterval {
+        guard case .suspended(let suspension) = status,
+              case .focus(let remaining, _, _, _) = suspension.frozen else { return 0 }
+        return max(0, Self.meetingResumeDelay - remaining)
+    }
+
     mutating func beginMeetingPause(at now: Date) {
         guard case .focusing = status else { return }
         suspend(reason: .meeting, at: now)
@@ -551,7 +600,7 @@ fileprivate extension SessionEngine {
 
     mutating func endMeetingPause(at now: Date) {
         guard case .suspended(let suspension) = status, suspension.reason == .meeting else { return }
-        resume(at: now, grace: Self.meetingResumeDelay)
+        resume(at: now, grace: protectionResumeGrace)
     }
 
     mutating func beginManualPause(at now: Date) {
@@ -581,21 +630,22 @@ fileprivate extension SessionEngine {
         resume(at: now, grace: resumeGrace)
     }
 
-    mutating func endSystemPause(at now: Date, meetingActive: Bool) -> BreakHistoryEntry? {
+    mutating func endSystemPause(at now: Date, meetingActive: Bool, videoActive: Bool = false) -> BreakHistoryEntry? {
         guard case .suspended(let suspension) = status, suspension.reason == .system else { return nil }
 
-        if meetingActive {
+        if let reason = protectionReason(meetingActive: meetingActive, videoActive: videoActive) {
             status = .suspended(Suspension(
-                reason: .meeting,
+                reason: reason,
                 awaySince: now,
                 frozen: suspension.frozen,
-                meetingPending: false
+                meetingPending: meetingActive,
+                videoPending: videoActive
             ))
             return nil
         }
 
         let awayDuration = max(0, now.timeIntervalSince(suspension.awaySince))
-        if suspension.meetingPending {
+        if suspension.pendingProtectionReason != nil {
             if awayDuration >= activeConfiguration.breakDuration {
                 let entry = BreakHistoryEntry.transition(
                     from: session,
@@ -608,7 +658,7 @@ fileprivate extension SessionEngine {
                 startFocus(at: now)
                 return entry
             } else {
-                resume(at: now, grace: Self.meetingResumeDelay)
+                resume(at: now, grace: protectionResumeGrace)
                 return nil
             }
         }

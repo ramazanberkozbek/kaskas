@@ -27,6 +27,7 @@ struct MenuBarView: View {
         case longBreak
         case manualPause
         case meetingPause
+        case videoPause
         case idlePause
         case onBreak
 
@@ -40,6 +41,8 @@ struct MenuBarView: View {
                     self = .idlePause
                 case .meeting:
                     self = .meetingPause
+                case .video:
+                    self = .videoPause
                 }
             case .onBreak:
                 self = .onBreak
@@ -54,6 +57,7 @@ struct MenuBarView: View {
             case .longBreak: "menu.badge.longBreak"
             case .manualPause: "menu.badge.manualPause"
             case .meetingPause: "menu.badge.meetingPause"
+            case .videoPause: "menu.badge.videoPause"
             case .idlePause: "menu.badge.idlePause"
             case .onBreak: "menu.badge.onBreak"
             }
@@ -64,6 +68,7 @@ struct MenuBarView: View {
             case .shortBreak: Color(red: 0.40, green: 0.61, blue: 0.96)
             case .longBreak: Color(red: 0.98, green: 0.68, blue: 0.35)
             case .manualPause: Color(red: 0.72, green: 0.72, blue: 0.76)
+            case .videoPause: Color(red: 0.35, green: 0.65, blue: 0.88)
             case .meetingPause: Color(red: 0.69, green: 0.56, blue: 0.94)
             case .idlePause: Color(red: 0.98, green: 0.68, blue: 0.35)
             case .onBreak: Color(red: 0.43, green: 0.77, blue: 0.48)
@@ -100,6 +105,14 @@ struct MenuBarView: View {
 
                 Divider()
                     .padding(.top, 11)
+            }
+
+            if snapshot.status.isProtectionPaused {
+                Button("menu.ignoreProtectionForCycle", action: controller.ignoreAutomaticPauseForCurrentCycle)
+                    .font(.system(size: 11))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 8)
             }
 
             todayRow
@@ -230,7 +243,7 @@ struct MenuBarView: View {
                     action: controller.startBreakNow
                 )
 
-                if !snapshot.status.isMeetingPaused {
+                if !snapshot.status.isProtectionPaused {
                     actionButton(
                         "menu.snooze",
                         item: .snooze,
