@@ -10,6 +10,18 @@ extension SessionEngine {
     ) -> [SessionEffect] {
         var effects = EffectBatch()
 
+        // Typing is a temporary countdown hold. Explicit actions and lifecycle
+        // transitions first thaw it, so they retain their usual behavior.
+        if status.isTypingPaused {
+            switch input {
+            case .launch, .toggleManualPause, .setManualPause(active: true), .systemSuspended,
+                 .startBreak, .completeBreak, .skipBreak, .snooze, .snoozeBreak, .postponeBreak, .beginIdle:
+                resume(at: now)
+            default:
+                break
+            }
+        }
+
         switch input {
         case .launch(let meetingActive, let videoActive):
             var naturalBreakEntry: BreakHistoryEntry?
@@ -32,6 +44,26 @@ extension SessionEngine {
             effects.dismissAllAlerts()
             // Restored breaks are recorded silently; their end was not observed live.
             effects.persist(record: naturalBreakEntry, kind: currentActivityKind(at: now))
+            effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
+
+        case .setTyping(let active):
+            let shouldHold = active && configuration.pauseWhileTyping
+                && configuration.breakWarningEnabled && !ignoresProtectionForCycle
+            if shouldHold, case .focusing(var run) = status,
+               run.endsAt.timeIntervalSince(now) <= configuration.breakWarningLeadTime {
+                // A late scheduler wake must not open a break over active typing.
+                run.endsAt = max(run.endsAt, now.addingTimeInterval(1))
+                run.warningShown = true
+                status = .focusing(run)
+                suspend(reason: .typing, at: now)
+            } else if !shouldHold, status.isTypingPaused {
+                restartWarningAfterTyping(at: now, leadTime: configuration.breakWarningLeadTime)
+            } else {
+                return []
+            }
+            effects.dismiss(.dismissMicroReminder)
+            effects.present(.showBreakWarning(endsAt: session.endsAt))
+            effects.persist(kind: .studying)
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .tick:
@@ -105,7 +137,7 @@ extension SessionEngine {
             let videoActive: Bool
             if case .suspended(let s) = status { videoActive = s.videoPending == true || s.reason == .video }
             else { videoActive = false }
-            let wasOtherPause = status.isPaused && !status.isProtectionPaused
+            let wasOtherPause = status.isPaused && !status.isProtectionPaused && !status.isTypingPaused
             let effects = send(.setProtection(meetingActive: active, videoActive: videoActive), at: now)
             // Preserve the legacy meeting event's no-presentation contract while
             // storing pending signals. The combined event persists live changes.
@@ -128,6 +160,14 @@ extension SessionEngine {
                                                meetingPending: meeting, videoPending: video))
                 effects.dismiss(.dismissMicroReminder, .dismissBreakWarning)
             case .suspended(var s):
+                if s.reason == .typing, let reason {
+                    // Meeting/video protection takes priority over the typing hold.
+                    resume(at: now)
+                    status = .suspended(Suspension(reason: reason, awaySince: now, frozen: freeze(at: now),
+                                                   meetingPending: meeting, videoPending: video))
+                    effects.dismiss(.dismissMicroReminder, .dismissBreakWarning)
+                    break
+                }
                 let wasProtectionPaused = status.isProtectionPaused
                 let previous = s
                 s.meetingPending = meeting
@@ -148,6 +188,7 @@ extension SessionEngine {
 
         case .ignoreProtectionForCycle:
             ignoresProtectionForCycle = true
+            if status.isTypingPaused { return send(.setTyping(active: false), at: now) }
             return send(.setProtection(meetingActive: false, videoActive: false), at: now)
 
         case .beginIdle(let startedAt):
@@ -310,7 +351,16 @@ extension SessionEngine {
             let oldWarningEnabled = configuration.breakWarningEnabled
             let oldWarningLeadTime = configuration.breakWarningLeadTime
             let oldFocusDuration = configuration.focusDuration
+            let resumesTyping = status.isTypingPaused && (!newConfig.pauseWhileTyping
+                || !newConfig.breakWarningEnabled || oldFocusDuration != newConfig.focusDuration
+                || oldWarningLeadTime != newConfig.breakWarningLeadTime)
+            if resumesTyping {
+                restartWarningAfterTyping(at: now, leadTime: newConfig.breakWarningLeadTime)
+            }
             updateConfiguration(newConfig, at: now)
+            if resumesTyping, newConfig.breakWarningEnabled, hasShownBreakWarning {
+                effects.present(.showBreakWarning(endsAt: session.endsAt))
+            }
             if oldWarningEnabled != newConfig.breakWarningEnabled
                 || oldWarningLeadTime != newConfig.breakWarningLeadTime
                 || oldFocusDuration != newConfig.focusDuration {
@@ -560,13 +610,26 @@ fileprivate extension SessionEngine {
         }
     }
 
+    mutating func restartWarningAfterTyping(at now: Date, leadTime: TimeInterval) {
+        guard status.isTypingPaused else { return }
+        // Thaw first to preserve the original focus start and time spent typing.
+        resume(at: now)
+        guard case .focusing(var run) = status else { return }
+        // Give the user a full, uninterrupted warning after typing stops.
+        run.endsAt = now.addingTimeInterval(leadTime)
+        run.warningShown = true
+        run.nextMicroReminderAt = nil
+        status = .focusing(run)
+    }
+
     mutating func resume(at now: Date, grace: TimeInterval = 0) {
         guard case .suspended(let suspension) = status else { return }
         switch suspension.frozen {
         case .focus(let remaining, let total, _, let warningShown):
             let effectiveRemaining = remaining + grace
             let endsAt = now.addingTimeInterval(effectiveRemaining)
-            let startedAt = endsAt.addingTimeInterval(-total)
+            let typingDuration = suspension.reason == .typing ? max(0, now.timeIntervalSince(suspension.awaySince)) : 0
+            let startedAt = endsAt.addingTimeInterval(-total - typingDuration)
             let firstReminder = nextFutureMicroReminder(
                 after: startedAt,
                 relativeTo: now,

@@ -28,6 +28,7 @@ struct MenuBarView: View {
         case manualPause
         case meetingPause
         case videoPause
+        case typingPause
         case idlePause
         case onBreak
 
@@ -41,6 +42,8 @@ struct MenuBarView: View {
                     self = .idlePause
                 case .meeting:
                     self = .meetingPause
+                case .typing:
+                    self = .typingPause
                 case .video:
                     self = .videoPause
                 }
@@ -58,6 +61,7 @@ struct MenuBarView: View {
             case .manualPause: "menu.badge.manualPause"
             case .meetingPause: "menu.badge.meetingPause"
             case .videoPause: "menu.badge.videoPause"
+            case .typingPause: "warning.typing"
             case .idlePause: "menu.badge.idlePause"
             case .onBreak: "menu.badge.onBreak"
             }
@@ -68,6 +72,7 @@ struct MenuBarView: View {
             case .shortBreak: Color(red: 0.40, green: 0.61, blue: 0.96)
             case .longBreak: Color(red: 0.98, green: 0.68, blue: 0.35)
             case .manualPause: Color(red: 0.72, green: 0.72, blue: 0.76)
+            case .typingPause: .pink
             case .videoPause: Color(red: 0.35, green: 0.65, blue: 0.88)
             case .meetingPause: Color(red: 0.69, green: 0.56, blue: 0.94)
             case .idlePause: Color(red: 0.98, green: 0.68, blue: 0.35)

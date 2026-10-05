@@ -20,6 +20,7 @@ struct BreakRun: Codable, Equatable, Sendable {
 
 enum SuspendReason: String, Codable, Equatable, Sendable {
     case manual
+    case typing
     case meeting
     case video
     case idle
@@ -65,6 +66,11 @@ enum SessionStatus: Codable, Equatable, Sendable {
 
     var isPaused: Bool {
         if case .suspended = self { return true }
+        return false
+    }
+
+    var isTypingPaused: Bool {
+        if case .suspended(let s) = self { return s.reason == .typing }
         return false
     }
 
@@ -123,6 +129,8 @@ enum SessionStatus: Codable, Equatable, Sendable {
                 return .kaskasPaused
             case .meeting:
                 return .meeting
+            case .typing:
+                return .studying
             }
         }
     }

@@ -8,6 +8,7 @@ enum SystemCause: String, Codable, Equatable, Sendable {
 
 enum SessionInput: Equatable, Sendable {
     case launch(meetingActive: Bool, videoActive: Bool = false)
+    case setTyping(active: Bool)
     case tick
     case toggleManualPause
     case setManualPause(active: Bool)

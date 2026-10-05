@@ -191,6 +191,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var customWallpaperPath: String?
     var meetingPauseIndicatorEnabled: Bool
     var pauseDuringMeetings: Bool
+    var pauseWhileTyping: Bool
+    var typingPauseIndicatorEnabled: Bool
     var pauseDuringVideo: Bool
     var videoPauseIndicatorEnabled: Bool
     var meetingCameraDetectionEnabled: Bool
@@ -226,6 +228,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         customWallpaperPath: String? = nil,
         pauseDuringMeetings: Bool = true,
         meetingPauseIndicatorEnabled: Bool = true,
+        pauseWhileTyping: Bool = true,
+        typingPauseIndicatorEnabled: Bool = true,
         pauseDuringVideo: Bool = false,
         videoPauseIndicatorEnabled: Bool = true,
         meetingCameraDetectionEnabled: Bool = false,
@@ -260,6 +264,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.customWallpaperPath = customWallpaperPath
         self.pauseDuringMeetings = pauseDuringMeetings
         self.meetingPauseIndicatorEnabled = meetingPauseIndicatorEnabled
+        self.pauseWhileTyping = pauseWhileTyping
+        self.typingPauseIndicatorEnabled = typingPauseIndicatorEnabled
         self.pauseDuringVideo = pauseDuringVideo
         self.videoPauseIndicatorEnabled = videoPauseIndicatorEnabled
         self.meetingCameraDetectionEnabled = meetingCameraDetectionEnabled
@@ -296,6 +302,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case customWallpaperPath
         case pauseDuringMeetings
         case meetingPauseIndicatorEnabled
+        case pauseWhileTyping
+        case typingPauseIndicatorEnabled
         case pauseDuringVideo
         case videoPauseIndicatorEnabled
         case meetingCameraDetectionEnabled
@@ -344,6 +352,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             customWallpaperPath: value(.customWallpaperPath, fallback: defaults.customWallpaperPath),
             pauseDuringMeetings: value(.pauseDuringMeetings, fallback: defaults.pauseDuringMeetings),
             meetingPauseIndicatorEnabled: value(.meetingPauseIndicatorEnabled, fallback: defaults.meetingPauseIndicatorEnabled),
+            pauseWhileTyping: value(.pauseWhileTyping, fallback: defaults.pauseWhileTyping),
+            typingPauseIndicatorEnabled: value(.typingPauseIndicatorEnabled, fallback: defaults.typingPauseIndicatorEnabled),
             pauseDuringVideo: value(.pauseDuringVideo, fallback: defaults.pauseDuringVideo),
             videoPauseIndicatorEnabled: value(.videoPauseIndicatorEnabled, fallback: defaults.videoPauseIndicatorEnabled),
             meetingCameraDetectionEnabled: value(.meetingCameraDetectionEnabled, fallback: defaults.meetingCameraDetectionEnabled),

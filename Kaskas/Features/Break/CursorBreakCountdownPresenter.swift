@@ -3,55 +3,89 @@ import SwiftUI
 
 @MainActor
 final class CursorBreakCountdownPresenter {
-    private var panel: NSPanel?
+    private(set) var panel: NSPanel?
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
     private var autoDismissTask: Task<Void, Never>?
+    private var panelSize = CursorBreakCountdownView.panelSize
 
     func show(endsAt: Date, leadTime: TimeInterval) {
-        dismiss()
-        guard endsAt > .now, !NSScreen.screens.isEmpty else { return }
-
-        let size = CursorBreakCountdownView.panelSize
-        let panel = NSPanel(
-            contentRect: NSRect(origin: .zero, size: size),
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false
+        show(
+            content: AnyView(CursorBreakCountdownView(endsAt: endsAt, leadTime: leadTime)),
+            size: CursorBreakCountdownView.panelSize,
+            endsAt: endsAt
         )
-        let contentView = NSHostingView(rootView: CursorBreakCountdownView(endsAt: endsAt, leadTime: leadTime))
-        contentView.frame = NSRect(origin: .zero, size: size)
-        panel.contentView = contentView
-        panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = true
-        panel.ignoresMouseEvents = true
-        panel.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()) + 1)
-        panel.hidesOnDeactivate = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
-        panel.isReleasedWhenClosed = false
+    }
 
-        self.panel = panel
-        movePanelToCursor()
-        panel.orderFrontRegardless()
+    func showMeetingPause() {
+        show(
+            content: AnyView(CursorMeetingPauseView()),
+            size: CursorMeetingPauseView.panelSize,
+            endsAt: .now.addingTimeInterval(CursorMeetingPauseView.displayDuration)
+        )
+    }
 
-        // Event-driven mouse monitoring: zero CPU wakeup when mouse is stationary
-        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(
-            matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
+    func showTypingPause() {
+        show(content: AnyView(CursorTypingPauseView()), size: CursorTypingPauseView.panelSize,
+             endsAt: nil)
+    }
+
+    private func show(content: AnyView, size: CGSize, endsAt: Date?) {
+        guard endsAt.map({ $0 > .now }) ?? true, !NSScreen.screens.isEmpty else {
+            dismiss()
+            return
+        }
+        autoDismissTask?.cancel()
+        autoDismissTask = nil
+        panelSize = size
+
+        if let panel, let hostingView = panel.contentView as? NSHostingView<AnyView> {
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { hostingView.rootView = content }
+            panel.setContentSize(size)
+            hostingView.frame = NSRect(origin: .zero, size: size)
+            movePanelToCursor()
+        } else {
+            let panel = NSPanel(
+                contentRect: NSRect(origin: .zero, size: size),
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false
+            )
+            let contentView = NSHostingView(rootView: content)
+            contentView.frame = NSRect(origin: .zero, size: size)
+            panel.contentView = contentView
+            panel.isOpaque = false
+            panel.backgroundColor = .clear
+            panel.hasShadow = false
+            panel.animationBehavior = .none
+            panel.ignoresMouseEvents = true
+            panel.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()) + 1)
+            panel.hidesOnDeactivate = false
+            panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications, .transient]
+            panel.isReleasedWhenClosed = false
+
+            self.panel = panel
+            movePanelToCursor()
+
+            // Event-driven mouse monitoring: zero CPU wakeup when mouse is stationary.
+            globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(
+                matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.movePanelToCursor() }
+            }
+
+            localMouseMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+            ) { [weak self] event in
                 self?.movePanelToCursor()
+                return event
             }
         }
 
-        localMouseMonitor = NSEvent.addLocalMonitorForEvents(
-            matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
-        ) { [weak self] event in
-            self?.movePanelToCursor()
-            return event
-        }
-
         // Exact sleep until endsAt instead of polling every frame
+        guard let endsAt else { return }
         let timeRemaining = max(0, endsAt.timeIntervalSinceNow)
         autoDismissTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(timeRemaining))
@@ -83,20 +117,19 @@ final class CursorBreakCountdownPresenter {
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(pointer) })
             ?? NSScreen.main else { return }
 
-        let size = CursorBreakCountdownView.panelSize
-        let gap: CGFloat = 16
-        let x = pointer.x + size.width + gap <= screen.frame.maxX
-            ? pointer.x + gap
-            : pointer.x - size.width - gap
-        let y = pointer.y + size.height + gap <= screen.frame.maxY
-            ? pointer.y + gap
-            : pointer.y - size.height - gap
-
-        let newOrigin = NSPoint(x: x, y: y)
+        let newOrigin = Self.origin(beside: pointer, size: panelSize, screenFrame: screen.frame)
         if panel.frame.origin != newOrigin {
             panel.setFrameOrigin(newOrigin)
         }
         if !panel.isVisible { panel.orderFrontRegardless() }
+    }
+
+    /// One shared left-side anchor for countdown, typing and automatic-pause badges.
+    static func origin(beside pointer: NSPoint, size: CGSize, screenFrame: NSRect) -> NSPoint {
+        NSPoint(
+            x: min(max(pointer.x - size.width - 10, screenFrame.minX), screenFrame.maxX - size.width),
+            y: min(max(pointer.y - size.height / 2 - 6, screenFrame.minY), screenFrame.maxY - size.height)
+        )
     }
 }
 
@@ -141,5 +174,80 @@ private struct CursorBreakCountdownView: View {
             .frame(width: Self.panelSize.width, height: Self.panelSize.height)
             .modifier(NotificationGlassBackground(cornerRadius: Self.panelSize.height / 2))
         }
+    }
+}
+
+struct CursorMeetingPauseView: View {
+    var repeats = false
+    static let panelSize = CursorPauseBadgeStyle.panelSize
+    private static let entranceDuration = 0.18
+    private static let holdDuration = 1.5
+    static let displayDuration = entranceDuration + holdDuration
+
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Capsule().frame(width: 3, height: 14)
+            Capsule().frame(width: 3, height: 14)
+        }
+        .modifier(CursorPauseBadgeStyle())
+        .opacity(isVisible ? 1 : 0)
+        .task {
+            repeat {
+                withAnimation(.easeOut(duration: Self.entranceDuration)) { isVisible = true }
+                do {
+                    try await Task.sleep(for: .seconds(Self.entranceDuration + Self.holdDuration))
+                } catch { return }
+                isVisible = false
+                guard repeats else { return }
+                do {
+                    try await Task.sleep(for: .seconds(0.8))
+                } catch { return }
+            } while !Task.isCancelled
+        }
+    }
+}
+
+/// Shared by the live notification and the Automatic Pause preview.
+struct CursorTypingPauseView: View {
+    static let panelSize = CursorPauseBadgeStyle.panelSize
+
+    var body: some View {
+        Image(systemName: "keyboard")
+            .font(.system(size: 18, weight: .regular))
+            .modifier(CursorPauseBadgeStyle())
+            .accessibilityLabel(Text("warning.typing"))
+    }
+}
+
+/// One surface for both automatic-pause indicators in previews and live panels.
+private struct CursorPauseBadgeStyle: ViewModifier {
+    static let panelSize = CGSize(width: 40, height: 40)
+
+    func body(content: Content) -> some View {
+        content
+            .foregroundStyle(.white.opacity(0.92))
+            .frame(width: 32, height: 32)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(LinearGradient(
+                        colors: [.white.opacity(0.12), .white.opacity(0.02), .black.opacity(0.08)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(LinearGradient(
+                        colors: [.white.opacity(0.34), .white.opacity(0.08)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ), lineWidth: 0.5)
+            }
+            .shadow(color: .black.opacity(0.18), radius: 2, y: 1)
+            .frame(width: Self.panelSize.width, height: Self.panelSize.height)
+            .environment(\.colorScheme, .dark)
     }
 }

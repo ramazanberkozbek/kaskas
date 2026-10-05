@@ -7133,6 +7133,38 @@
         }
       }
     },
+    "warning.typing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typing…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazılıyor…"
+          }
+        }
+      }
+    },
+    "warning.typingPaused" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Countdown paused while you type"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazarken geri sayım duraklatıldı"
+          }
+        }
+      }
+    },
     "Yapıştır" : {
       "localizations" : {
         "en" : {

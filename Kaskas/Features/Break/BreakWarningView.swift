@@ -7,6 +7,7 @@ struct BreakWarningView: View {
 
     let endsAt: Date
     let leadTime: TimeInterval
+    var pausedRemaining: TimeInterval? = nil
     let onStart: () -> Void
     let onPostpone: (TimeInterval) -> Void
     let onSkip: () -> Void
@@ -42,18 +43,19 @@ struct BreakWarningView: View {
                 endsAt: endsAt,
                 duration: leadTime,
                 cornerRadius: 20,
-                color: accent
+                color: accent,
+                pausedRemaining: pausedRemaining
             )
         }
     }
 
     private var countdownHeader: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
-            let remaining = max(0, endsAt.timeIntervalSince(context.date))
+        TimelineView(.animation(minimumInterval: 1, paused: pausedRemaining != nil)) { context in
+            let remaining = pausedRemaining ?? max(0, endsAt.timeIntervalSince(context.date))
             let seconds = Int(remaining.rounded(.up))
 
             HStack(spacing: 12) {
-                Image(systemName: "clock.arrow.circlepath")
+                Image(systemName: pausedRemaining == nil ? "clock.arrow.circlepath" : "pause.fill")
                     .font(.system(size: 22, weight: .medium))
                     .foregroundStyle(accent)
                     .frame(width: 48, height: 48)
@@ -70,7 +72,7 @@ struct BreakWarningView: View {
                         .monospacedDigit()
                         .foregroundStyle(.white)
 
-                    Text("warning.subtitle")
+                    Text(pausedRemaining == nil ? "warning.subtitle" : "warning.typingPaused")
                         .font(NotificationTypography.message())
                         .foregroundStyle(.white.opacity(0.65))
                 }

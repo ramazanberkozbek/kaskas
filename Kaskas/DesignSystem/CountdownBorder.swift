@@ -6,10 +6,11 @@ struct CountdownBorder: View {
     let duration: TimeInterval
     let cornerRadius: CGFloat
     let color: Color
+    var pausedRemaining: TimeInterval? = nil
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
-            let remaining = min(1, max(0, endsAt.timeIntervalSince(context.date) / duration))
+        TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: pausedRemaining != nil)) { context in
+            let remaining = min(1, max(0, (pausedRemaining ?? endsAt.timeIntervalSince(context.date)) / duration))
             RoundedRectangle(cornerRadius: cornerRadius - 1)
                 .stroke(.white.opacity(0.14), lineWidth: 1.5)
                 .overlay {

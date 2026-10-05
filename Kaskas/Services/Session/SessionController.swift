@@ -48,6 +48,7 @@ final class SessionController {
     @ObservationIgnored private let settingsPresenter: SettingsPresenter
     @ObservationIgnored private let skippedBreakNotifier = SkippedBreakNotifier()
     @ObservationIgnored private let idleBreakNotifier = IdleBreakNotifier()
+    @ObservationIgnored private let typingMonitor: any TypingActivityMonitoring
     @ObservationIgnored private let cursorIdleMonitor = CursorIdleMonitor()
     @ObservationIgnored private let meetingMonitor: any MeetingActivityMonitoring
     @ObservationIgnored private let videoMonitor: any VideoActivityMonitoring
@@ -114,6 +115,7 @@ final class SessionController {
         settingsPresenter: SettingsPresenter = SettingsPresenter(),
         meetingMonitor: any MeetingActivityMonitoring = MeetingActivityMonitor(),
         videoMonitor: any VideoActivityMonitoring = VideoActivityMonitor(),
+        typingMonitor: any TypingActivityMonitoring = TypingActivityMonitor(),
         now: Date = Date()
     ) {
         let configuration = store.loadConfiguration()
@@ -126,6 +128,7 @@ final class SessionController {
         self.customWallpaperStore = customWallpaperStore
         self.meetingMonitor = meetingMonitor
         self.videoMonitor = videoMonitor
+        self.typingMonitor = typingMonitor
         self.categoryRegistry = categoryRegistry
         appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore, excludedUsageStore: excludedUsageStore)
         persistence = SessionPersistence(store: store, historyStore: historyStore)
@@ -238,6 +241,7 @@ final class SessionController {
             at: now
         )
         refreshProtection(at: now, showsBreakWarning: showsBreakWarning)
+        refreshTyping(active: typingMonitor.sample(), at: now, showsBreakWarning: showsBreakWarning)
         let effects = engine.send(.tick, at: now)
         apply(effects, at: now, showsBreakWarning: showsBreakWarning)
     }
@@ -383,6 +387,9 @@ final class SessionController {
             refreshProtection(at: now)
         }
         if idleSettingsChanged { startIdleMonitoringIfNeeded() }
+        if engine.status.isTypingPaused {
+            apply([.showBreakWarning(endsAt: engine.session.endsAt)], at: now)
+        }
         if warningSettingsChanged,
            engine.status.phase == .focusing,
            engine.hasShownBreakWarning {
@@ -723,8 +730,24 @@ final class SessionController {
         refreshScreenTimeToday(at: now)
     }
 
+    private func refreshTyping(active: Bool, at now: Date, showsBreakWarning: Bool = true) {
+        let effects = engine.send(.setTyping(active: active), at: now)
+        guard !effects.isEmpty else { return }
+        apply(effects, at: now, showsBreakWarning: showsBreakWarning)
+    }
+
     private func refreshSnapshot(at now: Date = Date()) {
         sessionSnapshot = engine.snapshot(at: now)
+        let watchesTyping = hasStarted && configuration.pauseWhileTyping && configuration.breakWarningEnabled
+            && (engine.status.isTypingPaused || (!engine.status.isPaused && engine.status.phase == .focusing
+                && sessionSnapshot.remaining <= configuration.breakWarningLeadTime))
+        if watchesTyping {
+            typingMonitor.start { [weak self] active, date in
+                self?.refreshTyping(active: active, at: date)
+            }
+        } else {
+            typingMonitor.stop()
+        }
     }
 
     private func apply(
@@ -762,6 +785,8 @@ final class SessionController {
                     endsAt: endsAt,
                     leadTime: configuration.breakWarningLeadTime,
                     position: configuration.notificationPosition,
+                    pausedRemaining: engine.status.isTypingPaused ? sessionSnapshot.remaining : nil,
+                    typingIndicatorEnabled: configuration.typingPauseIndicatorEnabled,
                     onStart: { [weak self] in self?.startBreakNow() },
                     onPostpone: { [weak self] duration in self?.postponeBreak(by: duration) },
                     onSkip: { [weak self] in self?.skipUpcomingBreak() }

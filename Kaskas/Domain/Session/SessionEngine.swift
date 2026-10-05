@@ -44,7 +44,7 @@ struct SessionEngine: Sendable {
         scheduledBreakCount = restoredState.scheduledBreakCount
 
         var resolvedStatus = restoredState.status
-        if case .suspended(let s) = resolvedStatus, s.reason == .idle {
+        if case .suspended(let s) = resolvedStatus, s.reason == .idle || s.reason == .typing {
             let resumeAt = lastActiveAt ?? now
             if case .focus(let rem, let tot, _, let w) = s.frozen {
                 let resumeGrace = max(0, Self.systemResumeGrace - rem)
