@@ -9,6 +9,8 @@ struct ExcludedApplicationsCard: View {
     let onToggleExpand: () -> Void
     let onAdd: () -> Void
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
+    @State private var showingExplanation = false
 
     private var applications: [ExcludedApplication] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -48,6 +50,18 @@ struct ExcludedApplicationsCard: View {
                 .buttonStyle(.plain)
                 .accessibilityValue(isExpanded ? Text("exclusions.expanded") : Text("exclusions.collapsed"))
                 HStack(spacing: 4) {
+                    Button { showingExplanation = true } label: {
+                        Image(systemName: "info.circle")
+                    }
+                    .buttonStyle(HeaderActionButtonStyle())
+                    .accessibilityLabel(Text("exclusions.about"))
+                    .popover(isPresented: $showingExplanation) {
+                        Text(verbatim: AppLanguage.localizedString("exclusions.historyExplanation", locale: locale))
+                            .font(.system(size: 12))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(16)
+                            .frame(width: 300)
+                    }
                     Button(action: onAdd) {
                         Image(systemName: "plus")
                     }
@@ -58,13 +72,6 @@ struct ExcludedApplicationsCard: View {
                 .padding(.trailing, SettingsPageLayout.cardInset)
                 .padding(.vertical, 8)
             }
-
-            Text("exclusions.historyExplanation")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, SettingsPageLayout.cardInset)
-                .padding(.bottom, 12)
 
             if isExpanded {
                 Divider().padding(.horizontal, SettingsPageLayout.cardInset)

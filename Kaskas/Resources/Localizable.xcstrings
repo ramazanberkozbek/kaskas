@@ -2335,13 +2335,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Time in these apps is excluded from study statistics and sessions, including past reports. Break reminders continue."
+            "value" : "Time spent in these apps is excluded from study statistics and sessions, including past reports."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu uygulamalarda geçen süre, geçmiş dahil çalışma istatistiklerinden ve oturumlardan çıkarılır. Mola hatırlatmaları devam eder."
+            "value" : "Bu uygulamalarda geçen süre, geçmiş dahil çalışma istatistiklerinden ve oturumlardan çıkarılır."
           }
         }
       }
