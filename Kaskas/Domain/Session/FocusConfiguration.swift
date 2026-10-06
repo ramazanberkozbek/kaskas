@@ -175,12 +175,12 @@ public func localizedString(_ key: String, locale: Locale? = nil, defaultValue: 
     AppLanguage.localizedString(key, locale: locale, defaultValue: defaultValue)
 }
 
-
 struct FocusConfiguration: Codable, Equatable, Sendable {
     static var defaultLanguage: AppLanguage {
         .system
     }
 
+    var activeHours: ActiveHoursSchedule
     var focusDuration: TimeInterval
     var microRemindersEnabled: Bool
     var microReminderDisplayMode: MicroReminderDisplayMode
@@ -220,6 +220,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var appLanguage: AppLanguage
 
     init(
+        activeHours: ActiveHoursSchedule = ActiveHoursSchedule(),
         focusDuration: TimeInterval = 25 * 60,
         microRemindersEnabled: Bool = true,
         microReminderDisplayMode: MicroReminderDisplayMode = .mascot,
@@ -258,6 +259,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         notificationPosition: NotificationPosition = .center,
         appLanguage: AppLanguage = FocusConfiguration.defaultLanguage
     ) {
+        self.activeHours = activeHours.isValid ? activeHours : ActiveHoursSchedule()
         self.focusDuration = max(1, focusDuration)
         self.microRemindersEnabled = microRemindersEnabled
         self.microReminderDisplayMode = microReminderDisplayMode
@@ -298,6 +300,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case activeHours
         case focusDuration
         case microRemindersEnabled
         case microReminderDisplayMode
@@ -350,6 +353,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             }
         }
         self.init(
+            activeHours: value(.activeHours, fallback: defaults.activeHours),
             focusDuration: value(.focusDuration, fallback: defaults.focusDuration),
             microRemindersEnabled: value(.microRemindersEnabled, fallback: defaults.microRemindersEnabled),
             microReminderDisplayMode: value(.microReminderDisplayMode, fallback: defaults.microReminderDisplayMode),

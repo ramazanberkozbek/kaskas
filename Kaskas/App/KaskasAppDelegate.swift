@@ -59,6 +59,12 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
             name: .NSSystemClockDidChange,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(systemClockDidChange(_:)),
+            name: .NSSystemTimeZoneDidChange,
+            object: nil
+        )
         let center = NSWorkspace.shared.notificationCenter
         center.addObserver(
             self,

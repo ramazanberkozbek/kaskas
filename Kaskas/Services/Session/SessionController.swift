@@ -747,7 +747,7 @@ final class SessionController {
         let wasProtectionPaused = sessionSnapshot.status.isProtectionPaused
         let previousKind = sessionSnapshot.status.activityKind
         sessionSnapshot = engine.snapshot(at: now)
-        let watchesTyping = hasStarted && configuration.pauseWhileTyping && configuration.breakWarningEnabled
+        let watchesTyping = hasStarted && !sessionSnapshot.outsideActiveHours && configuration.pauseWhileTyping && configuration.breakWarningEnabled
             && (engine.status.isTypingPaused || (!engine.status.isPaused && engine.status.phase == .focusing
                 && sessionSnapshot.remaining <= configuration.breakWarningLeadTime))
         if watchesTyping {
@@ -759,7 +759,7 @@ final class SessionController {
         }
         let indicatorEnabled = sessionSnapshot.status.isMeetingPaused ? configuration.meetingPauseIndicatorEnabled
             : (sessionSnapshot.status.isVideoPaused && configuration.videoPauseIndicatorEnabled)
-        if !hasStarted || !indicatorEnabled || !sessionSnapshot.status.isProtectionPaused {
+        if !hasStarted || sessionSnapshot.outsideActiveHours || !indicatorEnabled || !sessionSnapshot.status.isProtectionPaused {
             meetingPauseIndicator.dismiss()
         } else if (!wasProtectionPaused || previousKind != sessionSnapshot.status.activityKind),
                   lastProtectionIndicatorAt.map({ now.timeIntervalSince($0) >= 60 }) ?? true {

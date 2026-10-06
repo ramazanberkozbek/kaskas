@@ -26,6 +26,7 @@ struct MenuBarView: View {
         case shortBreak
         case longBreak
         case manualPause
+        case outsideActiveHours
         case meetingPause
         case videoPause
         case typingPause
@@ -36,6 +37,8 @@ struct MenuBarView: View {
             switch snapshot.status {
             case .suspended(let suspension):
                 switch suspension.reason {
+                case .outsideActiveHours:
+                    self = .outsideActiveHours
                 case .manual, .system:
                     self = .manualPause
                 case .idle:
@@ -61,6 +64,7 @@ struct MenuBarView: View {
             case .shortBreak: "menu.badge.shortBreak"
             case .longBreak: "menu.badge.longBreak"
             case .manualPause: "menu.badge.manualPause"
+            case .outsideActiveHours: "menu.badge.outsideActiveHours"
             case .meetingPause: "menu.badge.meetingPause"
             case .videoPause: "menu.badge.videoPause"
             case .typingPause: "warning.typing"
@@ -73,6 +77,7 @@ struct MenuBarView: View {
             switch self {
             case .shortBreak: Color(red: 0.40, green: 0.61, blue: 0.96)
             case .longBreak: Color(red: 0.98, green: 0.68, blue: 0.35)
+            case .outsideActiveHours: Color(red: 0.62, green: 0.56, blue: 0.90)
             case .manualPause: Color(red: 0.72, green: 0.72, blue: 0.76)
             case .typingPause: .pink
             case .videoPause: Color(red: 0.35, green: 0.65, blue: 0.88)

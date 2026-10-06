@@ -13,13 +13,18 @@ struct SessionEngine: Sendable {
     var consecutiveSkippedBreaks = 0
     var scheduledBreakCount = 0
     var ignoresProtectionForCycle = false
+    var activeHoursCalendar: Calendar = .autoupdatingCurrent
+    var activeHoursState: ActiveHoursState?
+    var manualBreakActive = false
 
     // MARK: - Initialization
 
     init(
         configuration: FocusConfiguration = FocusConfiguration(),
-        now: Date = Date()
+        now: Date = Date(),
+        calendar: Calendar = .autoupdatingCurrent
     ) {
+        self.activeHoursCalendar = calendar
         self.configuration = configuration
         activeConfiguration = configuration
         status = .focusing(Self.makeFocusRun(
@@ -28,15 +33,20 @@ struct SessionEngine: Sendable {
             microRemindersEnabled: configuration.microRemindersEnabled,
             at: now
         ))
+        _ = reconcileActiveHours(at: now)
     }
 
     init(
         configuration: FocusConfiguration,
         restoredState: SessionState,
         lastActiveAt: Date? = nil,
-        now: Date = Date()
+        now: Date = Date(),
+        calendar: Calendar = .autoupdatingCurrent
     ) {
+        self.activeHoursCalendar = calendar
         self.configuration = configuration
+        activeHoursState = restoredState.activeHoursState
+        manualBreakActive = restoredState.manualBreakActive ?? false
         activeConfiguration = restoredState.activeConfiguration
         activeConfiguration.microReminderInterval = configuration.microReminderInterval
         activeConfiguration.microRemindersEnabled = configuration.microRemindersEnabled
@@ -91,6 +101,8 @@ struct SessionEngine: Sendable {
 
     var state: SessionState {
         SessionState(
+            activeHoursState: activeHoursState,
+            manualBreakActive: manualBreakActive,
             status: status,
             activeConfiguration: activeConfiguration,
             completedBreaks: completedBreaks,
@@ -133,7 +145,12 @@ struct SessionEngine: Sendable {
     }
 
     func currentActivityKind(at now: Date = Date()) -> ActivityKind {
-        status.activityKind
+        if configuration.activeHours.pausesTracking,
+           configuration.activeHours.state(at: now, calendar: activeHoursCalendar)?.isOutside == true,
+           status.activityKind == .studying || status.activityKind == .meeting {
+            return .kaskasPaused
+        }
+        return status.activityKind
     }
 
     var session: FocusSession {
@@ -186,6 +203,10 @@ struct SessionEngine: Sendable {
     }
 
     var nextEventDate: Date? {
+        [nextSessionEventDate, activeHoursState?.nextTransition].compactMap { $0 }.min()
+    }
+
+    private var nextSessionEventDate: Date? {
         switch status {
         case .suspended:
             return nil
@@ -237,7 +258,9 @@ struct SessionEngine: Sendable {
             nextMicroReminderAt: currentSession.nextMicroReminderAt,
             remaining: remaining,
             progress: min(max(elapsed / totalDuration, 0), 1),
-            nextBreakKind: nextBreakKind
+            nextBreakKind: nextBreakKind,
+            outsideActiveHours: configuration.activeHours.state(at: now, calendar: activeHoursCalendar)?.isOutside == true,
+            nextActiveHoursStart: activeHoursState?.isOutside == true ? activeHoursState?.nextTransition : nil
         )
     }
 
@@ -277,6 +300,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func advanceDay(at now: Date = Date()) {
+        manualBreakActive = false
         ignoresProtectionForCycle = false
         completedBreaks = 0
         completedBreaksDay = Calendar.current.date(byAdding: .day, value: -1, to: now)
@@ -290,6 +314,7 @@ struct SessionEngine: Sendable {
     }
 
     mutating func resetFocus(at now: Date = Date()) {
+        manualBreakActive = false
         ignoresProtectionForCycle = false
         activeConfiguration = configuration
         status = .focusing(Self.makeFocusRun(

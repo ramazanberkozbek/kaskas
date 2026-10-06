@@ -3107,6 +3107,23 @@
         }
       }
     },
+    "menu.badge.outsideActiveHours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OFF"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KAPALI"
+          }
+        }
+      }
+    },
     "menu.badge.shortBreak" : {
       "extractionState" : "manual",
       "localizations" : {

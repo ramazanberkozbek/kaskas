@@ -4,7 +4,7 @@ import Foundation
 
 extension SessionEngine {
     @discardableResult
-    mutating func send(
+    mutating func reduce(
         _ input: SessionInput,
         at now: Date = Date()
     ) -> [SessionEffect] {
@@ -44,7 +44,7 @@ extension SessionEngine {
                 status = .suspended(s)
             }
             if status.isProtectionPaused {
-                _ = send(.setProtection(meetingActive: meetingActive, videoActive: videoActive), at: now)
+                _ = reduce(.setProtection(meetingActive: meetingActive, videoActive: videoActive), at: now)
             }
             effects.dismissAllAlerts()
             // Restored breaks are recorded silently; their end was not observed live.
@@ -116,7 +116,7 @@ extension SessionEngine {
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .toggleManualPause:
-            return send(.setManualPause(active: !status.isManualPaused), at: now)
+            return reduce(.setManualPause(active: !status.isManualPaused), at: now)
 
         case .setManualPause(let active):
             if active {
@@ -149,7 +149,7 @@ extension SessionEngine {
             if case .suspended(let s) = status { videoActive = s.videoPending == true || s.reason == .video }
             else { videoActive = false }
             let wasOtherPause = status.isPaused && !status.isProtectionPaused && !status.isTypingPaused
-            let effects = send(.setProtection(meetingActive: active, videoActive: videoActive), at: now)
+            let effects = reduce(.setProtection(meetingActive: active, videoActive: videoActive), at: now)
             // Preserve the legacy meeting event's no-presentation contract while
             // storing pending signals. The combined event persists live changes.
             return wasOtherPause ? [] : effects
@@ -163,6 +163,12 @@ extension SessionEngine {
                 // crediting the video as time away when the pointer hasn't moved.
                 declineIdleBreak(at: now)
                 effects.dismiss(.dismissIdleBreakReminder)
+            }
+            if status.isOutsideActiveHours, let reason {
+                suspend(reason: reason, at: now)
+                effects.persist(kind: currentActivityKind(at: now))
+                effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
+                break
             }
             switch status {
             case .focusing:
@@ -199,10 +205,11 @@ extension SessionEngine {
 
         case .ignoreProtectionForCycle:
             ignoresProtectionForCycle = true
-            if status.isTypingPaused { return send(.setTyping(active: false), at: now) }
-            return send(.setProtection(meetingActive: false, videoActive: false), at: now)
+            if status.isTypingPaused { return reduce(.setTyping(active: false), at: now) }
+            return reduce(.setProtection(meetingActive: false, videoActive: false), at: now)
 
         case .beginIdle(let startedAt):
+            if status.isOutsideActiveHours { resume(at: now) }
             guard case .focusing = status else { return [] }
             let idleStart = max(session.startedAt, startedAt)
             beginIdlePause(at: idleStart)
@@ -470,7 +477,7 @@ fileprivate extension SessionEngine {
         }
         self.configuration = configuration
         if case .suspended(let s) = status {
-            _ = send(.setProtection(meetingActive: s.meetingPending || s.reason == .meeting,
+            _ = reduce(.setProtection(meetingActive: s.meetingPending || s.reason == .meeting,
                                    videoActive: s.videoPending == true || s.reason == .video), at: now)
         }
     }
@@ -530,6 +537,7 @@ fileprivate extension SessionEngine {
     }
 
     mutating func startBreak(at now: Date = Date(), scheduled: Bool = true) {
+        manualBreakActive = !scheduled
         if scheduled && activeConfiguration.longBreakEnabled { scheduledBreakCount += 1 }
         let isLongBreak = scheduled
             && activeConfiguration.longBreakEnabled
@@ -586,6 +594,7 @@ fileprivate extension SessionEngine {
     }
 
     mutating func snoozeBreak(at now: Date = Date()) {
+        manualBreakActive = false
         let endsAt = now.addingTimeInterval(activeConfiguration.snoozeDuration)
         status = .focusing(FocusRun(
             startedAt: now,
@@ -598,10 +607,12 @@ fileprivate extension SessionEngine {
     mutating func prepareFocusForReturn(at now: Date) {
         // Freeze the next focus until new input arrives; keep the completed break
         // pending so its history includes the time spent waiting for the user.
+        let wasManual = manualBreakActive
         let pendingBreak = BreakHistoryEntry.transition(
-            from: session, at: now, outcome: .completed, source: .scheduled
+            from: session, at: now, outcome: .completed, source: wasManual ? .manual : .scheduled
         )
         startFocus(at: now)
+        manualBreakActive = wasManual
         suspend(reason: .awaitingReturn, at: now)
         if case .suspended(var suspension) = status {
             suspension.pendingBreak = pendingBreak
@@ -613,6 +624,7 @@ fileprivate extension SessionEngine {
         guard case .suspended(var suspension) = status,
               let pending = suspension.pendingBreak else { return nil }
         suspension.pendingBreak = nil
+        manualBreakActive = false
         status = .suspended(suspension)
         return BreakHistoryEntry(
             id: pending.id, occurredAt: now, startedAt: pending.startedAt,
@@ -622,6 +634,7 @@ fileprivate extension SessionEngine {
     }
 
     mutating func startFocus(at now: Date) {
+        manualBreakActive = false
         ignoresProtectionForCycle = false
         if activeConfiguration.longBreakEnabled != configuration.longBreakEnabled
             || activeConfiguration.longBreakFrequency != configuration.longBreakFrequency {

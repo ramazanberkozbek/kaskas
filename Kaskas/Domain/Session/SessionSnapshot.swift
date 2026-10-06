@@ -1,6 +1,8 @@
 import Foundation
 
 struct SessionSnapshot: Equatable, Sendable {
+    let outsideActiveHours: Bool
+    let nextActiveHoursStart: Date?
     let status: SessionStatus
     let phase: SessionPhase
     let startedAt: Date
@@ -18,8 +20,12 @@ struct SessionSnapshot: Equatable, Sendable {
         nextMicroReminderAt: Date?,
         remaining: TimeInterval,
         progress: Double,
-        nextBreakKind: ScheduledBreakKind?
+        nextBreakKind: ScheduledBreakKind?,
+        outsideActiveHours: Bool = false,
+        nextActiveHoursStart: Date? = nil
     ) {
+        self.outsideActiveHours = outsideActiveHours
+        self.nextActiveHoursStart = nextActiveHoursStart
         self.status = status
         self.phase = phase
         self.startedAt = startedAt

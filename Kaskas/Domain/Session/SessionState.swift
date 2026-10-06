@@ -1,6 +1,8 @@
 import Foundation
 
 struct SessionState: Codable, Equatable, Sendable {
+    let activeHoursState: ActiveHoursState?
+    let manualBreakActive: Bool?
     let status: SessionStatus
     let activeConfiguration: FocusConfiguration
     let completedBreaks: Int
@@ -9,6 +11,8 @@ struct SessionState: Codable, Equatable, Sendable {
     let scheduledBreakCount: Int
 
     init(
+        activeHoursState: ActiveHoursState? = nil,
+        manualBreakActive: Bool? = nil,
         status: SessionStatus,
         activeConfiguration: FocusConfiguration,
         completedBreaks: Int = 0,
@@ -16,6 +20,8 @@ struct SessionState: Codable, Equatable, Sendable {
         consecutiveSkippedBreaks: Int = 0,
         scheduledBreakCount: Int = 0
     ) {
+        self.activeHoursState = activeHoursState
+        self.manualBreakActive = manualBreakActive
         self.status = status
         self.activeConfiguration = activeConfiguration
         self.completedBreaks = completedBreaks
