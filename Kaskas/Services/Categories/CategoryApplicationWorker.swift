@@ -7,6 +7,7 @@ actor CategoryApplicationWorker {
     nonisolated struct InstallationSnapshot: Sendable {
         let apps: [CategoryRegistry.DiscoveredApp]
         let installed: [String: Bool]
+        let revision: Int
     }
 
     nonisolated struct IconRequest: Hashable, Sendable {
@@ -21,27 +22,38 @@ actor CategoryApplicationWorker {
     }
 
     private var snapshot: InstallationSnapshot?
+    private var discoveredAt: ContinuousClock.Instant?
+    private var discoveryRevision = 0
     private var icons: [IconRequest: IconResult] = [:]
     private var iconOrder: [IconRequest] = []
     private let iconLimit: Int
+    private let discoveryCacheLifetime: Duration
+    private let clock: @Sendable () -> ContinuousClock.Instant
     private let diskDiscovery: @Sendable () -> [CategoryRegistry.DiscoveredApp]
     private let applicationPath: @Sendable (String) -> String?
     private let iconLoader: @Sendable (IconRequest, [CategoryRegistry.DiscoveredApp]) -> CGImage?
 
     init(
         iconLimit: Int = 256,
+        discoveryCacheLifetime: Duration = .seconds(60),
+        clock: @escaping @Sendable () -> ContinuousClock.Instant = { .now },
         diskDiscovery: @escaping @Sendable () -> [CategoryRegistry.DiscoveredApp] = AppDiscoveryService.performDiskDiscovery,
         applicationPath: @escaping @Sendable (String) -> String? = { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0)?.path },
         iconLoader: @escaping @Sendable (IconRequest, [CategoryRegistry.DiscoveredApp]) -> CGImage? = CategoryApplicationWorker.rasterizeIcon
     ) {
         self.iconLimit = max(1, iconLimit)
+        self.discoveryCacheLifetime = discoveryCacheLifetime
+        self.clock = clock
         self.diskDiscovery = diskDiscovery
         self.applicationPath = applicationPath
         self.iconLoader = iconLoader
     }
 
     func discover(rules: [CategoryRule], forceRefresh: Bool = false) -> InstallationSnapshot {
-        if !forceRefresh, let snapshot { return snapshot }
+        // Reopening a pane reuses discovery and icons. Expiry is checked only on
+        // requests, so newly installed/removed apps appear without a polling timer.
+        if !forceRefresh, let snapshot, let discoveredAt,
+           discoveredAt.duration(to: clock()) < discoveryCacheLifetime { return snapshot }
         var apps = diskDiscovery()
         CategoryRegistry.mergeRunningApplications(into: &apps)
         apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -53,8 +65,10 @@ actor CategoryApplicationWorker {
             installed[key] = identifiers.contains(key) || identifiers.contains(rule.displayName.lowercased()) ||
                 (!rule.appIdentifier.isEmpty && applicationPath(rule.appIdentifier) != nil)
         }
-        let result = InstallationSnapshot(apps: apps, installed: installed)
+        discoveryRevision += 1
+        let result = InstallationSnapshot(apps: apps, installed: installed, revision: discoveryRevision)
         snapshot = result
+        discoveredAt = clock()
         // A new installation revision can resolve previously missing icons.
         icons.removeAll()
         iconOrder.removeAll()

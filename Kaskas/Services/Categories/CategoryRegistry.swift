@@ -55,11 +55,13 @@ public final class CategoryRegistry {
 
     private static var cachedApps: [DiscoveredApp]?
     private static var cachedInstallation: [String: Bool] = [:]
+    private static var cachedInstallationRevision: Int?
     private static var discoveryGeneration = 0
     private static var discoveryTask: Task<CategoryApplicationWorker.InstallationSnapshot, Never>?
     private static let applicationWorker = CategoryApplicationWorker()
 
     private(set) var installationRevision = 0
+    @ObservationIgnored private var appliedInstallationRevision: Int?
     /// Includes explicit false results for absent default applications.
     public private(set) var installationSnapshot: [String: Bool] = [:]
     public private(set) var installedRules: [CategoryRule] = []
@@ -68,6 +70,7 @@ public final class CategoryRegistry {
         self.defaults = defaults
         loadCustomData()
         installationSnapshot = Self.cachedInstallation
+        appliedInstallationRevision = Self.cachedInstallationRevision
         rebuildInstalledRules()
     }
 
@@ -200,7 +203,9 @@ public final class CategoryRegistry {
     public func refreshInstalledApplications(forceRefresh: Bool = false) async {
         _ = await Self.discoverInstalledApplicationsAsync(forceRefresh: forceRefresh)
         guard !Task.isCancelled else { return }
+        guard appliedInstallationRevision != Self.cachedInstallationRevision else { return }
         installationSnapshot = Self.cachedInstallation
+        appliedInstallationRevision = Self.cachedInstallationRevision
         installationRevision += 1
         rebuildInstalledRules()
     }
@@ -242,9 +247,8 @@ public final class CategoryRegistry {
     }
 
     public static func discoverInstalledApplicationsAsync(forceRefresh: Bool = false) async -> [DiscoveredApp] {
-        // Check in-flight work before the cache so forced refresh callers also coalesce.
+        // The worker owns cache freshness; concurrent callers share even forced refreshes.
         if discoveryTask == nil {
-            if !forceRefresh, let cached = cachedApps { return cached }
             discoveryGeneration += 1
             let rules = Self.defaultRules
             discoveryTask = Task {
@@ -257,6 +261,7 @@ public final class CategoryRegistry {
         guard generation == discoveryGeneration else { return cachedApps ?? snapshot.apps }
         cachedApps = snapshot.apps
         cachedInstallation = snapshot.installed
+        cachedInstallationRevision = snapshot.revision
         // A completed waiter must not clear a newer refresh started by another waiter.
         discoveryTask = nil
         return snapshot.apps

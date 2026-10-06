@@ -120,7 +120,7 @@ struct CategorySettingsView: View {
         .environment(\.categoryApplicationRevision, registry.installationRevision)
         .scrollIndicators(.hidden)
         .background(colorScheme == .dark ? Color(red: 0.075, green: 0.075, blue: 0.075) : Color(nsColor: .windowBackgroundColor))
-        .task { await registry.refreshInstalledApplications(forceRefresh: true) }
+        .task { await registry.refreshInstalledApplications() }
         .onChange(of: registry.installedRules, initial: true) { rebuildGrouping() }
         .onChange(of: searchText) { rebuildGrouping() }
         .onChange(of: controller.appUsage.exclusions.revision) { rebuildGrouping() }

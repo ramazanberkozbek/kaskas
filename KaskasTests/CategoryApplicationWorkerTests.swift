@@ -6,6 +6,41 @@ import Testing
 @MainActor
 struct CategoryApplicationWorkerTests {
     @Test
+    func repeatedDiscoveryPreservesIconsAndExpiryFindsNewApplications() async {
+        let time = Mutex(ContinuousClock.now)
+        let scans = Mutex(0)
+        let loads = Mutex(0)
+        let identifier = "test.newly.installed.application"
+        let rule = CategoryRule(appIdentifier: identifier, displayName: "New App", categoryId: "coding")
+        let worker = CategoryApplicationWorker(clock: { time.withLock { $0 } }, diskDiscovery: {
+            let count = scans.withLock { $0 += 1; return $0 }
+            return count == 1 ? [] : [.init(id: identifier, name: "New App", bundleId: identifier,
+                                           path: "/Applications/New App.app")]
+        }, applicationPath: { _ in nil }, iconLoader: { _, _ in
+            loads.withLock { $0 += 1 }
+            return nil
+        })
+        let request = CategoryApplicationWorker.IconRequest(bundleId: identifier, appName: "New App")
+        let first = await worker.discover(rules: [rule])
+        _ = await worker.icon(for: request)
+        time.withLock { $0 = $0.advanced(by: .seconds(59)) }
+        let cached = await worker.discover(rules: [rule])
+        _ = await worker.icon(for: request)
+        #expect(scans.withLock { $0 } == 1)
+        #expect(loads.withLock { $0 } == 1)
+        #expect(cached.revision == first.revision)
+        #expect(cached.installed[identifier] == false)
+
+        time.withLock { $0 = $0.advanced(by: .seconds(1)) }
+        let refreshed = await worker.discover(rules: [rule])
+        _ = await worker.icon(for: request)
+        #expect(scans.withLock { $0 } == 2)
+        #expect(loads.withLock { $0 } == 2)
+        #expect(refreshed.revision > cached.revision)
+        #expect(refreshed.installed[identifier] == true)
+    }
+
+    @Test
     func concurrentColdDiscoveryCachesNegativeChecksAndRefreshRetries() async {
         let scans = Mutex(0)
         let checks = Mutex(0)
