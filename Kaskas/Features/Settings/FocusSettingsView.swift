@@ -12,9 +12,10 @@ struct FocusSettingsView: View {
     private let snoozeDurations: [TimeInterval] = [3, 5, 10, 15].map { $0 * 60 }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
-                SettingsPaneHeader(title: "settings.sidebar.focus")
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsPaneHeader(title: "settings.sidebar.focus")
 
                 // 1. Break Schedule
                 VStack(alignment: .leading, spacing: 12) {
@@ -109,6 +110,9 @@ struct FocusSettingsView: View {
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
+
+                ActiveHoursSettingsCard(controller: controller)
+                    .id("activeHours")
 
                 // 2. Live Break Preview (Hero Card)
                 VStack(alignment: .leading, spacing: 12) {
@@ -236,11 +240,22 @@ struct FocusSettingsView: View {
         .background(colorScheme == .dark
             ? Color(red: 0.075, green: 0.075, blue: 0.075)
             : Color(nsColor: .windowBackgroundColor))
-        .onDisappear {
-            wallpaperImportTask?.cancel()
-            wallpaperImportTask = nil
+        .onChange(of: controller.targetSettingsSection, initial: true) { _, section in
+            if section == "activeHours" {
+                DispatchQueue.main.async {
+                    withAnimation {
+                        proxy.scrollTo("activeHours", anchor: .top)
+                    }
+                    controller.targetSettingsSection = nil
+                }
+            }
         }
     }
+    .onDisappear {
+        wallpaperImportTask?.cancel()
+        wallpaperImportTask = nil
+    }
+}
 
     // MARK: - Helper Row and Header Views
 

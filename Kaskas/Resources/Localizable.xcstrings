@@ -3005,6 +3005,57 @@
         }
       }
     },
+    "menu.activeHours.outside" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outside active hours"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktif saatler dışında"
+          }
+        }
+      }
+    },
+    "menu.activeHours.remindersPaused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders paused"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hatırlatmalar duraklatıldı"
+          }
+        }
+      }
+    },
+    "menu.activeHours.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Working hours settings"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma saatleri ayarları"
+          }
+        }
+      }
+    },
     "menu.atTime" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3613,6 +3664,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seri"
+          }
+        }
+      }
+    },
+    "settings.activeHours.days" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active days"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktif günler"
+          }
+        }
+      }
+    },
+    "settings.activeHours.days.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days when Kaskas sends reminders"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaskas’ın hatırlatma göndereceği günler"
+          }
+        }
+      }
+    },
+    "settings.activeHours.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose when break reminders are active"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mola hatırlatmalarının etkin olduğu saatleri seçin"
+          }
+        }
+      }
+    },
+    "settings.activeHours.end" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş saati"
+          }
+        }
+      }
+    },
+    "settings.activeHours.invalidTimes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose different start and end times. This change has not been saved."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlangıç ve bitiş saatleri farklı olmalı. Bu değişiklik kaydedilmedi."
+          }
+        }
+      }
+    },
+    "settings.activeHours.overnight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ends the next day. Selected days determine when each interval starts."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ertesi gün sona erer. Seçilen günler, aralığın başladığı günlerdir."
+          }
+        }
+      }
+    },
+    "settings.activeHours.pauseTracking" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also pause tracking outside active hours"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saatler dışında takibi de durdur"
+          }
+        }
+      }
+    },
+    "settings.activeHours.pauseTracking.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop recording study and app usage time outside these hours"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu saatler dışında çalışma ve uygulama kullanım sürelerini kaydetme"
+          }
+        }
+      }
+    },
+    "settings.activeHours.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlangıç saati"
+          }
+        }
+      }
+    },
+    "settings.activeHours.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active Hours"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktif Saatler"
           }
         }
       }

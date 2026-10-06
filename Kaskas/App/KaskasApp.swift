@@ -46,8 +46,13 @@ private struct MenuBarStatusLabel: View {
             }
 
             if displayMode != .iconOnly {
-                Text(MenuBarDurationFormatter.string(for: remaining, locale: controller.locale))
-                    .monospacedDigit()
+                if snapshot.outsideActiveHours && snapshot.phase == .focusing {
+                    Image(systemName: "moon")
+                        .accessibilityLabel(Text("menu.activeHours.outside"))
+                } else {
+                    Text(MenuBarDurationFormatter.string(for: remaining, locale: controller.locale))
+                        .monospacedDigit()
+                }
             }
         }
         .onReceive(clock) { now = $0 }

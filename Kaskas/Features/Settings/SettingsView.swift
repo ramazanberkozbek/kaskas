@@ -4,11 +4,16 @@ import SwiftUI
 struct SettingsView: View {
     let controller: SessionController
 
-    @State private var selection: SettingsPane = .dashboard
+    @State private var selection: SettingsPane
     @State private var hoveredPane: SettingsPane?
     @State private var navigationTrace = SettingsNavigationTrace()
     @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
     @Environment(\.colorScheme) private var colorScheme
+
+    init(controller: SessionController, initialPane: SettingsPane = .dashboard) {
+        self.controller = controller
+        _selection = State(initialValue: controller.targetSettingsPane ?? initialPane)
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -70,6 +75,12 @@ struct SettingsView: View {
             .opacity(0)
             .allowsHitTesting(false)
         }
+        .onChange(of: controller.targetSettingsPane, initial: true) { _, newPane in
+            if let newPane {
+                selection = newPane
+                controller.targetSettingsPane = nil
+            }
+        }
         .environment(\.locale, controller.locale)
         .id(controller.configuration.appLanguage)
     }
@@ -126,7 +137,7 @@ struct SettingsView: View {
     }
 }
 
-private enum SettingsPane: String, CaseIterable, Identifiable {
+enum SettingsPane: String, CaseIterable, Identifiable {
     case dashboard
     case focus
     case alerts

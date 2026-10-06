@@ -23,6 +23,9 @@ final class SessionController {
         configuration.appLanguage.locale
     }
 
+    var targetSettingsPane: SettingsPane?
+    var targetSettingsSection: String?
+
     @ObservationIgnored private var engine: SessionEngine
     @ObservationIgnored private let scheduler: SessionScheduler
     @ObservationIgnored private let customWallpaperStore: CustomWallpaperStore
@@ -423,9 +426,14 @@ final class SessionController {
         apply(effects)
     }
 
-    func openSettings() {
+    func openSettings(pane: SettingsPane = .dashboard) {
         breakPresenter.dismiss()
-        settingsPresenter.show(controller: self)
+        settingsPresenter.show(controller: self, pane: pane)
+    }
+
+    func openActiveHoursSettings() {
+        targetSettingsSection = "activeHours"
+        openSettings(pane: .focus)
     }
 
     func toggleManualPause() {

@@ -18,6 +18,7 @@ struct MenuBarView: View {
     }
 
     private enum FooterItem {
+        case workingHoursSettings
         case settings
         case quit
     }
@@ -103,20 +104,27 @@ struct MenuBarView: View {
             countdown(for: snapshot)
                 .padding(.top, 8)
 
-            ProgressView(value: snapshot.progress)
-                .progressViewStyle(.linear)
-                .tint(Color(red: 0.35, green: 0.72, blue: 0.29))
-                .padding(.top, 7)
+            if !snapshot.outsideActiveHours || snapshot.phase == .onBreak {
+                ProgressView(value: snapshot.progress)
+                    .progressViewStyle(.linear)
+                    .tint(Color(red: 0.35, green: 0.72, blue: 0.29))
+                    .padding(.top, 7)
+            }
 
-            Divider()
-                .padding(.top, 18)
-                .padding(.bottom, 11)
-
-            if !snapshot.status.isManualPaused {
-                actions(for: snapshot)
-
+            if snapshot.outsideActiveHours && snapshot.phase == .focusing {
                 Divider()
-                    .padding(.top, 11)
+                    .padding(.top, 18)
+            } else {
+                Divider()
+                    .padding(.top, 18)
+                    .padding(.bottom, 11)
+
+                if !snapshot.status.isManualPaused {
+                    actions(for: snapshot)
+
+                    Divider()
+                        .padding(.top, 11)
+                }
             }
 
             if snapshot.status.isProtectionPaused {
@@ -138,7 +146,7 @@ struct MenuBarView: View {
 
             Divider()
 
-            footer
+            footer(for: snapshot)
                 .padding(.top, 8)
         }
         .padding(16)
@@ -167,7 +175,8 @@ struct MenuBarView: View {
 
     private func header(for snapshot: SessionSnapshot) -> some View {
         HStack {
-            Text(snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break")
+            Text(snapshot.outsideActiveHours && snapshot.phase == .focusing
+                 ? "settings.activeHours.title" : (snapshot.phase == .focusing ? "menu.nextBreak" : "menu.break"))
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
@@ -176,7 +185,16 @@ struct MenuBarView: View {
             Spacer()
 
             let status = BadgeStatus(snapshot: snapshot)
-            Button(action: controller.toggleManualPause) {
+            Button(action: {
+                if snapshot.outsideActiveHours {
+                    let menuWindow = NSApp.keyWindow
+                    dismiss()
+                    menuWindow?.orderOut(nil)
+                    controller.openActiveHoursSettings()
+                } else {
+                    controller.toggleManualPause()
+                }
+            }) {
                 HStack(spacing: 6) {
                     Circle()
                         .fill(status.color)
@@ -204,13 +222,23 @@ struct MenuBarView: View {
             .buttonStyle(.plain)
             .onHover { isBadgeHovered = $0 }
             .animation(.easeOut(duration: 0.15), value: isBadgeHovered)
-            .accessibilityLabel(snapshot.status.isManualPaused ? "menu.resume" : "menu.pause")
+            .accessibilityLabel(snapshot.outsideActiveHours ? "menu.activeHours.settings" : (snapshot.status.isManualPaused ? "menu.resume" : "menu.pause"))
         }
     }
 
     private func countdown(for snapshot: SessionSnapshot) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            if snapshot.status.isPaused {
+            if snapshot.outsideActiveHours && snapshot.phase == .focusing {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("menu.activeHours.remindersPaused")
+                        .font(.system(size: 18, weight: .semibold))
+                    if let next = snapshot.nextActiveHoursStart {
+                        Text(MenuBarDurationFormatter.activeHoursResumeString(for: next, relativeTo: now, locale: controller.locale))
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else if snapshot.status.isPaused {
                 Text(Self.pausedCountdownString(for: snapshot.remaining))
                     .font(.system(size: 30, weight: .bold))
                     .monospacedDigit()
@@ -227,7 +255,7 @@ struct MenuBarView: View {
                 .accessibilityLabel("menu.remaining")
             }
 
-            if !snapshot.status.isPaused {
+            if !snapshot.status.isPaused && !snapshot.outsideActiveHours {
                 (Text("menu.atTime") + Text(" ") + Text(snapshot.endsAt, style: .time))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
@@ -248,14 +276,16 @@ struct MenuBarView: View {
     private func actions(for snapshot: SessionSnapshot) -> some View {
         HStack(spacing: 6) {
             if snapshot.phase == .focusing {
-                actionButton(
-                    "menu.startBreak",
-                    item: .startBreak,
-                    systemImage: "play.circle",
-                    action: controller.startBreakNow
-                )
+                if !snapshot.outsideActiveHours {
+                    actionButton(
+                        "menu.startBreak",
+                        item: .startBreak,
+                        systemImage: "play.circle",
+                        action: controller.startBreakNow
+                    )
+                }
 
-                if !snapshot.status.isProtectionPaused {
+                if !snapshot.status.isProtectionPaused && !snapshot.outsideActiveHours {
                     actionButton(
                         "menu.snooze",
                         item: .snooze,
@@ -325,8 +355,17 @@ struct MenuBarView: View {
         .padding(.horizontal, 2)
     }
 
-    private var footer: some View {
+    private func footer(for snapshot: SessionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 0) {
+            if snapshot.outsideActiveHours && snapshot.phase == .focusing {
+                footerButton("menu.activeHours.settings", item: .workingHoursSettings) {
+                    let menuWindow = NSApp.keyWindow
+                    dismiss()
+                    menuWindow?.orderOut(nil)
+                    controller.openActiveHoursSettings()
+                }
+            }
+
             footerButton("menu.settings", item: .settings) {
                 let menuWindow = NSApp.keyWindow
                 dismiss()

@@ -5,9 +5,10 @@ import SwiftUI
 final class SettingsPresenter: NSObject, NSWindowDelegate {
     private var window: SettingsWindow?
 
-    func show(controller: SessionController) {
+    func show(controller: SessionController, pane: SettingsPane = .dashboard) {
         let trace = PerformanceTrace.begin("Settings window show")
         defer { PerformanceTrace.end(trace) }
+        controller.targetSettingsPane = pane
         if let window {
             if window.isMiniaturized {
                 window.deminiaturize(nil)
@@ -18,7 +19,7 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
 
         ensureMainMenu()
 
-        let rootView = SettingsView(controller: controller)
+        let rootView = SettingsView(controller: controller, initialPane: pane)
         let hostingController = NSHostingController(rootView: rootView)
         // NSWindow owns this fixed-size window's dimensions. Asking SwiftUI
         // for minimum, ideal and maximum content sizes relays out every pane.
