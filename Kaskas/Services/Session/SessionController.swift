@@ -2,19 +2,7 @@ import AppKit
 import Foundation
 import Observation
 
-/// The puppet master and central brain of Kaskas.
-///
-/// If this class breaks, the entire app has an existential crisis. It sits between
-/// pure mathematical state (`SessionEngine`) and the messy real world coordinating
-/// timers, spying on hardware, and ultimately deciding when you need to touch grass.
-///
-/// What the maestro actually does:
-/// - Dictates the focus & break lifecycle (and tolerates your desperate snooze clicks).
-/// - Keeps an eye on your camera and mic so it doesn't embarrass you during Zoom calls.
-/// - Detects when you abandon your Mac for coffee and counts it as a natural break.
-/// - Tracks which apps steal your focus and silently logs them to SwiftData.
-/// - Hijacks your screen when it's break time and locks it if you asked for tough love.
-/// - Survives system sleep, restarts, and random macOS panics without losing a second.
+/// Coordinates session state, monitoring, presentation, and persistence.
 @MainActor
 @Observable
 final class SessionController {
@@ -56,6 +44,7 @@ final class SessionController {
     @ObservationIgnored private let videoMonitor: any VideoActivityMonitoring
     @ObservationIgnored private var checkpointTimer: Timer?
     @ObservationIgnored private var hasStarted = false
+    @ObservationIgnored private var trackingWindowEnd: Date?
     private var cachedTodayBaseStudyingTime: TimeInterval = 0
     private var cachedTodayStartOfDay: Date?
     @ObservationIgnored private var screenTimeRefreshTask: Task<Void, Never>?
@@ -118,7 +107,9 @@ final class SessionController {
         meetingMonitor: any MeetingActivityMonitoring = MeetingActivityMonitor(),
         videoMonitor: any VideoActivityMonitoring = VideoActivityMonitor(),
         typingMonitor: any TypingActivityMonitoring = TypingActivityMonitor(),
-        now: Date = Date()
+        now: Date = Date(),
+        foregroundAppMonitor: any ForegroundAppMonitoring = ForegroundAppMonitor(),
+        appUsageClock: @escaping () -> Date = Date.init
     ) {
         let configuration = store.loadConfiguration()
         self.configuration = configuration
@@ -132,7 +123,7 @@ final class SessionController {
         self.videoMonitor = videoMonitor
         self.typingMonitor = typingMonitor
         self.categoryRegistry = categoryRegistry
-        appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore, excludedUsageStore: excludedUsageStore)
+        appUsage = AppUsageController(sessionStore: store, registry: categoryRegistry, usageStore: appUsageStore, excludedUsageStore: excludedUsageStore, monitor: foregroundAppMonitor, clock: appUsageClock)
         persistence = SessionPersistence(store: store, historyStore: historyStore)
         activityTracker = ActivityTracker(sessionStore: store, activityStore: activityStore)
         breakHistoryStore = historyStore as? BreakHistoryStore
@@ -166,7 +157,7 @@ final class SessionController {
         refreshScreenTimeToday(at: now)
     }
 
-    func start() {
+    func start(at now: Date = Date()) {
         guard !hasStarted else {
             return
         }
@@ -182,11 +173,11 @@ final class SessionController {
                 }
             }
         }
-        let now = Date()
         let meetingActive = configuration.pauseDuringMeetings && meetingMonitor.sample()
         let effects = engine.send(.launch(meetingActive: meetingActive, videoActive: configuration.pauseDuringVideo && videoMonitor.sample()), at: now)
-        activityTracker.resume(as: currentActivityKind, at: now, preservingBreak: engine.status.isAwaitingReturn)
-        appUsage.setWorking(currentActivityKind == .studying, at: now)
+        activityTracker.resume(as: currentActivityKind(at: now), at: now, preservingBreak: engine.status.isAwaitingReturn)
+        trackingWindowEnd = configuration.activeHours.pausesTracking ? engine.activeHoursState?.window?.end : nil
+        appUsage.setWorking(currentActivityKind(at: now) == .studying, at: now, until: trackingWindowEnd)
         apply(effects, at: now)
         startIdleMonitoringIfNeeded()
         let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
@@ -196,15 +187,14 @@ final class SessionController {
         checkpointTimer = timer
     }
 
-    func stop() {
+    func stop(at now: Date = Date()) {
         wallpaperImportID = nil
-        stopIdleMonitoring(at: Date())
+        stopIdleMonitoring(at: now)
         checkpointTimer?.invalidate()
         checkpointTimer = nil
         meetingMonitor.stop()
         videoMonitor.stop()
         settingsPresenter.dismiss()
-        let now = Date()
         appUsage.setWorking(false, at: now)
         hasStarted = false
         let effects = engine.send(.quit, at: now)
@@ -263,7 +253,8 @@ final class SessionController {
         let base = cachedTodayStartOfDay == startOfDay ? cachedTodayBaseStudyingTime : 0
         if let startedAt = activeStudyingStartedAt {
             let effectiveStart = max(startOfDay, startedAt)
-            return base + max(0, now.timeIntervalSince(effectiveStart))
+            let effectiveEnd = min(now, trackingWindowEnd ?? now)
+            return base + max(0, effectiveEnd.timeIntervalSince(effectiveStart))
         }
         return base
     }
@@ -337,8 +328,7 @@ final class SessionController {
         settingsPresenter.setDockVisibility(configuration.showInDock)
     }
 
-    func updateConfiguration(_ configuration: FocusConfiguration) {
-        let now = Date()
+    func updateConfiguration(_ configuration: FocusConfiguration, at now: Date = Date()) {
         let idleSettingsChanged = configuration.idleDetectionEnabled != self.configuration.idleDetectionEnabled
             || configuration.idleThreshold != self.configuration.idleThreshold
         let warningSettingsChanged = configuration.breakWarningEnabled != self.configuration.breakWarningEnabled
@@ -666,11 +656,11 @@ final class SessionController {
         BreakSoundPlayer.play(configuration.breakEndSound)
     }
 
-    private var currentActivityKind: ActivityKind {
+    private func currentActivityKind(at now: Date) -> ActivityKind {
         if engine.status.isSystemPaused {
             return activityTracker.journal.cursor?.kind ?? .computerInactive
         }
-        return engine.status.activityKind
+        return engine.currentActivityKind(at: now)
     }
 
     private func startIdleMonitoringIfNeeded() {
@@ -722,13 +712,18 @@ final class SessionController {
         at now: Date = Date(),
         activityKind: ActivityKind? = nil
     ) {
-        let kind = activityKind ?? currentActivityKind
+        let kind = activityKind ?? currentActivityKind(at: now)
+        if let deadline = trackingWindowEnd, now >= deadline,
+           let cursor = activityTracker.journal.cursor, cursor.kind == .studying || cursor.kind == .meeting {
+            activityTracker.update(to: .kaskasPaused, at: max(cursor.startedAt, deadline))
+        }
+        trackingWindowEnd = configuration.activeHours.pausesTracking ? engine.activeHoursState?.window?.end : nil
         if let record, record.source == .smartPause, let startedAt = record.startedAt {
             activityTracker.update(to: .breakTime, at: startedAt)
             activityTracker.update(to: .studying, at: record.occurredAt)
         }
         activityTracker.update(to: kind, at: now)
-        appUsage.setWorking(hasStarted && kind == .studying, at: now)
+        appUsage.setWorking(hasStarted && kind == .studying, at: now, until: trackingWindowEnd)
         if activityStorageFailed != activityTracker.storageFailed {
             activityStorageFailed = activityTracker.storageFailed
         }

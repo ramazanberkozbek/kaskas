@@ -14,6 +14,7 @@ final class AppUsageController {
     @ObservationIgnored private let excludedTracker: ExcludedUsageTracker
     @ObservationIgnored private let monitor: any ForegroundAppMonitoring
     @ObservationIgnored private var isWorking = false
+    @ObservationIgnored private var recordingDeadline: Date?
     @ObservationIgnored private var isMonitoring = false
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private let clock: () -> Date
@@ -47,8 +48,12 @@ final class AppUsageController {
         synchronize(at: now)
     }
 
-    func setWorking(_ working: Bool, at now: Date) {
+    func setWorking(_ working: Bool, at now: Date, until deadline: Date? = nil) {
+        // Close at the old deadline before replacing it, even if the scheduler
+        // or a foreground-app notification was delivered late.
+        if recordingDeadline.map({ now >= $0 }) == true { record(at: now) }
         isWorking = working
+        recordingDeadline = deadline
         synchronize(at: now)
     }
 
@@ -60,12 +65,14 @@ final class AppUsageController {
     }
 
     func segments(from start: Date, to end: Date, now: Date) -> [AppUsageSegment] {
+        stopIfExpired(at: now)
         let segments = tracker.segments(from: start, to: end, now: now)
         refreshStorageFailure()
         return Self.resolve(segments, using: registry.resolverSnapshot())
     }
 
     func segmentsAsync(from start: Date, to end: Date, now: Date) async -> [AppUsageSegment] {
+        stopIfExpired(at: now)
         let segments = await tracker.segmentsAsync(from: start, to: end, now: now)
         refreshStorageFailure()
         return await Self.resolveAsync(segments, using: registry.resolverSnapshot())
@@ -94,7 +101,8 @@ final class AppUsageController {
     func resetHistory(at now: Date) { tracker.resetHistory(at: now); excludedTracker.resetHistory(at: now) }
 
     private func synchronize(at now: Date) {
-        let shouldMonitor = isWorking && (isEnabled || !exclusions.applications.isEmpty)
+        let shouldMonitor = isWorking && recordingDeadline.map({ now < $0 }) != false
+            && (isEnabled || !exclusions.applications.isEmpty)
         if shouldMonitor && !isMonitoring {
             isMonitoring = true
             generation += 1
@@ -102,8 +110,10 @@ final class AppUsageController {
             // Initial sampling occurs only when category recording or exclusions need it.
             monitor.start { [weak self] app in
                 guard let self, self.isWorking, self.isMonitoring, self.generation == activeGeneration else { return }
+                let now = self.clock()
+                guard !self.stopIfExpired(at: now) else { return }
                 self.currentApp = app
-                self.record(at: self.clock())
+                self.record(at: now)
             }
         } else if !shouldMonitor && isMonitoring {
             isMonitoring = false
@@ -123,12 +133,14 @@ final class AppUsageController {
     }
 
     func excludedIntervals(from start: Date, to end: Date, now: Date) -> [ExcludedUsageInterval] {
+        stopIfExpired(at: now)
         let values = excludedTracker.intervals(from: start, to: end, now: now)
         refreshStorageFailure()
         return values
     }
 
     func excludedIntervalsAsync(from start: Date, to end: Date, now: Date) async -> [ExcludedUsageInterval] {
+        stopIfExpired(at: now)
         let values = await excludedTracker.intervalsAsync(from: start, to: end, now: now)
         refreshStorageFailure()
         return values
@@ -138,12 +150,24 @@ final class AppUsageController {
         storageFailed = tracker.storageFailed || excludedTracker.storageFailed
     }
 
+    @discardableResult
+    private func stopIfExpired(at now: Date) -> Bool {
+        guard recordingDeadline.map({ now >= $0 }) == true else { return false }
+        if isMonitoring {
+            isWorking = false
+            synchronize(at: now)
+        }
+        return true
+    }
+
     private func record(at now: Date) {
-        let isExcluded = isMonitoring && currentApp.map { exclusions.snapshot().contains($0) } == true
-        let recordedApp = isMonitoring && isEnabled && !isExcluded ? currentApp : nil
+        let canRecord = isMonitoring && recordingDeadline.map({ now < $0 }) != false
+        let recordedAt = min(now, recordingDeadline ?? now)
+        let isExcluded = canRecord && currentApp.map { exclusions.snapshot().contains($0) } == true
+        let recordedApp = canRecord && isEnabled && !isExcluded ? currentApp : nil
         let resolution = registry.resolution(bundleID: recordedApp?.bundleID, appName: recordedApp?.name)
-        tracker.update(app: recordedApp, resolution: resolution, at: now)
-        excludedTracker.update(isExcluded: isExcluded, at: now)
+        tracker.update(app: recordedApp, resolution: resolution, at: recordedAt)
+        excludedTracker.update(isExcluded: isExcluded, at: recordedAt)
         refreshStorageFailure()
     }
 }
