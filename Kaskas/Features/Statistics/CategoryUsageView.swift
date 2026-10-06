@@ -68,9 +68,13 @@ struct CategoryUsageView: View {
                     }
                 }
                 if storageFailed {
-                    Label("categories.usage.storageWarning", systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                    Label {
+                        Text("categories.usage.storageWarning")
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundStyle(.red)
+                    }
+                    .font(.caption)
                 }
             }
             .padding(SettingsPageLayout.cardInset)
