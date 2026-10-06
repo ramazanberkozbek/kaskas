@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import SwiftUI
 
 enum BreakBackground: String, Codable, CaseIterable, Identifiable, Sendable {
     case ocean
@@ -175,8 +177,64 @@ public func localizedString(_ key: String, locale: Locale? = nil, defaultValue: 
     AppLanguage.localizedString(key, locale: locale, defaultValue: defaultValue)
 }
 
+enum AppAppearance: String, Codable, CaseIterable, Identifiable, Sendable {
+    case system
+    case light
+    case dark
+
+    var id: Self { self }
+
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .system: "settings.theme.system"
+        case .light: "settings.theme.light"
+        case .dark: "settings.theme.dark"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+
+    var effectiveColorScheme: ColorScheme {
+        colorScheme ?? Self.systemColorScheme
+    }
+
+    var nsAppearance: NSAppearance? {
+        switch self {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+    }
+
+    static var systemColorScheme: ColorScheme {
+        if let global = UserDefaults(suiteName: ".GlobalPreferences"),
+           let style = global.string(forKey: "AppleInterfaceStyle"),
+           style.caseInsensitiveCompare("dark") == .orderedSame {
+            return .dark
+        }
+        if let style = UserDefaults.standard.string(forKey: "AppleInterfaceStyle"),
+           style.caseInsensitiveCompare("dark") == .orderedSame {
+            return .dark
+        }
+        if NSApplication.shared.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            return .dark
+        }
+        return .light
+    }
+}
+
 struct FocusConfiguration: Codable, Equatable, Sendable {
     static var defaultLanguage: AppLanguage {
+        .system
+    }
+
+    static var defaultAppearance: AppAppearance {
         .system
     }
 
@@ -218,6 +276,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var breakWarningLeadTime: TimeInterval
     var notificationPosition: NotificationPosition
     var appLanguage: AppLanguage
+    var appAppearance: AppAppearance
 
     init(
         activeHours: ActiveHoursSchedule = ActiveHoursSchedule(),
@@ -257,7 +316,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         breakWarningEnabled: Bool = true,
         breakWarningLeadTime: TimeInterval = 20,
         notificationPosition: NotificationPosition = .center,
-        appLanguage: AppLanguage = FocusConfiguration.defaultLanguage
+        appLanguage: AppLanguage = FocusConfiguration.defaultLanguage,
+        appAppearance: AppAppearance = FocusConfiguration.defaultAppearance
     ) {
         self.activeHours = activeHours.isValid ? activeHours : ActiveHoursSchedule()
         self.focusDuration = max(1, focusDuration)
@@ -297,6 +357,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.breakWarningLeadTime = min(60, max(5, (breakWarningLeadTime / 5).rounded() * 5))
         self.notificationPosition = notificationPosition
         self.appLanguage = appLanguage
+        self.appAppearance = appAppearance
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -338,6 +399,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case breakWarningLeadTime
         case notificationPosition
         case appLanguage
+        case appAppearance
     }
 
     init(from decoder: Decoder) throws {
@@ -390,7 +452,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             breakWarningEnabled: value(.breakWarningEnabled, fallback: defaults.breakWarningEnabled),
             breakWarningLeadTime: value(.breakWarningLeadTime, fallback: defaults.breakWarningLeadTime),
             notificationPosition: value(.notificationPosition, fallback: defaults.notificationPosition),
-            appLanguage: value(.appLanguage, fallback: defaults.appLanguage)
+            appLanguage: value(.appLanguage, fallback: defaults.appLanguage),
+            appAppearance: value(.appAppearance, fallback: defaults.appAppearance)
         )
     }
 }

@@ -8,11 +8,14 @@ struct SettingsView: View {
     @State private var hoveredPane: SettingsPane?
     @State private var navigationTrace = SettingsNavigationTrace()
     @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
-    @Environment(\.colorScheme) private var colorScheme
 
     init(controller: SessionController, initialPane: SettingsPane = .dashboard) {
         self.controller = controller
         _selection = State(initialValue: controller.targetSettingsPane ?? initialPane)
+    }
+
+    private var effectiveColorScheme: ColorScheme {
+        controller.effectiveColorScheme
     }
 
     var body: some View {
@@ -24,7 +27,7 @@ struct SettingsView: View {
                         Color.clear
                             .overlay {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.09 : 0.06))
+                                    .fill(Color.primary.opacity(effectiveColorScheme == .dark ? 0.09 : 0.06))
                                     .padding(.horizontal, 10)
                                     .opacity(hoveredPane == pane && selection != pane ? 1 : 0)
                             }
@@ -59,7 +62,7 @@ struct SettingsView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .scrollIndicators(.hidden)
-        .background(SettingsWindowChrome(colorScheme: colorScheme))
+        .background(SettingsWindowChrome(colorScheme: effectiveColorScheme, appearance: controller.configuration.appAppearance))
         .background {
             Button("") {
                 withAnimation {
@@ -82,6 +85,8 @@ struct SettingsView: View {
             }
         }
         .environment(\.locale, controller.locale)
+        .environment(\.colorScheme, effectiveColorScheme)
+        .preferredColorScheme(effectiveColorScheme)
         .id(controller.configuration.appLanguage)
     }
 
@@ -191,6 +196,7 @@ private struct SettingsPlaceholderView: View {
 /// traffic lights sit inline with the sidebar.
 private struct SettingsWindowChrome: NSViewRepresentable {
     var colorScheme: ColorScheme
+    var appearance: AppAppearance
 
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
@@ -208,6 +214,10 @@ private struct SettingsWindowChrome: NSViewRepresentable {
         guard let window else { return }
         if window.titleVisibility != .hidden { window.titleVisibility = .hidden }
         if !window.titlebarAppearsTransparent { window.titlebarAppearsTransparent = true }
+        let targetAppearance = appearance.nsAppearance
+        if window.appearance != targetAppearance {
+            window.appearance = targetAppearance
+        }
         let backgroundColor = colorScheme == .dark
             ? NSColor(red: 0.08, green: 0.08, blue: 0.08, alpha: 1.0)
             : NSColor.windowBackgroundColor

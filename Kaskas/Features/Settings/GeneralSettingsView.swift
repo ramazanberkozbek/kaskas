@@ -8,6 +8,16 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
+                AppearanceSettingsPicker(selection: appAppearance)
+                    .settingsFormRow()
+            } header: {
+                VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsPaneHeader(title: "settings.sidebar.general")
+                    sectionHeader("settings.theme.section")
+                }
+                .settingsFormSectionHeader()
+            }
+            Section {
                 Group {
                     LabeledContent("settings.language.title") {
                         SettingsMenuPicker(
@@ -23,11 +33,8 @@ struct GeneralSettingsView: View {
                 }
                 .settingsFormRow()
             } header: {
-                VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
-                    SettingsPaneHeader(title: "settings.sidebar.general")
-                    sectionHeader("settings.language.section")
-                }
-                .settingsFormSectionHeader()
+                sectionHeader("settings.language.section")
+                    .settingsFormSectionHeader()
             }
             Section {
                 Group {
@@ -142,6 +149,16 @@ struct GeneralSettingsView: View {
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(.primary)
             .textCase(nil)
+    }
+
+    private var appAppearance: Binding<AppAppearance> {
+        Binding {
+            controller.configuration.appAppearance
+        } set: { appearance in
+            var configuration = controller.configuration
+            configuration.appAppearance = appearance
+            controller.updateConfiguration(configuration)
+        }
     }
 
     private var appLanguage: Binding<AppLanguage> {

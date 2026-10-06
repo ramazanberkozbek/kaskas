@@ -29,7 +29,7 @@ struct SessionStoreTests {
 
     @Test(arguments: [
         "breakLayout", "breakSound", "breakEndSound", "microReminderColor",
-        "menuBarDisplayMode", "notificationPosition", "appLanguage", "focusDuration",
+        "menuBarDisplayMode", "notificationPosition", "appLanguage", "appAppearance", "focusDuration",
         "showInDock", "customWallpaperPath", "microRemindersEnabled", "microReminderDisplayMode"
     ])
     func invalidSettingDoesNotResetOtherPreferences(key: String) throws {
@@ -70,6 +70,25 @@ struct SessionStoreTests {
         #expect(configuration.breakSound == .glass)
         #expect(configuration.showInDock)
         #expect(configuration.appLanguage == .turkish)
+        #expect(configuration.appAppearance == .system)
+    }
+
+    @Test
+    func appAppearanceSurvivesPersistenceAndDefaultsToSystem() throws {
+        let suite = "SessionStoreTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = SessionStore(defaults: defaults)
+        #expect(store.loadConfiguration().appAppearance == .system)
+
+        var config = store.loadConfiguration()
+        config.appAppearance = .dark
+        store.save(configuration: config)
+        #expect(store.loadConfiguration().appAppearance == .dark)
+
+        config.appAppearance = .light
+        store.save(configuration: config)
+        #expect(store.loadConfiguration().appAppearance == .light)
     }
 
     @Test func cachedAnnotationsImmediatelyFollowOtherWritersAndPreserveUnrelatedNotes() throws {

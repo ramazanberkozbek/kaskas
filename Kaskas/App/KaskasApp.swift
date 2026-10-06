@@ -13,10 +13,12 @@ struct KaskasApp: App {
         MenuBarExtra {
             MenuBarView(controller: appDelegate.sessionController)
                 .environment(\.locale, appDelegate.sessionController.locale)
+                .preferredColorScheme(appDelegate.sessionController.effectiveColorScheme)
                 .id(appDelegate.sessionController.configuration.appLanguage)
         } label: {
             MenuBarStatusLabel(controller: appDelegate.sessionController)
                 .environment(\.locale, appDelegate.sessionController.locale)
+                .preferredColorScheme(appDelegate.sessionController.effectiveColorScheme)
                 .id(appDelegate.sessionController.configuration.appLanguage)
         }
         .menuBarExtraStyle(.window)

@@ -38,6 +38,7 @@ final class SettingsPresenter: NSObject, NSWindowDelegate {
         )
 
         window.contentViewController = hostingController
+        window.appearance = controller.configuration.appAppearance.nsAppearance
         window.title = "Kaskas"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true

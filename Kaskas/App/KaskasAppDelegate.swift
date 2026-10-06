@@ -49,6 +49,7 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
         guard !Self.isHostingTests else { return }
         SingleInstanceCoordinator.shared.enforceSingleInstance()
         sessionController.applyDockVisibility()
+        sessionController.applyAppearance()
 
         #if !DEBUG
         sessionController.launchAtLogin.configureDefaultIfNeeded()
@@ -108,6 +109,8 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
                                 name: Notification.Name("com.apple.screenIsLocked"), object: nil)
         distributed.addObserver(self, selector: #selector(screenDidUnlock(_:)),
                                 name: Notification.Name("com.apple.screenIsUnlocked"), object: nil)
+        distributed.addObserver(self, selector: #selector(systemThemeDidChange(_:)),
+                                name: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil)
         sessionController.start()
         if CGDisplayIsAsleep(CGMainDisplayID()) != 0 {
             updateAvailability(.screenSlept)
@@ -193,6 +196,10 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func screenDidUnlock(_ notification: Notification) {
         updateAvailability(.screenUnlocked)
+    }
+
+    @objc private func systemThemeDidChange(_ notification: Notification) {
+        sessionController.systemThemeDidChange()
     }
 }
 

@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Observation
+import SwiftUI
 
 /// Coordinates session state, monitoring, presentation, and persistence.
 @MainActor
@@ -21,6 +22,19 @@ final class SessionController {
 
     var locale: Locale {
         configuration.appLanguage.locale
+    }
+
+    private var systemThemeRevision = 0
+
+    var effectiveColorScheme: ColorScheme {
+        _ = systemThemeRevision
+        return configuration.appAppearance.effectiveColorScheme
+    }
+
+    func systemThemeDidChange() {
+        guard configuration.appAppearance == .system else { return }
+        systemThemeRevision += 1
+        applyAppearance()
     }
 
     var targetSettingsPane: SettingsPane?
@@ -331,6 +345,10 @@ final class SessionController {
         settingsPresenter.setDockVisibility(configuration.showInDock)
     }
 
+    func applyAppearance() {
+        NSApplication.shared.appearance = configuration.appAppearance.nsAppearance
+    }
+
     func updateConfiguration(_ configuration: FocusConfiguration, at now: Date = Date()) {
         let idleSettingsChanged = configuration.idleDetectionEnabled != self.configuration.idleDetectionEnabled
             || configuration.idleThreshold != self.configuration.idleThreshold
@@ -356,12 +374,14 @@ final class SessionController {
         let videoSettingsChanged = configuration.pauseDuringVideo != self.configuration.pauseDuringVideo
             || configuration.videoExcludedBundleIDs != self.configuration.videoExcludedBundleIDs
         let dockVisibilityChanged = configuration.showInDock != self.configuration.showInDock
+        let appearanceChanged = configuration.appAppearance != self.configuration.appAppearance
         if configuration.breakBackground != self.configuration.breakBackground
             || configuration.customWallpaperPath != self.configuration.customWallpaperPath {
             wallpaperImportID = nil
         }
         self.configuration = configuration
         if dockVisibilityChanged { applyDockVisibility() }
+        if appearanceChanged { applyAppearance() }
         configureMeetingMonitor()
         if videoSettingsChanged { startVideoMonitoringIfNeeded() }
         if !configuration.pauseDuringMeetings {
