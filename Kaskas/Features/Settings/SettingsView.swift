@@ -20,27 +20,14 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(availablePanes, selection: paneSelection) { pane in
-                sidebarLabel(pane)
-                    .tag(pane)
-                    .listRowBackground(
-                        Color.clear
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.primary.opacity(effectiveColorScheme == .dark ? 0.09 : 0.06))
-                                    .padding(.horizontal, 10)
-                                    .opacity(hoveredPane == pane && selection != pane ? 1 : 0)
-                            }
-                            .contentShape(Rectangle())
-                            .onHover { isHovered in
-                                if isHovered {
-                                    hoveredPane = pane
-                                } else if hoveredPane == pane {
-                                    hoveredPane = nil
-                                }
-                            }
-                            .animation(.easeInOut(duration: 0.15), value: hoveredPane)
-                    )
+            List(selection: paneSelection) {
+                ForEach(paneSections) { section in
+                    Section {
+                        ForEach(section.panes) { pane in
+                            sidebarRow(pane)
+                        }
+                    }
+                }
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
@@ -95,6 +82,7 @@ struct SettingsView: View {
         switch selection {
         case .dashboard:
             DashboardView(controller: controller)
+                .onAppear { navigationTrace.appeared(SettingsPane.dashboard.rawValue) }
         case .focus:
             FocusSettingsView(controller: controller)
                 .onAppear { navigationTrace.appeared(SettingsPane.focus.rawValue) }
@@ -116,13 +104,17 @@ struct SettingsView: View {
         }
     }
 
-    private var availablePanes: [SettingsPane] {
-        SettingsPane.allCases.filter { pane in
-            if pane == .developer {
-                return isDeveloperModeEnabled
-            }
-            return true
-        }
+    private struct PaneSection: Identifiable {
+        let id: Int
+        let panes: [SettingsPane]
+    }
+
+    private var paneSections: [PaneSection] {
+        [
+            PaneSection(id: 0, panes: [.dashboard, .focus, .alerts]),
+            PaneSection(id: 1, panes: [.statistics, .categories]),
+            PaneSection(id: 2, panes: isDeveloperModeEnabled ? [.general, .developer] : [.general]),
+        ]
     }
 
     private var paneSelection: Binding<SettingsPane> {
@@ -135,10 +127,47 @@ struct SettingsView: View {
         }
     }
 
+    private func sidebarRow(_ pane: SettingsPane) -> some View {
+        sidebarLabel(pane)
+            .tag(pane)
+            .listRowBackground(
+                Color.clear
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.primary.opacity(effectiveColorScheme == .dark ? 0.09 : 0.06))
+                            .padding(.horizontal, 10)
+                            .opacity(hoveredPane == pane && selection != pane ? 1 : 0)
+                    }
+                    .contentShape(Rectangle())
+                    .onHover { isHovered in
+                        if isHovered {
+                            hoveredPane = pane
+                        } else if hoveredPane == pane {
+                            hoveredPane = nil
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.15), value: hoveredPane)
+            )
+    }
+
     private func sidebarLabel(_ pane: SettingsPane) -> some View {
-        Label(pane.title, systemImage: pane.systemImage)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+        HStack(spacing: 9) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(pane.badgeColor.gradient)
+                    .frame(width: 20, height: 20)
+                Image(systemName: pane.systemImage)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+
+            Text(pane.title)
+                .font(.system(size: 13, weight: .regular))
+                .lineLimit(1)
+        }
+        .padding(.vertical, 2.5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 }
 
@@ -171,21 +200,20 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .focus: "leaf"
         case .alerts: "bell.badge"
         case .statistics: "chart.bar.xaxis"
-        case .categories: "square.grid.3x3.fill"
+        case .categories: "square.grid.3x3"
         case .general: "gearshape"
-        case .developer: "hammer.fill"
+        case .developer: "hammer"
         }
     }
-}
 
-private struct SettingsPlaceholderView: View {
-    let pane: SettingsPane
-
-    var body: some View {
-        ContentUnavailableView {
-            Label(pane.title, systemImage: pane.systemImage)
-        } description: {
-            Text("settings.comingSoon")
+    var badgeColor: Color {
+        switch self {
+        case .dashboard, .focus, .alerts:
+            Color(red: 0.33, green: 0.54, blue: 0.86)
+        case .statistics, .categories:
+            Color(red: 0.89, green: 0.56, blue: 0.32)
+        case .general, .developer:
+            Color(nsColor: .systemGray)
         }
     }
 }
