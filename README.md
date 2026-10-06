@@ -56,17 +56,31 @@ Rest your eyes and stay productive. Kaskas lives in your menu bar, tracks your s
 
 ## What it does
 
-Kaskas helps you stay productive without burning out. It quietly tracks your focus time from the menu bar, reminds you to rest your eyes with 20-20-20 micro-breaks, and brings up full-screen pauses when it's time to step away—automatically holding off during meetings and keeping all your data private on your Mac.
+- Track focus time and app usage, with daily statistics by app and category.
+- Get short reminders to rest your eyes, on screen or beside your cursor.
+- Take scheduled full-screen breaks, with snooze, skip and lock screen controls.
+- Delay breaks while typing, in meetings or watching videos in supported browsers.
+- Set working days and hours, and optionally pause tracking outside them.
+- Adjust focus and break durations, exclude apps from study statistics, and choose system, light or dark mode.
 
 ## Why Kaskas
 
-Long study and coding sessions are hard on your eyes, your neck and your
-focus. Kaskas follows the idea behind the 20-20-20 rule: every 20 minutes a
-short reminder to look away, and every 45 minutes a real break. It is built
-with native SwiftUI and AppKit, so it feels like part of macOS rather than
-another app fighting for your attention.
+- **Free and open source.** Read the code, build it yourself or contribute under the GPLv2 license.
+- **Native to macOS.** Built with Swift, SwiftUI and AppKit, with a menu bar interface and standard macOS controls.
+- **Readable, tested code.** Session logic, system services and views are kept separate, with automated tests for scheduling, tracking and settings.
+- **Local and account-free.** No sign-up, subscription or cloud service to use the app.
+
+## Privacy
+
+No account, no ads, no analytics and no backend. Kaskas is sandboxed and
+everything it records (sessions, app usage and settings) stays on your Mac.
+Meeting protection only checks *whether* the microphone or camera is in use;
+audio and video are never recorded.
 
 ## Installation
+
+Supports macOS 15 or later on Apple Silicon and Intel Macs. The app is
+signed with a Developer ID certificate and notarized by Apple.
 
 1. Download **[Kaskas.dmg](https://github.com/ramazanberkozbek/kaskas/releases/latest/download/Kaskas.dmg)** (or browse [all releases](https://github.com/ramazanberkozbek/kaskas/releases)).
 2. Open the DMG and drag **Kaskas** into your **Applications** folder.
@@ -83,13 +97,6 @@ open Kaskas.xcodeproj
 ```
 
 Then pick the `Kaskas` scheme in Xcode and press <kbd>⌘</kbd> <kbd>R</kbd>.
-
-## Privacy
-
-No account, no ads, no analytics and no backend. Kaskas is sandboxed and
-everything it records (sessions, app usage and settings) stays on your Mac.
-Meeting protection only checks *whether* the microphone or camera is in use;
-audio and video are never recorded.
 
 ## Contributing
 
