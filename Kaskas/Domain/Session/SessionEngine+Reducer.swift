@@ -373,6 +373,10 @@ extension SessionEngine {
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 
         case .updateConfiguration(let newConfig):
+            if configuration.microRemindersEnabled != newConfig.microRemindersEnabled
+                || configuration.microReminderDisplayMode != newConfig.microReminderDisplayMode {
+                effects.dismiss(.dismissMicroReminder)
+            }
             let oldWarningEnabled = configuration.breakWarningEnabled
             let oldWarningLeadTime = configuration.breakWarningLeadTime
             let oldFocusDuration = configuration.focusDuration
@@ -441,25 +445,30 @@ fileprivate extension SessionEngine {
     ) {
         let microReminderChanged = configuration.microReminderInterval != self.configuration.microReminderInterval
             || configuration.microReminderInterval != activeConfiguration.microReminderInterval
+            || configuration.microRemindersEnabled != self.configuration.microRemindersEnabled
+            || configuration.microRemindersEnabled != activeConfiguration.microRemindersEnabled
 
         if case .focusing = status,
            configuration.focusDuration != self.configuration.focusDuration {
             activeConfiguration.focusDuration = configuration.focusDuration
             activeConfiguration.microReminderInterval = configuration.microReminderInterval
+            activeConfiguration.microRemindersEnabled = configuration.microRemindersEnabled
             status = .focusing(Self.makeFocusRun(
                 duration: activeConfiguration.focusDuration,
                 microReminderInterval: activeConfiguration.microReminderInterval,
+                microRemindersEnabled: activeConfiguration.microRemindersEnabled,
                 at: now
             ))
         } else if microReminderChanged {
             activeConfiguration.microReminderInterval = configuration.microReminderInterval
+            activeConfiguration.microRemindersEnabled = configuration.microRemindersEnabled
             if case .focusing(var run) = status {
                 let nextReminder = now.addingTimeInterval(configuration.microReminderInterval)
-                run.nextMicroReminderAt = nextReminder < run.endsAt ? nextReminder : nil
+                run.nextMicroReminderAt = configuration.microRemindersEnabled && nextReminder < run.endsAt ? nextReminder : nil
                 status = .focusing(run)
             } else if case .suspended(var suspension) = status {
                 if case .focus(let remaining, let total, _, let warningShown) = suspension.frozen {
-                    let nextReminderIn = configuration.microReminderInterval < remaining
+                    let nextReminderIn = configuration.microRemindersEnabled && configuration.microReminderInterval < remaining
                         ? configuration.microReminderInterval
                         : nil
                     suspension.frozen = .focus(
@@ -507,7 +516,7 @@ fileprivate extension SessionEngine {
                 return [.breakApproaching]
             }
 
-            guard let reminderAt = run.nextMicroReminderAt, now >= reminderAt else {
+            guard activeConfiguration.microRemindersEnabled, let reminderAt = run.nextMicroReminderAt, now >= reminderAt else {
                 return []
             }
 
@@ -635,6 +644,7 @@ fileprivate extension SessionEngine {
         status = .focusing(Self.makeFocusRun(
             duration: activeConfiguration.focusDuration,
             microReminderInterval: activeConfiguration.microReminderInterval,
+            microRemindersEnabled: activeConfiguration.microRemindersEnabled,
             at: now
         ))
     }
@@ -814,6 +824,7 @@ fileprivate extension SessionEngine {
         relativeTo now: Date,
         focusEndsAt: Date
     ) -> Date? {
+        guard activeConfiguration.microRemindersEnabled else { return nil }
         let elapsedIntervals = floor(
             now.timeIntervalSince(reminderAt) / activeConfiguration.microReminderInterval
         ) + 1

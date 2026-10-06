@@ -51,6 +51,14 @@ enum BreakSound: String, Codable, CaseIterable, Identifiable, Sendable {
     var id: Self { self }
 }
 
+enum MicroReminderDisplayMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    case mascot
+    case cursorIcon
+
+    var id: Self { self }
+    var titleKey: String { "settings.microReminderDisplayMode.\(rawValue)" }
+}
+
 enum MicroReminderMascot: String, Codable, CaseIterable, Identifiable, Sendable {
     case flame
     case glasses
@@ -174,6 +182,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     }
 
     var focusDuration: TimeInterval
+    var microRemindersEnabled: Bool
+    var microReminderDisplayMode: MicroReminderDisplayMode
     var microReminderInterval: TimeInterval
     var breakDuration: TimeInterval
     var longBreakEnabled: Bool
@@ -211,6 +221,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
 
     init(
         focusDuration: TimeInterval = 25 * 60,
+        microRemindersEnabled: Bool = true,
+        microReminderDisplayMode: MicroReminderDisplayMode = .mascot,
         microReminderInterval: TimeInterval = 20 * 60,
         breakDuration: TimeInterval = 5 * 60,
         longBreakEnabled: Bool = false,
@@ -247,6 +259,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         appLanguage: AppLanguage = FocusConfiguration.defaultLanguage
     ) {
         self.focusDuration = max(1, focusDuration)
+        self.microRemindersEnabled = microRemindersEnabled
+        self.microReminderDisplayMode = microReminderDisplayMode
         self.microReminderInterval = max(1, microReminderInterval)
         self.breakDuration = max(1, breakDuration)
         self.longBreakEnabled = longBreakEnabled
@@ -285,6 +299,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case focusDuration
+        case microRemindersEnabled
+        case microReminderDisplayMode
         case microReminderInterval
         case breakDuration
         case longBreakEnabled
@@ -335,6 +351,8 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         }
         self.init(
             focusDuration: value(.focusDuration, fallback: defaults.focusDuration),
+            microRemindersEnabled: value(.microRemindersEnabled, fallback: defaults.microRemindersEnabled),
+            microReminderDisplayMode: value(.microReminderDisplayMode, fallback: defaults.microReminderDisplayMode),
             microReminderInterval: value(.microReminderInterval, fallback: defaults.microReminderInterval),
             breakDuration: value(.breakDuration, fallback: defaults.breakDuration),
             longBreakEnabled: value(.longBreakEnabled, fallback: defaults.longBreakEnabled),

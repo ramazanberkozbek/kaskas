@@ -25,6 +25,7 @@ struct SessionEngine: Sendable {
         status = .focusing(Self.makeFocusRun(
             duration: configuration.focusDuration,
             microReminderInterval: configuration.microReminderInterval,
+            microRemindersEnabled: configuration.microRemindersEnabled,
             at: now
         ))
     }
@@ -38,12 +39,27 @@ struct SessionEngine: Sendable {
         self.configuration = configuration
         activeConfiguration = restoredState.activeConfiguration
         activeConfiguration.microReminderInterval = configuration.microReminderInterval
+        activeConfiguration.microRemindersEnabled = configuration.microRemindersEnabled
         completedBreaks = restoredState.completedBreaks
         completedBreaksDay = restoredState.completedBreaksDay
         consecutiveSkippedBreaks = restoredState.consecutiveSkippedBreaks
         scheduledBreakCount = restoredState.scheduledBreakCount
 
         var resolvedStatus = restoredState.status
+        if !configuration.microRemindersEnabled {
+            switch resolvedStatus {
+            case .focusing(var run):
+                run.nextMicroReminderAt = nil
+                resolvedStatus = .focusing(run)
+            case .suspended(var suspension):
+                if case .focus(let remaining, let total, _, let warningShown) = suspension.frozen {
+                    suspension.frozen = .focus(remaining: remaining, total: total,
+                                              nextMicroReminderIn: nil, warningShown: warningShown)
+                    resolvedStatus = .suspended(suspension)
+                }
+            case .onBreak: break
+            }
+        }
         if case .suspended(let s) = resolvedStatus, s.reason == .idle || s.reason == .typing {
             let resumeAt = lastActiveAt ?? now
             if case .focus(let rem, let tot, _, let w) = s.frozen {
@@ -228,6 +244,7 @@ struct SessionEngine: Sendable {
     static func makeFocusRun(
         duration: TimeInterval,
         microReminderInterval: TimeInterval,
+        microRemindersEnabled: Bool = true,
         at now: Date
     ) -> FocusRun {
         let endsAt = now.addingTimeInterval(duration)
@@ -235,7 +252,7 @@ struct SessionEngine: Sendable {
         return FocusRun(
             startedAt: now,
             endsAt: endsAt,
-            nextMicroReminderAt: firstReminderAt < endsAt ? firstReminderAt : nil,
+            nextMicroReminderAt: microRemindersEnabled && firstReminderAt < endsAt ? firstReminderAt : nil,
             warningShown: false
         )
     }
@@ -267,6 +284,7 @@ struct SessionEngine: Sendable {
         status = .focusing(Self.makeFocusRun(
             duration: activeConfiguration.focusDuration,
             microReminderInterval: activeConfiguration.microReminderInterval,
+            microRemindersEnabled: activeConfiguration.microRemindersEnabled,
             at: now
         ))
     }
@@ -277,6 +295,7 @@ struct SessionEngine: Sendable {
         status = .focusing(Self.makeFocusRun(
             duration: activeConfiguration.focusDuration,
             microReminderInterval: activeConfiguration.microReminderInterval,
+            microRemindersEnabled: activeConfiguration.microRemindersEnabled,
             at: now
         ))
     }

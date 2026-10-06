@@ -30,6 +30,12 @@ final class CursorBreakCountdownPresenter {
              endsAt: nil)
     }
 
+    func showMicroReminder(color: MicroReminderColor) {
+        show(content: AnyView(CursorMicroReminderView(color: color)),
+             size: CursorMicroReminderView.panelSize,
+             endsAt: .now.addingTimeInterval(6))
+    }
+
     private func show(content: AnyView, size: CGSize, endsAt: Date?) {
         guard endsAt.map({ $0 > .now }) ?? true, !NSScreen.screens.isEmpty else {
             dismiss()
@@ -222,7 +228,7 @@ struct CursorTypingPauseView: View {
 }
 
 /// One surface for both automatic-pause indicators in previews and live panels.
-private struct CursorPauseBadgeStyle: ViewModifier {
+struct CursorPauseBadgeStyle: ViewModifier {
     static let panelSize = CGSize(width: 40, height: 40)
 
     func body(content: Content) -> some View {

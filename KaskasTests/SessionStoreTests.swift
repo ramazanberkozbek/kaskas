@@ -9,7 +9,8 @@ struct SessionStoreTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let configuration = FocusConfiguration(
-            focusDuration: 3600, microReminderInterval: 900, breakDuration: 600,
+            focusDuration: 3600, microRemindersEnabled: false,
+            microReminderDisplayMode: .cursorIcon, microReminderInterval: 900, breakDuration: 600,
             longBreakEnabled: true, longBreakFrequency: 5, longBreakDuration: 1200,
             snoozeDuration: 120, breakBackground: .custom, breakLayout: .horizon,
             breakSoundEnabled: false, breakSound: .hero,
@@ -29,7 +30,7 @@ struct SessionStoreTests {
     @Test(arguments: [
         "breakLayout", "breakSound", "breakEndSound", "microReminderColor",
         "menuBarDisplayMode", "notificationPosition", "appLanguage", "focusDuration",
-        "showInDock", "customWallpaperPath"
+        "showInDock", "customWallpaperPath", "microRemindersEnabled", "microReminderDisplayMode"
     ])
     func invalidSettingDoesNotResetOtherPreferences(key: String) throws {
         let suite = "SessionStoreTests.\(UUID())"
@@ -352,6 +353,8 @@ struct SessionStoreTests {
         #expect(config.breakSound == .glass)
         #expect(config.breakEndSoundEnabled == true)
         #expect(config.breakEndSound == .glass)
+        #expect(config.microRemindersEnabled == true)
+        #expect(config.microReminderDisplayMode == .mascot)
         #expect(config.microReminderInterval == 20 * 60)
         #expect(config.microReminderMascot == .flame)
         #expect(config.microReminderColor == .white)

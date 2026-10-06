@@ -6,6 +6,16 @@ import SwiftData
 final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     let sessionController: SessionController
 
+    /// The test host only needs to load the bundle; it must not run the real session,
+    /// change Dock visibility, or write to the user's stored state.
+    /// Build and test only with `-derivedDataPath .build/xcode`, never `open -n`, and run `pkill -x Kaskas` when done.
+    private static let isHostingTests: Bool = {
+        let environment = ProcessInfo.processInfo.environment
+        return environment["XCTestConfigurationFilePath"] != nil ||
+            environment["XCInjectBundleInto"] != nil ||
+            NSClassFromString("XCTestCase") != nil
+    }()
+
     override init() {
         let sessionStore = SessionStore()
         let historyStore: BreakHistoryStore?
@@ -36,6 +46,7 @@ final class KaskasAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !Self.isHostingTests else { return }
         SingleInstanceCoordinator.shared.enforceSingleInstance()
         sessionController.applyDockVisibility()
 

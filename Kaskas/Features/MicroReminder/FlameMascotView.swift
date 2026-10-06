@@ -6,6 +6,7 @@ struct FlameMascotView: View {
     let size: CGFloat
     let animated: Bool
     var looping: Bool = false
+    var blinkingOnly: Bool = false
     let onFinished: @MainActor () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -18,6 +19,7 @@ struct FlameMascotView: View {
         size: CGFloat,
         animated: Bool,
         looping: Bool = false,
+        blinkingOnly: Bool = false,
         onFinished: @escaping @MainActor () -> Void = {}
     ) {
         self.mascot = mascot
@@ -25,6 +27,7 @@ struct FlameMascotView: View {
         self.size = size
         self.animated = animated
         self.looping = looping
+        self.blinkingOnly = blinkingOnly
         self.onFinished = onFinished
     }
 
@@ -36,7 +39,9 @@ struct FlameMascotView: View {
                     let cycleDuration = FlameAnimationTimeline.totalDuration + 1.0
                     let activeElapsed = looping ? elapsed.truncatingRemainder(dividingBy: cycleDuration) : elapsed
 
-                    let pose = FlameAnimationTimeline.pose(at: activeElapsed, reduceMotion: reduceMotion)
+                    let pose = blinkingOnly
+                        ? FlameAnimationTimeline.cursorPose(at: elapsed, reduceMotion: reduceMotion)
+                        : FlameAnimationTimeline.pose(at: activeElapsed, reduceMotion: reduceMotion)
 
                     artwork(pose: pose)
                         .onChange(of: pose.finished) { _, finished in
@@ -48,7 +53,7 @@ struct FlameMascotView: View {
             } else {
                 artwork(pose: .init(
                     eyeOpenness: 1,
-                    smileProgress: 1,
+                    smileProgress: blinkingOnly ? 0 : 1,
                     breathingScale: 1,
                     appearanceScale: 1,
                     opacity: 1,

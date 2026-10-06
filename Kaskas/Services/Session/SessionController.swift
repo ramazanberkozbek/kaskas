@@ -467,7 +467,9 @@ final class SessionController {
     }
 
     func previewMicroReminder() {
+        guard configuration.microRemindersEnabled else { return }
         microReminderPresenter.show(
+            displayMode: configuration.microReminderDisplayMode,
             mascot: configuration.microReminderMascot,
             color: configuration.microReminderColor,
             isPreview: true
@@ -798,7 +800,9 @@ final class SessionController {
                 idleBreakNotifier.dismiss()
 
             case .showMicroReminder:
+                guard configuration.microRemindersEnabled else { break }
                 microReminderPresenter.show(
+                    displayMode: configuration.microReminderDisplayMode,
                     mascot: configuration.microReminderMascot,
                     color: configuration.microReminderColor
                 )

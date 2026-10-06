@@ -44,6 +44,13 @@ struct FlameAnimationTimeline {
         )
     }
 
+    /// The cursor icon only blinks: its silhouette, size and opacity stay fixed.
+    static func cursorPose(at elapsed: TimeInterval, reduceMotion: Bool) -> Pose {
+        let eye = eyePose(at: max(0, elapsed).truncatingRemainder(dividingBy: eyeDuration))
+        return Pose(eyeOpenness: reduceMotion ? 1 : eye.openness, smileProgress: 0,
+                    breathingScale: 1, appearanceScale: 1, opacity: 1, finished: false)
+    }
+
     private static func eyePose(at time: TimeInterval) -> (openness: Double, smile: Double) {
         let blinks: [(close: Double, open: Double)] = [
             (0.36, 0.425), (0.61, 0.675),

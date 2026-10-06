@@ -5499,6 +5499,108 @@
         }
       }
     },
+    "settings.microReminderDisplayMode.cursorIcon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flame beside cursor"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fare yanında alev"
+          }
+        }
+      }
+    },
+    "settings.microReminderDisplayMode.cursorIcon.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A small flame that only blinks beside your cursor"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fare yanında yalnızca göz kırpan küçük bir alev"
+          }
+        }
+      }
+    },
+    "settings.microReminderDisplayMode.mascot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mascot"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maskot"
+          }
+        }
+      }
+    },
+    "settings.microReminderDisplayMode.mascot.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the animated mascot on a dimmed screen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karartılmış ekranda hareketli maskotu göster"
+          }
+        }
+      }
+    },
+    "settings.microReminderDisplayMode.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görünüm"
+          }
+        }
+      }
+    },
+    "settings.microReminders.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micro-breaks are off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikro molalar kapalı"
+          }
+        }
+      }
+    },
     "settings.microReminderMascot.flame" : {
       "extractionState" : "manual",
       "localizations" : {

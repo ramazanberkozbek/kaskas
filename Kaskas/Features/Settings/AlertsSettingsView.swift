@@ -127,13 +127,20 @@ struct AlertsSettingsView: View {
 
                 // Micro Reminders & Mascot Section
                 VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("settings.microReminders.title")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        Text("settings.reminderInterval.description")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings.microReminders.title")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.primary)
+                            Text("settings.reminderInterval.description")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Toggle("settings.microReminders.title", isOn: binding(for: \.microRemindersEnabled))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .accessibilityLabel(Text("settings.microReminders.title"))
                     }
 
                     VStack(spacing: 0) {
@@ -141,14 +148,33 @@ struct AlertsSettingsView: View {
                         ZStack {
                             MicroReminderArtwork()
 
-                            MicroReminderMascotView(
-                                mascot: controller.configuration.microReminderMascot,
-                                color: controller.configuration.microReminderColor,
-                                size: 110,
-                                animated: isMascotPreviewVisible,
-                                looping: true
-                            )
-                            .id(previewMascotKey)
+                            if !controller.configuration.microRemindersEnabled {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "bell.slash.fill")
+                                        .font(.system(size: 24))
+                                    Text("settings.microReminders.off")
+                                        .font(.system(size: 12, weight: .medium))
+                                }
+                                .foregroundStyle(.white.opacity(0.7))
+                            } else if controller.configuration.microReminderDisplayMode == .cursorIcon {
+                                HStack(spacing: 10) {
+                                    CursorMicroReminderView(
+                                        color: controller.configuration.microReminderColor,
+                                        animated: isMascotPreviewVisible
+                                    )
+                                    SettingsCursorArrow()
+                                }
+                                .id(previewMascotKey)
+                            } else {
+                                MicroReminderMascotView(
+                                    mascot: controller.configuration.microReminderMascot,
+                                    color: controller.configuration.microReminderColor,
+                                    size: 110,
+                                    animated: isMascotPreviewVisible,
+                                    looping: true
+                                )
+                                .id(previewMascotKey)
+                            }
                         }
                         .frame(height: 240)
                         .frame(maxWidth: .infinity)
@@ -175,6 +201,7 @@ struct AlertsSettingsView: View {
                                     }
                             }
                             .buttonStyle(.plain)
+                            .disabled(!controller.configuration.microRemindersEnabled)
                             .padding(12)
                         }
 
@@ -191,39 +218,60 @@ struct AlertsSettingsView: View {
                                 options: reminderIntervals
                             )
                         }
+                        .disabled(!controller.configuration.microRemindersEnabled)
 
                         Divider().padding(.horizontal, SettingsPageLayout.cardInset)
 
-                        // Row 2: Mascot Selection
                         settingRow(
                             title: "settings.microReminderDesign.sidekick",
-                            subtitle: LocalizedStringKey(controller.configuration.microReminderMascot.titleKey)
+                            subtitle: LocalizedStringKey(controller.configuration.microReminderDisplayMode == .cursorIcon
+                                ? MicroReminderDisplayMode.cursorIcon.titleKey
+                                : controller.configuration.microReminderMascot.titleKey)
                         ) {
-                            Button {
-                                showingMascotPicker = true
-                            } label: {
-                                MicroReminderMascotView(
-                                    mascot: controller.configuration.microReminderMascot,
-                                    color: controller.configuration.microReminderColor,
-                                    size: 24,
-                                    animated: false
-                                )
-                                .frame(width: 44, height: 34)
-                                .background(
-                                    Color.white.opacity(colorScheme == .dark ? 0.08 : 0.05),
-                                    in: RoundedRectangle(cornerRadius: 8)
-                                )
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                            HStack(spacing: 8) {
+                                Button {
+                                    var config = controller.configuration
+                                    config.microReminderDisplayMode = .cursorIcon
+                                    controller.updateConfiguration(config)
+                                } label: {
+                                    HStack(spacing: 1) {
+                                        FlameMascotView(mascot: .flame,
+                                                        color: controller.configuration.microReminderColor,
+                                                        size: 20, animated: false, blinkingOnly: true)
+                                        Image(systemName: "cursorarrow")
+                                            .font(.system(size: 10, weight: .medium))
+                                            .foregroundStyle(.primary)
+                                    }
+                                    .frame(width: 44, height: 34)
+                                    .background(microReminderOptionSurface(isSelected: controller.configuration.microReminderDisplayMode == .cursorIcon))
                                 }
+                                .buttonStyle(.plain)
+                                .help(Text(LocalizedStringKey(MicroReminderDisplayMode.cursorIcon.titleKey)))
+                                .accessibilityLabel(Text(LocalizedStringKey(MicroReminderDisplayMode.cursorIcon.titleKey)))
+                                .accessibilityAddTraits(controller.configuration.microReminderDisplayMode == .cursorIcon ? .isSelected : [])
+
+                                Button {
+                                    var config = controller.configuration
+                                    config.microReminderDisplayMode = .mascot
+                                    controller.updateConfiguration(config)
+                                    showingMascotPicker = true
+                                } label: {
+                                    MicroReminderMascotView(
+                                        mascot: controller.configuration.microReminderMascot,
+                                        color: controller.configuration.microReminderColor,
+                                        size: 24,
+                                        animated: false
+                                    )
+                                    .frame(width: 44, height: 34)
+                                    .background(microReminderOptionSurface(isSelected: controller.configuration.microReminderDisplayMode == .mascot))
+                                }
+                                .buttonStyle(.plain)
+                                .help(Text("settings.microReminderDesign.sidekick"))
+                                .accessibilityLabel(Text("settings.microReminderDesign.sidekick"))
+                                .accessibilityAddTraits(controller.configuration.microReminderDisplayMode == .mascot ? .isSelected : [])
                             }
-                            .buttonStyle(.plain)
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            showingMascotPicker = true
-                        }
+                        .disabled(!controller.configuration.microRemindersEnabled)
                     }
                     .background(cardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -251,6 +299,7 @@ struct AlertsSettingsView: View {
                             color: controller.configuration.microReminderColor,
                             onSelectMascot: { newMascot in
                                 var config = controller.configuration
+                                config.microReminderDisplayMode = .mascot
                                 config.microReminderMascot = newMascot
                                 controller.updateConfiguration(config)
                             },
@@ -269,6 +318,18 @@ struct AlertsSettingsView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: showingMascotPicker)
+        .onChange(of: controller.configuration.microRemindersEnabled) { _, enabled in
+            if !enabled { showingMascotPicker = false }
+        }
+    }
+
+    private func microReminderOptionSurface(isSelected: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(isSelected ? Color.blue.opacity(0.18) : Color.primary.opacity(0.06))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.blue.opacity(0.8) : Color.primary.opacity(0.12), lineWidth: 1)
+            }
     }
 
     private var cardBackground: Color {

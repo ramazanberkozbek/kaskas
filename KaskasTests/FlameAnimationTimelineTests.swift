@@ -43,4 +43,19 @@ struct FlameAnimationTimelineTests {
         #expect(pose.appearanceScale == 1)
         #expect(!pose.finished)
     }
+
+    @Test
+    func cursorFlameOnlyBlinks() {
+        for time in [0.0, 0.425, 0.7, 1.3, 2.165, 3.3, 4.0, 5.0] {
+            let pose = FlameAnimationTimeline.cursorPose(at: time, reduceMotion: false)
+            #expect(pose.breathingScale == 1)
+            #expect(pose.appearanceScale == 1)
+            #expect(pose.opacity == 1)
+            #expect(pose.smileProgress == 0)
+            #expect(!pose.finished)
+        }
+        #expect(abs(FlameAnimationTimeline.cursorPose(at: 0.425, reduceMotion: false).eyeOpenness - 0.09) < 0.001)
+        #expect(FlameAnimationTimeline.cursorPose(at: 0.95, reduceMotion: false).eyeOpenness == 1)
+        #expect(FlameAnimationTimeline.cursorPose(at: 0.425, reduceMotion: true).eyeOpenness == 1)
+    }
 }
