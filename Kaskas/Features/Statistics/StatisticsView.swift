@@ -191,21 +191,18 @@ struct StatisticsView: View {
         let year = selectedYear
         let refreshPeriod = period
         let refreshNow = now
-        let trendStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
-        let yearStart = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) ?? window.start
-        let yearEnd = calendar.date(byAdding: .year, value: 1, to: yearStart) ?? refreshNow
         let categoryEnd = calendar.date(byAdding: .day, value: 1, to: window.end) ?? refreshNow
-        let start = min(trendStart, yearStart)
-        let end = min(max(yearEnd, categoryEnd), refreshNow)
         let exclusions = controller.appUsage.exclusions.snapshot()
+        let ranges = StatisticsHistoryRanges(window: window, year: year, now: refreshNow,
+                                             calendar: calendar, exclusions: exclusions)
         refreshTask = Task {
             let trace = PerformanceTrace.begin("Statistics reload")
             defer { PerformanceTrace.end(trace) }
-            let history = await controller.activityIntervalsAsync(from: start, to: end, now: refreshNow)
+            let history = await controller.activityIntervalsAsync(from: ranges.activity.start, to: ranges.activity.end, now: refreshNow)
             guard !Task.isCancelled else { return }
-            let usage = await controller.appUsage.segmentsAsync(from: start, to: end, now: refreshNow)
+            let usage = await controller.appUsage.segmentsAsync(from: ranges.usage.start, to: ranges.usage.end, now: refreshNow)
             guard !Task.isCancelled else { return }
-            let excluded = await controller.appUsage.excludedIntervalsAsync(from: start, to: end, now: refreshNow)
+            let excluded = await controller.appUsage.excludedIntervalsAsync(from: ranges.activity.start, to: ranges.activity.end, now: refreshNow)
             guard !Task.isCancelled else { return }
             guard let snapshot = try? await StatisticsRefreshSnapshot.make(intervals: history, usage: usage,
                 window: window, categoryEnd: categoryEnd, year: year, calendar: calendar, period: refreshPeriod, excluded: excluded, exclusions: exclusions) else { return }

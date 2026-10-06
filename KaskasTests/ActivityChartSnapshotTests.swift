@@ -9,6 +9,79 @@ struct ActivityChartSnapshotTests {
         return value
     }
 
+    @Test(arguments: StatisticsPeriod.allCases)
+    func statisticsReadRangesPreserveYearBoundaryHistoryAndLimitUsage(_ period: StatisticsPeriod) throws {
+        let calendar = calendar()
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 1, day: 3, hour: 15)))
+        let today = calendar.startOfDay(for: now)
+        let selected = period.window(endingAt: today, calendar: calendar)
+        let window = (start: selected.start, end: min(selected.end, today))
+        let ranges = StatisticsHistoryRanges(window: window, year: 2026, now: now,
+                                             calendar: calendar, exclusions: .empty)
+        let prior = try #require(calendar.date(byAdding: .day, value: -6, to: window.start))
+        let yearStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 1, day: 1)))
+        let categoryEnd = try #require(calendar.date(byAdding: .day, value: 1, to: window.end))
+        #expect(ranges.activity.start == min(prior, yearStart))
+        #expect(ranges.activity.end == now)
+        #expect(ranges.usage.start == window.start)
+        #expect(ranges.usage.end == min(categoryEnd, now))
+        let excluded = StatisticsHistoryRanges(window: window, year: 2026, now: now, calendar: calendar,
+                                               exclusions: .init(identifiers: ["app.excluded"]))
+        #expect(excluded.usage == ranges.activity)
+    }
+
+    @Test(arguments: [false, true])
+    func limitedUsageReadsPreserveAnnualHeatmapAndExcludedTime(_ excludesApp: Bool) async throws {
+        let calendar = calendar()
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 6, hour: 15)))
+        let window = StatisticsPeriod.seven.window(endingAt: calendar.startOfDay(for: now), calendar: calendar)
+        let categoryEnd = try #require(calendar.date(byAdding: .day, value: 1, to: window.end))
+        let oldDay = try #require(calendar.date(from: DateComponents(year: 2026, month: 2, day: 1)))
+        let selectedStart = window.start.addingTimeInterval(9 * 3600)
+        let boundaryStart = window.start.addingTimeInterval(-600)
+        let intervals = [oldDay, selectedStart, boundaryStart].map {
+            ActivityInterval(kind: .studying, startedAt: $0,
+                             endedAt: $0.addingTimeInterval($0 == boundaryStart ? 1200 : 3600))
+        }
+        let exclusions = AppExclusionSnapshot(identifiers: excludesApp ? ["app.chat"] : [])
+        func segment(_ app: String, _ start: Date, _ minutes: Double) -> AppUsageSegment {
+            .init(id: UUID(), app: .init(bundleID: app, name: app),
+                  resolution: .init(categoryID: "coding", source: .userRule, ruleKey: app),
+                  startedAt: start, endedAt: start.addingTimeInterval(minutes * 60))
+        }
+        let usage = [segment("app.work", oldDay, 15),
+                     segment("app.chat", oldDay.addingTimeInterval(15 * 60), 15),
+                     segment("app.work", oldDay.addingTimeInterval(30 * 60), 30),
+                     segment("app.work", selectedStart, 10),
+                     segment("app.chat", selectedStart.addingTimeInterval(10 * 60), 10),
+                     segment("app.work", selectedStart.addingTimeInterval(25 * 60), 35),
+                     segment("app.work", boundaryStart, 20)]
+        let anonymous = [ExcludedUsageInterval(id: UUID(), startedAt: oldDay,
+                                               endedAt: oldDay.addingTimeInterval(10 * 60)),
+                         ExcludedUsageInterval(id: UUID(), startedAt: selectedStart.addingTimeInterval(20 * 60),
+                                               endedAt: selectedStart.addingTimeInterval(25 * 60))]
+        let ranges = StatisticsHistoryRanges(window: window, year: 2026, now: now,
+                                             calendar: calendar, exclusions: exclusions)
+        let boundedUsage = usage.filter { $0.startedAt < ranges.usage.end && $0.endedAt > ranges.usage.start }
+        if !excludesApp { #expect(boundedUsage.count < usage.count) }
+        let expected = try await StatisticsRefreshSnapshot.make(intervals: intervals, usage: usage,
+            window: window, categoryEnd: categoryEnd, year: 2026, calendar: calendar, period: .seven,
+            excluded: anonymous, exclusions: exclusions)
+        let actual = try await StatisticsRefreshSnapshot.make(intervals: intervals, usage: boundedUsage,
+            window: window, categoryEnd: categoryEnd, year: 2026, calendar: calendar, period: .seven,
+            excluded: anonymous, exclusions: exclusions)
+        #expect(actual.categories == expected.categories)
+        #expect(actual.categories.total == (excludesApp ? 55 : 65) * 60)
+        #expect(actual.chart.year.activityByDate == expected.chart.year.activityByDate)
+        let oldDuration = try #require(actual.chart.year.activityByDate[oldDay])
+        #expect(oldDuration == Double(excludesApp ? 35 : 50) * 60)
+        #expect(actual.chart.distributionDays == expected.chart.distributionDays)
+        #expect(actual.chart.trend.points == expected.chart.trend.points)
+        #expect(actual.chart.hourlyPoints.map(\.minutes) == expected.chart.hourlyPoints.map(\.minutes))
+        #expect(actual.chart.dailyTrend.todayHours == expected.chart.dailyTrend.todayHours)
+        #expect(actual.chart.dailyTrend.yesterdayHours == expected.chart.dailyTrend.yesterdayHours)
+    }
+
     @Test func commonPeriodKeepsChartsAndCategoriesAlignedAcrossYearBoundaries() throws {
         let calendar = calendar()
         let end = try #require(calendar.date(from: DateComponents(year: 2026, month: 1, day: 3, hour: 15)))

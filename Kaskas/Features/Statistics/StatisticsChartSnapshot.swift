@@ -78,6 +78,25 @@ nonisolated struct StatisticsChartSnapshot: Sendable {
     }
 }
 
+/// Activity and anonymous exclusions supply the annual heatmap. Application
+/// usage needs that entire range only when retrospective app exclusions apply.
+nonisolated struct StatisticsHistoryRanges: Sendable {
+    let activity: DateInterval
+    let usage: DateInterval
+
+    init(window: (start: Date, end: Date), year: Int, now: Date,
+         calendar: Calendar, exclusions: AppExclusionSnapshot) {
+        let trendStart = calendar.date(byAdding: .day, value: -6, to: window.start) ?? window.start
+        let yearStart = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) ?? window.start
+        let yearEnd = calendar.date(byAdding: .year, value: 1, to: yearStart) ?? now
+        let categoryEnd = calendar.date(byAdding: .day, value: 1, to: window.end) ?? now
+        activity = DateInterval(start: min(trendStart, yearStart), end: min(max(yearEnd, categoryEnd), now))
+        usage = exclusions.identifiers.isEmpty
+            ? DateInterval(start: window.start, end: min(categoryEnd, now))
+            : activity
+    }
+}
+
 nonisolated struct StatisticsRefreshSnapshot: Sendable {
     let categories: CategoryUsageSummary
     let chart: StatisticsChartSnapshot
