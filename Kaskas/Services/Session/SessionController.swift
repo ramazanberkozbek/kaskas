@@ -348,9 +348,6 @@ final class SessionController {
         if warningSettingsChanged {
             breakWarningPresenter.dismiss()
         }
-        if configuration.focusDuration != self.configuration.focusDuration {
-            breakWarningPresenter.dismiss()
-        }
         if configuration.appLanguage != self.configuration.appLanguage {
             switch configuration.appLanguage {
             case .system:

@@ -617,20 +617,28 @@ struct SessionEngineTests {
     }
 
     @Test
-    func changingFocusDurationRestartsCurrentCycleAndSurvivesRestore() {
+    func changingFocusDurationDoesNotRestartCurrentCycleAndAppliesOnNextCycle() {
         var engine = SessionEngine(configuration: configuration, now: startDate)
         engine.snooze()
+        let originalEndsAt = engine.session.endsAt
+        let originalStartedAt = engine.session.startedAt
         var updatedConfiguration = configuration
         updatedConfiguration.focusDuration = 30 * 60
         let changeDate = startDate.addingTimeInterval(10 * 60)
 
         engine.updateConfiguration(updatedConfiguration, at: changeDate)
 
-        #expect(engine.session.startedAt == changeDate)
-        #expect(engine.session.endsAt == changeDate.addingTimeInterval(30 * 60))
-        #expect(engine.activeConfiguration.focusDuration == 30 * 60)
+        #expect(engine.session.startedAt == originalStartedAt)
+        #expect(engine.session.endsAt == originalEndsAt)
+        #expect(engine.activeConfiguration.focusDuration == configuration.focusDuration)
+        #expect(engine.configuration.focusDuration == 30 * 60)
+
         let restored = SessionEngine(configuration: updatedConfiguration, restoredState: engine.state)
-        #expect(restored.session.endsAt == changeDate.addingTimeInterval(30 * 60))
+        #expect(restored.session.endsAt == originalEndsAt)
+
+        engine.startBreak(at: originalEndsAt)
+        engine.completeBreak(at: originalEndsAt.addingTimeInterval(5 * 60))
+        #expect(engine.session.endsAt == originalEndsAt.addingTimeInterval(5 * 60 + 30 * 60))
     }
 
     @Test
@@ -644,7 +652,7 @@ struct SessionEngineTests {
 
         #expect(engine.process(at: changeDate).isEmpty)
         #expect(engine.session.phase == .focusing)
-        #expect(engine.session.endsAt == changeDate.addingTimeInterval(10 * 60))
+        #expect(engine.session.endsAt == startDate.addingTimeInterval(45 * 60))
     }
 
     @Test

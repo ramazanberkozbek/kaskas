@@ -93,6 +93,19 @@ struct FocusSettingsView: View {
                                 options: longBreakDurations
                             )
                         }
+
+                        rowDivider
+
+                        HStack(spacing: 6) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 11))
+                            Text("settings.nextCycle.note")
+                                .font(.system(size: 11.5))
+                            Spacer()
+                        }
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, SettingsPageLayout.cardInset)
+                        .padding(.vertical, 10)
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }

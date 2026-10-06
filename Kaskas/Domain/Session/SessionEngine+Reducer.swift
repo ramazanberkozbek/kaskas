@@ -379,9 +379,8 @@ extension SessionEngine {
             }
             let oldWarningEnabled = configuration.breakWarningEnabled
             let oldWarningLeadTime = configuration.breakWarningLeadTime
-            let oldFocusDuration = configuration.focusDuration
             let resumesTyping = status.isTypingPaused && (!newConfig.pauseWhileTyping
-                || !newConfig.breakWarningEnabled || oldFocusDuration != newConfig.focusDuration
+                || !newConfig.breakWarningEnabled
                 || oldWarningLeadTime != newConfig.breakWarningLeadTime)
             if resumesTyping {
                 restartWarningAfterTyping(at: now, leadTime: newConfig.breakWarningLeadTime)
@@ -391,8 +390,7 @@ extension SessionEngine {
                 effects.present(.showBreakWarning(endsAt: session.endsAt))
             }
             if oldWarningEnabled != newConfig.breakWarningEnabled
-                || oldWarningLeadTime != newConfig.breakWarningLeadTime
-                || oldFocusDuration != newConfig.focusDuration {
+                || oldWarningLeadTime != newConfig.breakWarningLeadTime {
                 effects.dismiss(.dismissBreakWarning)
             }
             effects.persist(kind: currentActivityKind(at: now))
@@ -448,18 +446,7 @@ fileprivate extension SessionEngine {
             || configuration.microRemindersEnabled != self.configuration.microRemindersEnabled
             || configuration.microRemindersEnabled != activeConfiguration.microRemindersEnabled
 
-        if case .focusing = status,
-           configuration.focusDuration != self.configuration.focusDuration {
-            activeConfiguration.focusDuration = configuration.focusDuration
-            activeConfiguration.microReminderInterval = configuration.microReminderInterval
-            activeConfiguration.microRemindersEnabled = configuration.microRemindersEnabled
-            status = .focusing(Self.makeFocusRun(
-                duration: activeConfiguration.focusDuration,
-                microReminderInterval: activeConfiguration.microReminderInterval,
-                microRemindersEnabled: activeConfiguration.microRemindersEnabled,
-                at: now
-            ))
-        } else if microReminderChanged {
+        if microReminderChanged {
             activeConfiguration.microReminderInterval = configuration.microReminderInterval
             activeConfiguration.microRemindersEnabled = configuration.microRemindersEnabled
             if case .focusing(var run) = status {

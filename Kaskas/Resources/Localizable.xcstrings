@@ -5658,13 +5658,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When focus duration changes, the timer restarts with the new duration. Other changes apply to the next focus cycle."
+            "value" : "Changes apply to the next focus cycle without interrupting your current session."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odak süresi değişince sayaç yeni süreyle baştan başlar. Diğer değişiklikler sonraki odak döngüsünde uygulanır."
+            "value" : "Değişiklikler mevcut seansı kesmez, bir sonraki odak döngüsünde devreye girer."
           }
         }
       }
