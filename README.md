@@ -26,29 +26,29 @@ Rest your eyes and stay productive. Kaskas lives in your menu bar, tracks your s
 
 <img src=".github/assets/break-screen.gif" width="860" alt="Kaskas full-screen break: look away and rest, with snooze, skip and lock screen controls" />
 
-<sub><b>Break screen</b> &nbsp;·&nbsp; a calm full-screen pause every 45 minutes</sub>
+<sub><b>Break screen</b> &nbsp;·&nbsp; a calm full-screen pause every 25 minutes</sub>
 
 <br/>
 <br/>
 
-<img src=".github/assets/micro-reminder.gif" width="420" alt="Kaskas micro-break reminder: the flame mascot asks you to take a breath" />
-<img src=".github/assets/break-warning.gif" width="420" alt="Kaskas break warning with a countdown and snooze options" />
+<img src=".github/assets/micro-reminder.gif" width="860" alt="Kaskas micro-break reminder: the flame mascot asks you to take a breath" />
+<img src=".github/assets/break-warning.gif" width="860" alt="Kaskas break warning with a countdown and snooze options" />
 
 <sub><b>Micro-break reminder</b> &nbsp;·&nbsp; <b>Break warning</b></sub>
 
 <br/>
 <br/>
 
-<img src=".github/assets/dashboard.png" width="420" alt="Kaskas dashboard: today's study hours compared with yesterday" />
-<img src=".github/assets/dashboard-sessions.png" width="420" alt="Kaskas study sessions with automatic categories" />
+<img src=".github/assets/dashboard.png" width="860" alt="Kaskas dashboard: today's study hours compared with yesterday" />
+<img src=".github/assets/dashboard-sessions.png" width="860" alt="Kaskas study sessions with automatic categories" />
 
 <sub><b>Dashboard</b> &nbsp;·&nbsp; <b>Study sessions</b></sub>
 
 <br/>
 <br/>
 
-<img src=".github/assets/statistics.png" width="420" alt="Kaskas statistics: time by app and time by category" />
-<img src=".github/assets/focus-settings.png" width="420" alt="Kaskas focus settings: break wallpaper and layout" />
+<img src=".github/assets/statistics.png" width="860" alt="Kaskas statistics: time by app and time by category" />
+<img src=".github/assets/focus-settings.png" width="860" alt="Kaskas focus settings: break wallpaper and layout" />
 
 <sub><b>Statistics</b> &nbsp;·&nbsp; <b>Focus settings</b></sub>
 
@@ -56,63 +56,7 @@ Rest your eyes and stay productive. Kaskas lives in your menu bar, tracks your s
 
 ## What it does
 
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### Breaks
-
-- A **full-screen break** every 45 minutes, so you actually step away
-- A tiny **micro-break reminder** every 20 minutes: the flame mascot
-  asks you to blink, breathe and relax your shoulders
-- A **warning** a few seconds before each break, with +1, +5 or +15 min
-- **Snooze**, **skip** with `esc`, or **lock the screen** from the break
-- **Long breaks** after a set number of short ones
-- A gentle nudge when you've **skipped** too many breaks in a row
-
-</td>
-<td width="50%" valign="top">
-
-### Focus tracking
-
-- Tracks your **study time** quietly from the menu bar
-- A **dashboard** that puts today and yesterday on the same timeline
-- **Study sessions** with notes and an automatic category
-- **Statistics** by app and by category, for a day, 7 or 30 days
-- **Hourly focus**, time distribution and a **yearly activity heatmap**
-- See how much time went to study, breaks, meetings and sleep
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### Smart, not annoying
-
-- **Meeting protection**: breaks wait while your mic or camera is in use
-- **Idle detection**: walk away and Kaskas pauses, then offers to log
-  the time as a break
-- Survives **sleep, wake and relaunch** without losing your timer
-- **Categories** (coding, writing, design, browsing...) assigned per app,
-  with your own rules and custom categories
-
-</td>
-<td width="50%" valign="top">
-
-### Make it yours
-
-- Break **wallpapers**: mountain lake, snowy peaks, northern lights,
-  desert dunes, deep space, ocean, or **your own photo**
-- Two **break layouts**: Horizon and Gentle Bar
-- **Start and end sounds** for every break
-- Flame mascot in **eight colors**
-- Menu bar shows **icon, timer or both**, and the Dock icon is optional
-- Every duration is adjustable, plus **launch at login**
-- **English and Turkish**, light and dark mode
-
-</td>
-</tr>
-</table>
+Kaskas helps you stay productive without burning out. It quietly tracks your focus time from the menu bar, reminds you to rest your eyes with 20-20-20 micro-breaks, and brings up full-screen pauses when it's time to step away—automatically holding off during meetings and keeping all your data private on your Mac.
 
 ## Why Kaskas
 
