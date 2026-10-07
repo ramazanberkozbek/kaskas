@@ -3283,13 +3283,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ignore automatic pause for this cycle"
+            "value" : "Turn off automatic pause for this session"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu döngüde otomatik duraklatmayı yok say"
+            "value" : "Bu oturumda otomatik duraklatmayı kapat"
           }
         }
       }
@@ -7610,13 +7610,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "7-day average"
+            "value" : "Weekly average"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "7 günlük ortalama"
+            "value" : "Haftalık ortalama"
           }
         }
       }
@@ -7661,13 +7661,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daily study time and moving average"
+            "value" : "Daily study time and weekly average"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Günlük çalışma ve hareketli ortalama"
+            "value" : "Günlük çalışma süresi ve haftalık ortalama"
           }
         }
       }
