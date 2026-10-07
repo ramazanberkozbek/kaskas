@@ -272,7 +272,9 @@ nonisolated private final class CoreMeetingActivityHardware: MeetingActivityHard
             let id = (value as String).lowercased()
             guard !options.excludedBundleIDs.contains(where: { id == $0.lowercased() || id.hasPrefix($0.lowercased() + ".") }),
                   !id.contains("quicklook"), !id.contains("speechrecognition"), !id.contains("dictation") else { continue }
-            guard let devices = readObjects(process, selector: kAudioProcessPropertyDevices),
+            // Core Audio exposes process devices per direction; global scope can
+            // return an empty list even while Zoom is capturing microphone input.
+            guard let devices = readObjects(process, selector: kAudioProcessPropertyDevices, scope: kAudioObjectPropertyScopeInput),
                   !eligible.isDisjoint(with: devices) else { continue }
             return true
         }
@@ -309,8 +311,11 @@ nonisolated private final class CoreMeetingActivityHardware: MeetingActivityHard
         return pointer.load(as: T.self)
     }
 
-    private func readObjects(_ object: AudioObjectID, selector: AudioObjectPropertySelector) -> [AudioObjectID]? {
-        var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+    private func readObjects(
+        _ object: AudioObjectID, selector: AudioObjectPropertySelector,
+        scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal
+    ) -> [AudioObjectID]? {
+        var address = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: kAudioObjectPropertyElementMain)
         var size: UInt32 = 0
         guard AudioObjectGetPropertyDataSize(object, &address, 0, nil, &size) == noErr else { return nil }
         var values = [AudioObjectID](repeating: 0, count: Int(size) / MemoryLayout<AudioObjectID>.size)
