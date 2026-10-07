@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var hoveredPane: SettingsPane?
     @State private var navigationTrace = SettingsNavigationTrace()
     @State private var statisticsState = StatisticsViewState()
+    @State private var dashboardState = DashboardViewState()
     @AppStorage(DeveloperPreferences.Key.isEnabled) private var isDeveloperModeEnabled = false
 
     init(controller: SessionController, initialPane: SettingsPane = .dashboard) {
@@ -78,7 +79,7 @@ struct SettingsView: View {
     private var detailContent: some View {
         switch selection {
         case .dashboard:
-            DashboardView(controller: controller)
+            DashboardView(controller: controller, state: dashboardState)
                 .onAppear { navigationTrace.appeared(SettingsPane.dashboard.rawValue) }
         case .focus:
             FocusSettingsView(controller: controller)

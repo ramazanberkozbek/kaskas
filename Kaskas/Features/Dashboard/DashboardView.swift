@@ -4,12 +4,7 @@ import SwiftUI
 struct DashboardView: View {
     let controller: SessionController
 
-    @State private var period: DashboardPeriod = .today
-    @State private var endDate = Calendar.current.startOfDay(for: Date())
-    @State private var now = Date()
-    @State private var dayCategorySnapshot: DashboardCategorySnapshot = .empty
-    @State private var weekCategorySnapshot: DashboardCategorySnapshot = .empty
-    @State private var chartSnapshot: DashboardChartSnapshot = .empty
+    @Bindable var state: DashboardViewState
     @State private var selectedSession: DashboardCategorySnapshot.Session?
     @State private var showingCalendar = false
     @State private var annotationsRevision = 0
@@ -18,6 +13,10 @@ struct DashboardView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private let clock = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    private var period: DashboardPeriod { state.period }
+    private var endDate: Date { state.endDate }
+    private var now: Date { state.now }
+    private var chartSnapshot: DashboardChartSnapshot { state.snapshot?.chart ?? .empty }
     private var window: (start: Date, end: Date) {
         let end = Calendar.current.startOfDay(for: endDate)
         let start = Calendar.current.date(byAdding: .day, value: -6, to: end) ?? end
@@ -26,7 +25,7 @@ struct DashboardView: View {
     private var days: [DailyActivity] { chartSnapshot.days }
     private var weekTotal: TimeInterval { days.reduce(0) { $0 + $1.studying } }
     private var categorySnapshot: DashboardCategorySnapshot {
-        period == .today ? dayCategorySnapshot : weekCategorySnapshot
+        (period == .today ? state.snapshot?.day : state.snapshot?.week) ?? .empty
     }
     private var sessions: [DashboardCategorySnapshot.Session] { categorySnapshot.sessions }
     private var visibleSessions: [DashboardCategorySnapshot.Session] {
@@ -102,7 +101,8 @@ struct DashboardView: View {
 
                 VStack(spacing: 14) {
                     rangeControls
-                    if period == .today {
+                    if state.snapshot != nil {
+                        if period == .today {
                             DailyStudyChart(data: chartSnapshot.today, now: now)
                         } else {
                             StudyTrendChart(data: chartSnapshot.trend)
@@ -130,52 +130,58 @@ struct DashboardView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .monospacedDigit()
                         }
-                    }
-                    .dashboardPanel(colorScheme)
-
-                CategoryUsageView(summary: categorySnapshot.usage, registry: controller.categoryRegistry,
-                    storageFailed: controller.appUsage.storageFailed, showsAppSegments: true,
-                    minimumVisibleShare: 0.05)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    sectionHeading("dashboard.sessions.title", subtitle: sessionsSubtitle)
-                    if visibleSessions.isEmpty {
-                        Text(sessions.isEmpty ? sessionsEmptyText : sessionsShortOnlyText)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, minHeight: 90, alignment: .center)
-                            .dashboardPanel(colorScheme)
                     } else {
-                        LazyVStack(spacing: 0) {
-                            if period == .week {
-                                ForEach(groupedSessions, id: \.date) { group in
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        dayHeader(
-                                            group.date,
-                                            totalDuration: group.sessions.reduce(0) { $0 + $1.value.focusedDuration },
-                                            isFirst: group.date == groupedSessions.first?.date
-                                        )
-                                        ForEach(group.sessions) { session in
-                                            Button { selectedSession = session } label: { sessionRow(session) }
-                                                .buttonStyle(.plain)
-                                            if session.id != group.sessions.last?.id {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, minHeight: 220)
+                    }
+                }
+                .dashboardPanel(colorScheme)
+
+                if state.snapshot != nil {
+                    CategoryUsageView(summary: categorySnapshot.usage, registry: controller.categoryRegistry,
+                        storageFailed: controller.appUsage.storageFailed, showsAppSegments: true,
+                        minimumVisibleShare: 0.05)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        sectionHeading("dashboard.sessions.title", subtitle: sessionsSubtitle)
+                        if visibleSessions.isEmpty {
+                            Text(sessions.isEmpty ? sessionsEmptyText : sessionsShortOnlyText)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, minHeight: 90, alignment: .center)
+                                .dashboardPanel(colorScheme)
+                        } else {
+                            LazyVStack(spacing: 0) {
+                                if period == .week {
+                                    ForEach(groupedSessions, id: \.date) { group in
+                                        VStack(alignment: .leading, spacing: 0) {
+                                            dayHeader(
+                                                group.date,
+                                                totalDuration: group.sessions.reduce(0) { $0 + $1.value.focusedDuration },
+                                                isFirst: group.date == groupedSessions.first?.date
+                                            )
+                                            ForEach(group.sessions) { session in
+                                                Button { selectedSession = session } label: { sessionRow(session) }
+                                                    .buttonStyle(.plain)
+                                                if session.id != group.sessions.last?.id {
+                                                    Divider()
+                                                }
+                                            }
+                                            if group.date != groupedSessions.last?.date {
                                                 Divider()
+                                                    .padding(.vertical, 8)
                                             }
                                         }
-                                        if group.date != groupedSessions.last?.date {
-                                            Divider()
-                                                .padding(.vertical, 8)
-                                        }
+                                    }
+                                } else {
+                                    ForEach(visibleSessions) { session in
+                                        Button { selectedSession = session } label: { sessionRow(session) }
+                                            .buttonStyle(.plain)
+                                        if session.id != visibleSessions.last?.id { Divider() }
                                     }
                                 }
-                            } else {
-                                ForEach(visibleSessions) { session in
-                                    Button { selectedSession = session } label: { sessionRow(session) }
-                                        .buttonStyle(.plain)
-                                    if session.id != visibleSessions.last?.id { Divider() }
-                                }
                             }
+                            .dashboardPanel(colorScheme)
                         }
-                        .dashboardPanel(colorScheme)
                     }
                 }
 
@@ -206,7 +212,10 @@ struct DashboardView: View {
             annotationsRevision = controller.annotationsRevision
             reload()
         }
-        .onAppear(perform: reload)
+        .onAppear {
+            state.updateClock(to: Date())
+            reload()
+        }
         .onDisappear { refreshTask?.cancel() }
         .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
@@ -214,14 +223,12 @@ struct DashboardView: View {
         .onChange(of: endDate) { _, newDate in
             let normalized = Calendar.current.startOfDay(for: newDate)
             if endDate != normalized {
-                endDate = normalized
+                state.endDate = normalized
             }
             reload()
         }
         .onReceive(clock) { date in
-            let oldToday = Calendar.current.startOfDay(for: now)
-            now = date
-            if endDate == oldToday { endDate = Calendar.current.startOfDay(for: date) }
+            state.updateClock(to: date)
             reload()
         }
     }
@@ -232,7 +239,7 @@ struct DashboardView: View {
         return HStack(spacing: 10) {
             ControlGroup {
                 Button {
-                    endDate = calendar.date(byAdding: .day, value: -period.rawValue, to: endDate) ?? endDate
+                    state.endDate = calendar.date(byAdding: .day, value: -period.rawValue, to: endDate) ?? endDate
                 } label: {
                     Image(systemName: "chevron.left")
                 }
@@ -247,7 +254,7 @@ struct DashboardView: View {
                 }
                 .accessibilityLabel("stats.chooseDate")
                 .popover(isPresented: $showingCalendar) {
-                    DatePicker("stats.chooseDate", selection: $endDate, in: ...today, displayedComponents: .date)
+                    DatePicker("stats.chooseDate", selection: $state.endDate, in: ...today, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                         .padding()
                         .environment(\.locale, controller.locale)
@@ -255,7 +262,7 @@ struct DashboardView: View {
 
                 Button {
                     let next = calendar.date(byAdding: .day, value: period.rawValue, to: endDate) ?? endDate
-                    endDate = min(today, next)
+                    state.endDate = min(today, next)
                 } label: {
                     Image(systemName: "chevron.right")
                 }
@@ -263,7 +270,7 @@ struct DashboardView: View {
                 .accessibilityLabel("stats.nextPeriod")
             }
             Spacer(minLength: 8)
-            Picker("stats.period", selection: $period) {
+            Picker("stats.period", selection: $state.period) {
                 Text("dashboard.period.today").tag(DashboardPeriod.today)
                 Text("stats.period.seven").tag(DashboardPeriod.week)
             }
@@ -286,7 +293,7 @@ struct DashboardView: View {
 
     private func periodHitArea(_ value: DashboardPeriod) -> some View {
         Button {
-            period = value
+            state.period = value
         } label: {
             Color.clear
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -401,9 +408,7 @@ struct DashboardView: View {
             guard let snapshot = try? await DashboardRefreshSnapshot.make(intervals: intervals, usage: usage, breaks: breaks,
                 date: date, weekStart: weekStart, sessionEnd: sessionEnd, calendar: calendar, excluded: excluded, exclusions: exclusions) else { return }
             guard !Task.isCancelled else { return }
-            dayCategorySnapshot = snapshot.day
-            weekCategorySnapshot = snapshot.week
-            chartSnapshot = snapshot.chart
+            state.snapshot = snapshot
             if let selected = selectedSession {
                 selectedSession = (snapshot.day.sessions + snapshot.week.sessions).first { $0.id == selected.id }
             }
@@ -441,11 +446,6 @@ struct DashboardView: View {
     private func formatTime(_ date: Date) -> String {
         date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(controller.locale))
     }
-}
-
-private enum DashboardPeriod: Int {
-    case today = 1
-    case week = 7
 }
 
 enum SessionDuration {
