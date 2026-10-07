@@ -5,13 +5,11 @@ import Observation
 @MainActor
 @Observable
 final class StatisticsViewState {
-    var period: StatisticsPeriod = .seven {
-        didSet { if period != oldValue { snapshot = nil } }
-    }
-    var endDate: Date {
-        didSet { if endDate != oldValue { snapshot = nil } }
-    }
+    var period: StatisticsPeriod = .seven
+    var endDate: Date
     private(set) var now: Date
+    // Keep the content mounted while a new selection loads so the scroll view
+    // does not collapse to the initial loading indicator and reset its offset.
     var snapshot: StatisticsRefreshSnapshot?
 
     init(now: Date = Date(), calendar: Calendar = .current) {
