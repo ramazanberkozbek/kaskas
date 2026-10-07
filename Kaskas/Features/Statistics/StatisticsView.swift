@@ -4,17 +4,17 @@ import SwiftUI
 struct StatisticsView: View {
     let controller: SessionController
 
-    @State private var period: StatisticsPeriod = .seven
-    @State private var endDate = Calendar.current.startOfDay(for: Date())
-    @State private var now = Date()
-    @State private var categorySummary: CategoryUsageSummary = .empty
-    @State private var chartSnapshot: StatisticsChartSnapshot = .empty
-    @State private var loaded = false
+    @Bindable var state: StatisticsViewState
     @State private var refreshTask: Task<Void, Never>?
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.locale) private var locale
 
     private let refreshClock = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+
+    private var period: StatisticsPeriod { state.period }
+    private var endDate: Date { state.endDate }
+    private var now: Date { state.now }
+    private var chartSnapshot: StatisticsChartSnapshot { state.snapshot?.chart ?? .empty }
 
     var body: some View {
         ScrollView {
@@ -22,81 +22,88 @@ struct StatisticsView: View {
                 SettingsPaneHeader(title: "settings.sidebar.statistics")
 
                 Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("stats.summary.title")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.primary)
+                    if let snapshot = state.snapshot {
+                        let chartSnapshot = snapshot.chart
+                        let categorySummary = snapshot.categories
+                        VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("stats.summary.title")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.primary)
 
-                            Text("stats.summary.subtitle")
-                                .font(.system(size: 11))
+                                Text("stats.summary.subtitle")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            StatisticsSummaryCards(days: chartSnapshot.distributionDays)
+                        }
+
+                        StatisticsChartSection(
+                            title: "stats.trend.title",
+                            subtitle: trendSubtitle,
+                            legend: trendLegend
+                        ) {
+                            if period == .day {
+                                DailyStudyChart(data: chartSnapshot.dailyTrend, now: now)
+                            } else {
+                                StudyTrendChart(data: chartSnapshot.trend)
+                            }
+                        }
+
+                        CategoryUsageView(
+                            summary: categorySummary,
+                            registry: controller.categoryRegistry,
+                            storageFailed: controller.appUsage.storageFailed,
+                            showsAppSegments: true
+                        )
+
+                        UsageDonutCharts(summary: categorySummary, registry: controller.categoryRegistry)
+
+                        StatisticsChartSection(
+                            title: "stats.distribution.title",
+                            subtitle: period == .year ? "stats.distribution.monthlySubtitle" : "stats.distribution.subtitle",
+                            legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
+                        ) {
+                            StatisticsDistributionChart(
+                                buckets: chartSnapshot.distributionBuckets,
+                                points: chartSnapshot.distributionPoints,
+                                period: period
+                            )
+                        }
+
+                        StatisticsChartSection(
+                            title: "stats.hourly.title",
+                            subtitle: period.usesHourlyAverage ? "stats.hourly.averageSubtitle" : "stats.hourly.subtitle",
+                            legend: hourlyLegend
+                        ) {
+                            StatisticsHourlyChart(
+                                days: chartSnapshot.hourlyDays,
+                                points: hourlyPoints,
+                                period: period
+                            )
+                        }
+
+                        YearActivityHeatmap(
+                            selectedYear: selectedYear,
+                            data: chartSnapshot.year,
+                            scheme: colorScheme
+                        )
+
+                        if controller.activityStorageFailed {
+                            Label("stats.storageWarning", systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        } else if chartSnapshot.distributionDays.allSatisfy({ day in
+                            ActivityKind.allCases.allSatisfy { day.duration(for: $0) == 0 }
+                        }) {
+                            Text("stats.empty")
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-
-                        StatisticsSummaryCards(days: chartSnapshot.distributionDays)
-                    }
-
-                    StatisticsChartSection(
-                        title: "stats.trend.title",
-                        subtitle: trendSubtitle,
-                        legend: trendLegend
-                    ) {
-                        if period == .day {
-                            DailyStudyChart(data: chartSnapshot.dailyTrend, now: now)
-                        } else {
-                            StudyTrendChart(data: chartSnapshot.trend)
-                        }
-                    }
-
-                    CategoryUsageView(
-                        summary: categorySummary,
-                        registry: controller.categoryRegistry,
-                        storageFailed: controller.appUsage.storageFailed,
-                        showsAppSegments: true
-                    )
-
-                    UsageDonutCharts(summary: categorySummary, registry: controller.categoryRegistry)
-
-                    StatisticsChartSection(
-                        title: "stats.distribution.title",
-                        subtitle: period == .year ? "stats.distribution.monthlySubtitle" : "stats.distribution.subtitle",
-                        legend: ActivityKind.allCases.map { ($0.color, $0.labelKey) }
-                    ) {
-                        StatisticsDistributionChart(
-                            buckets: chartSnapshot.distributionBuckets,
-                            points: chartSnapshot.distributionPoints,
-                            period: period
-                        )
-                    }
-
-                    StatisticsChartSection(
-                        title: "stats.hourly.title",
-                        subtitle: period.usesHourlyAverage ? "stats.hourly.averageSubtitle" : "stats.hourly.subtitle",
-                        legend: hourlyLegend
-                    ) {
-                        StatisticsHourlyChart(
-                            days: chartSnapshot.hourlyDays,
-                            points: hourlyPoints,
-                            period: period
-                        )
-                    }
-
-                    YearActivityHeatmap(
-                        selectedYear: selectedYear,
-                        data: chartSnapshot.year,
-                        scheme: colorScheme
-                    )
-
-                    if controller.activityStorageFailed {
-                        Label("stats.storageWarning", systemImage: "exclamationmark.triangle")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    } else if loaded && chartSnapshot.distributionDays.allSatisfy({ day in
-                        ActivityKind.allCases.allSatisfy { day.duration(for: $0) == 0 }
-                    }) {
-                        Text("stats.empty")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, minHeight: 120)
                     }
                 } header: {
                     dateFilterBar
@@ -106,24 +113,24 @@ struct StatisticsView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear { reload() }
+        .onAppear {
+            state.updateClock(to: Date())
+            reload()
+        }
         .onDisappear { refreshTask?.cancel() }
         .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
         .onChange(of: controller.appUsage.exclusions.revision) { _, _ in reload() }
-        .onChange(of: period) { _, _ in resetSelectionAndReload() }
-        .onChange(of: endDate) { _, _ in resetSelectionAndReload() }
+        .onChange(of: period) { _, _ in reload() }
+        .onChange(of: endDate) { _, _ in reload() }
         .onReceive(refreshClock) { date in
-            let previousToday = Calendar.current.startOfDay(for: now)
-            now = date
-            let today = Calendar.current.startOfDay(for: date)
-            if endDate == previousToday { endDate = today }
+            state.updateClock(to: date)
             reload()
         }
     }
 
     private var dateFilterBar: some View {
-        StatisticsRangeControls(period: $period, endDate: $endDate, now: now)
+        StatisticsRangeControls(period: $state.period, endDate: $state.endDate, now: now)
             .padding(.vertical, 12)
             .background(Color(nsColor: .windowBackgroundColor))
             .overlay(alignment: .bottom) { Divider() }
@@ -180,10 +187,6 @@ struct StatisticsView: View {
         }
     }
 
-    private func resetSelectionAndReload() {
-        reload()
-    }
-
     private func reload() {
         refreshTask?.cancel()
         let calendar = Calendar.current
@@ -207,9 +210,7 @@ struct StatisticsView: View {
             guard let snapshot = try? await StatisticsRefreshSnapshot.make(intervals: history, usage: usage,
                 window: window, categoryEnd: categoryEnd, year: year, calendar: calendar, period: refreshPeriod, excluded: excluded, exclusions: exclusions) else { return }
             guard !Task.isCancelled else { return }
-            categorySummary = snapshot.categories
-            chartSnapshot = snapshot.chart
-            loaded = true
+            state.snapshot = snapshot
         }
     }
 }
