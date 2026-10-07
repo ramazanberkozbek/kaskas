@@ -21,12 +21,8 @@ struct SettingsView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: paneSelection) {
-                ForEach(paneSections) { section in
-                    Section {
-                        ForEach(section.panes) { pane in
-                            sidebarRow(pane)
-                        }
-                    }
+                ForEach(sidebarPanes) { pane in
+                    sidebarRow(pane)
                 }
             }
             .listStyle(.sidebar)
@@ -104,17 +100,9 @@ struct SettingsView: View {
         }
     }
 
-    private struct PaneSection: Identifiable {
-        let id: Int
-        let panes: [SettingsPane]
-    }
-
-    private var paneSections: [PaneSection] {
-        [
-            PaneSection(id: 0, panes: [.dashboard, .focus, .alerts]),
-            PaneSection(id: 1, panes: [.statistics, .categories]),
-            PaneSection(id: 2, panes: isDeveloperModeEnabled ? [.general, .developer] : [.general]),
-        ]
+    private var sidebarPanes: [SettingsPane] {
+        let panes: [SettingsPane] = [.dashboard, .focus, .alerts, .statistics, .categories, .general]
+        return isDeveloperModeEnabled ? panes + [.developer] : panes
     }
 
     private var paneSelection: Binding<SettingsPane> {
@@ -152,20 +140,16 @@ struct SettingsView: View {
 
     private func sidebarLabel(_ pane: SettingsPane) -> some View {
         HStack(spacing: 9) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(pane.badgeColor.gradient)
-                    .frame(width: 20, height: 20)
-                Image(systemName: pane.systemImage)
-                    .font(.system(size: 11.5, weight: .medium))
-                    .foregroundStyle(.white)
-            }
+            Image(systemName: pane.systemImage)
+                .symbolRenderingMode(.monochrome)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(selection == pane ? Color.white : pane.iconColor)
+                .frame(width: 20, height: 20)
 
             Text(pane.title)
                 .font(.system(size: 13, weight: .regular))
                 .lineLimit(1)
         }
-        .padding(.vertical, 2.5)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }
@@ -206,12 +190,18 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         }
     }
 
-    var badgeColor: Color {
+    var iconColor: Color {
         switch self {
-        case .dashboard, .focus, .alerts:
+        case .dashboard:
             Color(red: 0.33, green: 0.54, blue: 0.86)
-        case .statistics, .categories:
+        case .focus:
+            Color(red: 0.39, green: 0.70, blue: 0.40)
+        case .alerts:
+            Color(red: 0.89, green: 0.40, blue: 0.41)
+        case .statistics:
             Color(red: 0.89, green: 0.56, blue: 0.32)
+        case .categories:
+            Color(red: 0.65, green: 0.49, blue: 0.82)
         case .general, .developer:
             Color(nsColor: .systemGray)
         }
