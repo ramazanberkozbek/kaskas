@@ -61,6 +61,27 @@ enum MicroReminderDisplayMode: String, Codable, CaseIterable, Identifiable, Send
     var titleKey: String { "settings.microReminderDisplayMode.\(rawValue)" }
 }
 
+enum MicroReminderCommitmentMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    case flexible
+    case focused
+
+    var id: Self { self }
+    var allowsSkipping: Bool { self == .flexible }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        // The removed delayed-skip mode migrates to the skippable option.
+        if raw == "balanced" {
+            self = .flexible
+        } else if let mode = Self(rawValue: raw) {
+            self = mode
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown micro-break mode")
+        }
+    }
+}
+
 enum MicroReminderMascot: String, Codable, CaseIterable, Identifiable, Sendable {
     case flame
     case glasses
@@ -241,6 +262,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var activeHours: ActiveHoursSchedule
     var focusDuration: TimeInterval
     var microRemindersEnabled: Bool
+    var microReminderCommitmentMode: MicroReminderCommitmentMode
     var microReminderDisplayMode: MicroReminderDisplayMode
     var microReminderInterval: TimeInterval
     var breakDuration: TimeInterval
@@ -282,6 +304,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         activeHours: ActiveHoursSchedule = ActiveHoursSchedule(),
         focusDuration: TimeInterval = 25 * 60,
         microRemindersEnabled: Bool = true,
+        microReminderCommitmentMode: MicroReminderCommitmentMode = .flexible,
         microReminderDisplayMode: MicroReminderDisplayMode = .mascot,
         microReminderInterval: TimeInterval = 20 * 60,
         breakDuration: TimeInterval = 5 * 60,
@@ -322,6 +345,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.activeHours = activeHours.isValid ? activeHours : ActiveHoursSchedule()
         self.focusDuration = max(1, focusDuration)
         self.microRemindersEnabled = microRemindersEnabled
+        self.microReminderCommitmentMode = microReminderCommitmentMode
         self.microReminderDisplayMode = microReminderDisplayMode
         self.microReminderInterval = max(1, microReminderInterval)
         self.breakDuration = max(1, breakDuration)
@@ -364,6 +388,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case activeHours
         case focusDuration
         case microRemindersEnabled
+        case microReminderCommitmentMode
         case microReminderDisplayMode
         case microReminderInterval
         case breakDuration
@@ -414,10 +439,15 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
                 return fallback
             }
         }
+        enum LegacyKeys: String, CodingKey { case microReminderSkippable }
+        let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+        let legacySkippable = (try? legacy.decode(Bool.self, forKey: .microReminderSkippable)) ?? true
         self.init(
             activeHours: value(.activeHours, fallback: defaults.activeHours),
             focusDuration: value(.focusDuration, fallback: defaults.focusDuration),
             microRemindersEnabled: value(.microRemindersEnabled, fallback: defaults.microRemindersEnabled),
+            microReminderCommitmentMode: value(.microReminderCommitmentMode, fallback:
+                legacySkippable ? .flexible : .focused),
             microReminderDisplayMode: value(.microReminderDisplayMode, fallback: defaults.microReminderDisplayMode),
             microReminderInterval: value(.microReminderInterval, fallback: defaults.microReminderInterval),
             breakDuration: value(.breakDuration, fallback: defaults.breakDuration),

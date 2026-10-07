@@ -487,6 +487,7 @@ final class SessionController {
             displayMode: configuration.microReminderDisplayMode,
             mascot: configuration.microReminderMascot,
             color: configuration.microReminderColor,
+            commitmentMode: configuration.microReminderCommitmentMode,
             isPreview: true
         )
     }
@@ -785,7 +786,7 @@ final class SessionController {
         if !hasStarted || sessionSnapshot.outsideActiveHours || !indicatorEnabled || !sessionSnapshot.status.isProtectionPaused {
             meetingPauseIndicator.dismiss()
         } else if (!wasProtectionPaused || previousKind != sessionSnapshot.status.activityKind),
-                  lastProtectionIndicatorAt.map({ now.timeIntervalSince($0) >= 60 }) ?? true {
+                  lastProtectionIndicatorAt.map({ now.timeIntervalSince($0) >= 10 * 60 }) ?? true {
             // Shared presentation-only cooldown: detection and timer transitions
             // still run on every signal, including repeated video play/pause.
             lastProtectionIndicatorAt = now
@@ -824,7 +825,8 @@ final class SessionController {
                 microReminderPresenter.show(
                     displayMode: configuration.microReminderDisplayMode,
                     mascot: configuration.microReminderMascot,
-                    color: configuration.microReminderColor
+                    color: configuration.microReminderColor,
+                    commitmentMode: configuration.microReminderCommitmentMode
                 )
 
             case .showBreakWarning(let endsAt):

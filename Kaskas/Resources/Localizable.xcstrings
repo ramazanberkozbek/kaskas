@@ -3619,6 +3619,23 @@
         }
       }
     },
+    "reminder.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geç"
+          }
+        }
+      }
+    },
     "reminder.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5937,6 +5954,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gözlüklü Alev"
+          }
+        }
+      }
+    },
+    "settings.microReminderSkippable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow skipping"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçmeye izin ver"
+          }
+        }
+      }
+    },
+    "settings.microReminderSkippable.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss the mascot reminder with Skip or Esc."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maskot hatırlatmasını Geç düğmesi veya Esc ile kapatın."
           }
         }
       }

@@ -207,6 +207,27 @@ struct AlertsSettingsView: View {
 
                         Divider()
 
+                        if controller.configuration.microReminderDisplayMode == .mascot {
+                            settingRow(
+                                title: "settings.microReminderSkippable",
+                                subtitle: "settings.microReminderSkippable.description"
+                            ) {
+                                Toggle("settings.microReminderSkippable", isOn: Binding(
+                                    get: { controller.configuration.microReminderCommitmentMode.allowsSkipping },
+                                    set: { allowed in
+                                        var config = controller.configuration
+                                        config.microReminderCommitmentMode = allowed ? .flexible : .focused
+                                        controller.updateConfiguration(config)
+                                    }
+                                ))
+                                .labelsHidden()
+                                .toggleStyle(.switch)
+                            }
+                            .disabled(!controller.configuration.microRemindersEnabled)
+
+                            Divider().padding(.horizontal, SettingsPageLayout.cardInset)
+                        }
+
                         // Row 1: Reminder Interval
                         settingRow(
                             title: "settings.reminderInterval",

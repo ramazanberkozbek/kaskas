@@ -81,10 +81,101 @@ struct MicroReminderTests {
         let config = try JSONDecoder().decode(FocusConfiguration.self, from: Data("{}".utf8))
         #expect(config.microRemindersEnabled)
         #expect(config.microReminderDisplayMode == .mascot)
+        #expect(config.microReminderCommitmentMode == .flexible)
+    }
+
+    @Test func legacySkippingPreferencesMigrate() throws {
+        for (allowed, expected) in [(true, MicroReminderCommitmentMode.flexible), (false, .focused)] {
+            let data = Data("{\"microReminderSkippable\":\(allowed)}".utf8)
+            let config = try JSONDecoder().decode(FocusConfiguration.self, from: data)
+            #expect(config.microReminderCommitmentMode == expected)
+        }
+    }
+
+    @Test func removedBalancedModeMigratesToFlexible() throws {
+        let data = Data("{\"microReminderCommitmentMode\":\"balanced\"}".utf8)
+        let config = try JSONDecoder().decode(FocusConfiguration.self, from: data)
+        #expect(config.microReminderCommitmentMode == .flexible)
+        #expect(MicroReminderCommitmentMode.allCases == [.flexible, .focused])
+    }
+
+    @Test func skippingPreferenceSurvivesReopening() throws {
+        let suite = "MicroReminderTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var config = FocusConfiguration()
+        config.microReminderCommitmentMode = .focused
+        SessionStore(defaults: defaults).save(configuration: config)
+        #expect(SessionStore(defaults: defaults).loadConfiguration().microReminderCommitmentMode == .focused)
+    }
+
+    @MainActor @Test func mascotCanBeDismissedOnlyWhenSkippingIsAllowed() throws {
+        let suite = "MicroReminderTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let presenter = MicroReminderPresenter(defaults: defaults)
+        defer { presenter.dismiss() }
+        presenter.show(mascot: .flame, color: .white, commitmentMode: .focused)
+        let strictPanel = try #require(presenter.panel)
+        #expect(!strictPanel.canBecomeKey)
+        strictPanel.cancelOperation(nil)
+        #expect(presenter.panel != nil)
+
+        presenter.show(mascot: .flame, color: .white, commitmentMode: .flexible)
+        let skippablePanel = try #require(presenter.panel)
+        #expect(skippablePanel.canBecomeKey)
+        skippablePanel.cancelOperation(nil)
+        #expect(presenter.panel == nil)
+        #expect(!skippablePanel.isVisible)
+    }
+
+    @MainActor @Test func escapeHintAppearsOnceAndSurvivesReopening() throws {
+        let suite = "MicroReminderTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let presenter = MicroReminderPresenter(defaults: defaults)
+        defer { presenter.dismiss() }
+        #expect(FocusConfiguration().microReminderCommitmentMode.allowsSkipping)
+        presenter.show(mascot: .flame, color: .white, commitmentMode: .focused)
+        #expect(!presenter.showsEscapeHint)
+        presenter.show(displayMode: .cursorIcon, mascot: .flame, color: .white)
+        #expect(!presenter.showsEscapeHint)
+        presenter.show(mascot: .flame, color: .white, isPreview: true)
+        #expect(presenter.showsEscapeHint)
+        presenter.show(mascot: .flame, color: .white)
+        #expect(!presenter.showsEscapeHint)
+        presenter.dismiss()
+        let reopened = MicroReminderPresenter(defaults: defaults)
+        defer { reopened.dismiss() }
+        reopened.show(mascot: .flame, color: .white)
+        #expect(!reopened.showsEscapeHint)
+        let panel = try #require(reopened.panel)
+        panel.cancelOperation(nil)
+        #expect(reopened.panel == nil)
+    }
+
+    @MainActor @Test func mouseClickSkipsOnlyWhenAllowed() throws {
+        let suite = "MicroReminderTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let presenter = MicroReminderPresenter(defaults: defaults)
+        defer { presenter.dismiss() }
+        let click = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: .zero,
+            modifierFlags: [], timestamp: 0, windowNumber: 0, context: nil,
+            eventNumber: 1, clickCount: 1, pressure: 1))
+        presenter.show(mascot: .flame, color: .white, commitmentMode: .focused)
+        presenter.panel?.mouseDown(with: click)
+        #expect(presenter.panel != nil)
+        presenter.show(mascot: .flame, color: .white)
+        presenter.panel?.mouseDown(with: click)
+        #expect(presenter.panel == nil)
     }
 
     @MainActor @Test func cursorModeUsesASmallClickThroughPanelAndDismissesOnModeChange() throws {
-        let presenter = MicroReminderPresenter()
+        let suite = "MicroReminderTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let presenter = MicroReminderPresenter(defaults: defaults)
         defer { presenter.dismiss() }
         presenter.show(displayMode: .cursorIcon, mascot: .glasses, color: .mint, isPreview: true)
         let panel = try #require(presenter.panel)

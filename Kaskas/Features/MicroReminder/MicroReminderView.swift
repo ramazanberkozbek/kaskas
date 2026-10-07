@@ -3,32 +3,62 @@ import SwiftUI
 struct MicroReminderView: View {
     let mascot: MicroReminderMascot
     let color: MicroReminderColor
+    let commitmentMode: MicroReminderCommitmentMode
+    let showsEscapeHint: Bool
     let onFinished: @MainActor () -> Void
 
     init(
         mascot: MicroReminderMascot,
         color: MicroReminderColor = .peach,
+        commitmentMode: MicroReminderCommitmentMode = .flexible,
+        showsEscapeHint: Bool = false,
         onFinished: @escaping @MainActor () -> Void = {}
     ) {
         self.mascot = mascot
         self.color = color
+        self.commitmentMode = commitmentMode
+        self.showsEscapeHint = showsEscapeHint
         self.onFinished = onFinished
     }
 
     var body: some View {
         ZStack {
             Color.black.opacity(0.78)
-            MicroReminderMascotView(
-                mascot: mascot,
-                color: color,
-                size: 200,
-                animated: true,
-                onFinished: onFinished
-            )
+            VStack(spacing: 24) {
+                MicroReminderMascotView(
+                    mascot: mascot,
+                    color: color,
+                    size: 200,
+                    animated: true,
+                    onFinished: onFinished
+                )
+                if commitmentMode.allowsSkipping {
+                    Button(action: onFinished) {
+                        HStack(spacing: 8) {
+                            Text("reminder.skip")
+                            if showsEscapeHint {
+                                Text(verbatim: "Esc").font(.system(size: 11, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(.white.opacity(0.65))
+                            }
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 9)
+                        .background(.white.opacity(0.12), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if commitmentMode.allowsSkipping { onFinished() }
+        }
         .ignoresSafeArea()
-        .accessibilityElement(children: .ignore)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("reminder.title"))
     }
 }

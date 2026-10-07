@@ -4,6 +4,9 @@ import SwiftUI
 @MainActor
 final class MicroReminderPresenter {
     private static let maximumDisplayDuration: Duration = .seconds(6)
+    private static let escapeHintShownKey = "microReminderEscapeHintShown"
+    private let defaults: UserDefaults
+    private(set) var showsEscapeHint = false
 
     private var fullscreenPanel: NonactivatingPanel?
     private let cursorPresenter = CursorBreakCountdownPresenter()
@@ -11,8 +14,12 @@ final class MicroReminderPresenter {
     private var dismissalTask: Task<Void, Never>?
     private var isShowingPreview = false
 
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
     func show(displayMode: MicroReminderDisplayMode = .mascot,
-              mascot: MicroReminderMascot, color: MicroReminderColor, isPreview: Bool = false) {
+              mascot: MicroReminderMascot, color: MicroReminderColor, commitmentMode: MicroReminderCommitmentMode = .flexible, isPreview: Bool = false) {
         dismiss()
         if displayMode == .cursorIcon {
             cursorPresenter.showMicroReminder(color: color)
@@ -27,7 +34,8 @@ final class MicroReminderPresenter {
             return
         }
 
-        let contentView = NSHostingView(rootView: MicroReminderView(mascot: mascot, color: color) { [weak self] in
+        showsEscapeHint = commitmentMode.allowsSkipping && !defaults.bool(forKey: Self.escapeHintShownKey)
+        let contentView = NSHostingView(rootView: MicroReminderView(mascot: mascot, color: color, commitmentMode: commitmentMode, showsEscapeHint: showsEscapeHint) { [weak self] in
             self?.dismiss()
         })
         contentView.frame = NSRect(origin: .zero, size: screen.frame.size)
@@ -38,6 +46,9 @@ final class MicroReminderPresenter {
             backing: .buffered,
             defer: false
         )
+        panel.onSkip = commitmentMode.allowsSkipping ? { [weak self] in
+            self?.dismiss()
+        } : nil
         panel.contentView = contentView
         panel.isOpaque = false
         panel.backgroundColor = .clear
@@ -49,8 +60,10 @@ final class MicroReminderPresenter {
 
         panel.setFrame(screen.frame, display: true)
         panel.orderFrontRegardless()
+        if commitmentMode.allowsSkipping { panel.makeKey() }
         self.fullscreenPanel = panel
         isShowingPreview = isPreview
+        if showsEscapeHint { defaults.set(true, forKey: Self.escapeHintShownKey) }
 
         dismissalTask = Task { @MainActor [weak self] in
             do {
@@ -69,6 +82,7 @@ final class MicroReminderPresenter {
         fullscreenPanel = nil
         cursorPresenter.dismiss()
         isShowingPreview = false
+        showsEscapeHint = false
     }
 
     func dismissPreview() {
@@ -77,10 +91,21 @@ final class MicroReminderPresenter {
 }
 
 private final class NonactivatingPanel: NSPanel {
-    override var canBecomeKey: Bool { false }
+    var onSkip: (() -> Void)?
+    override var canBecomeKey: Bool { onSkip != nil }
+
+    override func cancelOperation(_ sender: Any?) { onSkip?() }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53, let onSkip {
+            onSkip()
+        } else {
+            super.keyDown(with: event)
+        }
+    }
     override var canBecomeMain: Bool { false }
 
-    override func mouseDown(with event: NSEvent) {}
+    override func mouseDown(with event: NSEvent) { onSkip?() }
     override func rightMouseDown(with event: NSEvent) {}
     override func otherMouseDown(with event: NSEvent) {}
 }
