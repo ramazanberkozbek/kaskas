@@ -57,4 +57,11 @@ struct DurationInputTests {
         #expect(DurationInput.clampedSeconds(from: 3, unit: .seconds, minimum: 5, maximum: 30, step: 5) == 5)
         #expect(DurationInput.clampedSeconds(from: 0, unit: .seconds, minimum: 5, maximum: 30, step: 5) == 5)
     }
+
+    @Test func durationUnitLocalizationResolvesProperly() {
+        #expect(AppLanguage.localizedString("settings.duration.seconds", locale: Locale(identifier: "en")).lowercased() == "seconds")
+        #expect(AppLanguage.localizedString("settings.duration.seconds", locale: Locale(identifier: "tr")).lowercased() == "saniye")
+        #expect(AppLanguage.localizedString("settings.duration.minutes", locale: Locale(identifier: "en")).lowercased() == "minutes")
+        #expect(AppLanguage.localizedString("settings.duration.minutes", locale: Locale(identifier: "tr")).lowercased() == "dakika")
+    }
 }

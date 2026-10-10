@@ -57,7 +57,7 @@ struct SettingsDurationPicker: View {
 
     private var unitText: String {
         let key = inputUnit == .seconds ? "settings.duration.seconds" : "settings.duration.minutes"
-        return String(localized: String.LocalizationValue(key), locale: locale).lowercased()
+        return AppLanguage.localizedString(key, locale: locale).lowercased(with: locale)
     }
 
     private var inlineEditor: some View {
