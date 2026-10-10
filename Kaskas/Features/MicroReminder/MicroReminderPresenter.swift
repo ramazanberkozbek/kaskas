@@ -19,7 +19,9 @@ final class MicroReminderPresenter {
     }
 
     func show(displayMode: MicroReminderDisplayMode = .mascot,
-              mascot: MicroReminderMascot, color: MicroReminderColor, commitmentMode: MicroReminderCommitmentMode = .flexible, isPreview: Bool = false) {
+              mascot: MicroReminderMascot, color: MicroReminderColor, commitmentMode: MicroReminderCommitmentMode = .flexible,
+              locale: Locale = AppLanguage.currentLocale,
+              isPreview: Bool = false) {
         dismiss()
         if displayMode == .cursorIcon {
             cursorPresenter.showMicroReminder(color: color)
@@ -35,9 +37,15 @@ final class MicroReminderPresenter {
         }
 
         showsEscapeHint = commitmentMode.allowsSkipping && !defaults.bool(forKey: Self.escapeHintShownKey)
-        let contentView = NSHostingView(rootView: MicroReminderView(mascot: mascot, color: color, commitmentMode: commitmentMode, showsEscapeHint: showsEscapeHint) { [weak self] in
+        let contentView = NSHostingView(rootView: MicroReminderView(
+            mascot: mascot,
+            color: color,
+            commitmentMode: commitmentMode,
+            showsEscapeHint: showsEscapeHint,
+            locale: locale
+        ) { [weak self] in
             self?.dismiss()
-        })
+        }.environment(\.locale, locale))
         contentView.frame = NSRect(origin: .zero, size: screen.frame.size)
 
         let panel = NonactivatingPanel(

@@ -1,10 +1,13 @@
 import SwiftUI
 
 struct MicroReminderView: View {
+    @Environment(\.locale) private var environmentLocale
+
     let mascot: MicroReminderMascot
     let color: MicroReminderColor
     let commitmentMode: MicroReminderCommitmentMode
     let showsEscapeHint: Bool
+    let locale: Locale?
     let onFinished: @MainActor () -> Void
 
     init(
@@ -12,13 +15,19 @@ struct MicroReminderView: View {
         color: MicroReminderColor = .peach,
         commitmentMode: MicroReminderCommitmentMode = .flexible,
         showsEscapeHint: Bool = false,
+        locale: Locale? = nil,
         onFinished: @escaping @MainActor () -> Void = {}
     ) {
         self.mascot = mascot
         self.color = color
         self.commitmentMode = commitmentMode
         self.showsEscapeHint = showsEscapeHint
+        self.locale = locale
         self.onFinished = onFinished
+    }
+
+    private var activeLocale: Locale {
+        locale ?? environmentLocale
     }
 
     var body: some View {
@@ -35,7 +44,7 @@ struct MicroReminderView: View {
                 if commitmentMode.allowsSkipping {
                     Button(action: onFinished) {
                         HStack(spacing: 8) {
-                            Text("reminder.skip")
+                            Text(AppLanguage.localizedString("reminder.skip", locale: activeLocale))
                             if showsEscapeHint {
                                 Text(verbatim: "Esc").font(.system(size: 11, weight: .medium, design: .monospaced))
                                     .foregroundStyle(.white.opacity(0.65))
@@ -59,7 +68,7 @@ struct MicroReminderView: View {
         }
         .ignoresSafeArea()
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(Text("reminder.title"))
+        .accessibilityLabel(Text(AppLanguage.localizedString("reminder.title", locale: activeLocale)))
     }
 }
 

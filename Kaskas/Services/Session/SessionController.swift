@@ -488,6 +488,7 @@ final class SessionController {
             mascot: configuration.microReminderMascot,
             color: configuration.microReminderColor,
             commitmentMode: configuration.microReminderCommitmentMode,
+            locale: locale,
             isPreview: true
         )
     }
@@ -826,7 +827,8 @@ final class SessionController {
                     displayMode: configuration.microReminderDisplayMode,
                     mascot: configuration.microReminderMascot,
                     color: configuration.microReminderColor,
-                    commitmentMode: configuration.microReminderCommitmentMode
+                    commitmentMode: configuration.microReminderCommitmentMode,
+                    locale: locale
                 )
 
             case .showBreakWarning(let endsAt):

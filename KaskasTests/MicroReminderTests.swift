@@ -195,4 +195,11 @@ struct MicroReminderTests {
         presenter.dismissPreview()
         #expect(presenter.panel != nil)
     }
+
+    @MainActor @Test func microReminderSkipLabelRespectsLocale() throws {
+        #expect(AppLanguage.localizedString("reminder.skip", locale: Locale(identifier: "en")) == "Skip")
+        #expect(AppLanguage.localizedString("reminder.skip", locale: Locale(identifier: "tr")) == "Geç")
+        #expect(AppLanguage.localizedString("reminder.title", locale: Locale(identifier: "en")) == "Take a breath")
+        #expect(AppLanguage.localizedString("reminder.title", locale: Locale(identifier: "tr")) == "Kısa bir nefes")
+    }
 }
