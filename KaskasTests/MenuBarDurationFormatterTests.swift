@@ -4,24 +4,28 @@ import Testing
 
 struct MenuBarDurationFormatterTests {
     @Test
-    func roundsUpAndSwitchesUnitsAtAnHour() {
+    func roundsUpAndFormatsCompactMinute() {
         let locale = Locale(identifier: "en_US")
-        #expect(MenuBarDurationFormatter.string(for: 0, locale: locale).contains("1 min"))
-        #expect(MenuBarDurationFormatter.string(for: 59 * 60, locale: locale).contains("59 min"))
-        #expect(MenuBarDurationFormatter.string(for: 59 * 60 + 1, locale: locale).contains("1 hr"))
-        #expect(MenuBarDurationFormatter.string(for: 60 * 60 + 1, locale: locale).contains("1 hr 1 min"))
-        #expect(MenuBarDurationFormatter.string(for: 120 * 60, locale: locale).contains("2 hr"))
+        #expect(MenuBarDurationFormatter.string(for: 0, locale: locale) == "1m")
+        #expect(MenuBarDurationFormatter.string(for: 59 * 60, locale: locale) == "59m")
+        #expect(MenuBarDurationFormatter.string(for: 59 * 60 + 1, locale: locale) == "60m")
+        #expect(MenuBarDurationFormatter.string(for: 60 * 60 + 1, locale: locale) == "61m")
+        #expect(MenuBarDurationFormatter.string(for: 90 * 60, locale: locale) == "90m")
+        #expect(MenuBarDurationFormatter.string(for: 120 * 60, locale: locale) == "120m")
     }
 
     @Test
     func usesLocaleSpecificUnitNames() {
         let turkish = MenuBarDurationFormatter.string(for: 65 * 60, locale: Locale(identifier: "tr_TR"))
+        let turkish90 = MenuBarDurationFormatter.string(for: 90 * 60, locale: Locale(identifier: "tr_TR"))
         let english = MenuBarDurationFormatter.string(for: 65 * 60, locale: Locale(identifier: "en_US"))
-        #expect(turkish.contains("sa"))
-        #expect(turkish.contains("dk"))
-        #expect(!turkish.contains("dk."))
-        #expect(english.contains("hr"))
-        #expect(english.contains("min"))
+        #expect(turkish == "65d")
+        #expect(turkish90 == "90d")
+        #expect(english == "65m")
+        #expect(!turkish.contains("dk"))
+        #expect(!turkish.contains("sa"))
+        #expect(!english.contains("min"))
+        #expect(!english.contains("hr"))
     }
 
     @Test
