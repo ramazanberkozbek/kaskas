@@ -40,12 +40,9 @@ struct BreakView: View {
                     gentleBarLayout(now: context.date)
                 } else {
                     VStack(spacing: 0) {
-                        // Top localized date (e.g., "Thursday, Sep 24")
-                        Text(context.date, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.85))
-                            .tracking(0.5)
-                            .padding(.top, 48)
+                        clockHeader(now: context.date)
+                            .padding(.top, 40)
+                            .breakReveal(delay: 0.45)
 
                         Spacer()
 
@@ -79,6 +76,7 @@ struct BreakView: View {
                                 .accessibilityValue(formattedRemaining)
                         }
                         .multilineTextAlignment(.center)
+                        .breakReveal(delay: 0.55)
 
                         Spacer()
 
@@ -103,6 +101,7 @@ struct BreakView: View {
                             )
                         }
                         .padding(.bottom, 64)
+                        .breakReveal(delay: 0.7)
                     }
                     .padding(.horizontal, Theme.Spacing.extraLarge)
                 }
@@ -114,10 +113,9 @@ struct BreakView: View {
 
     private func gentleBarLayout(now: Date) -> some View {
         VStack(spacing: 0) {
-            Text(now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
-                .font(.system(size: 16, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
-                .padding(.top, 48)
+            clockHeader(now: now)
+                .padding(.top, 40)
+                .breakReveal(delay: 0.45)
 
             Spacer()
 
@@ -156,6 +154,7 @@ struct BreakView: View {
             }
             .shadow(color: .black.opacity(0.45), radius: 9, y: 3)
             .padding(.bottom, 46)
+            .breakReveal(delay: 0.55)
 
             HStack(spacing: 6) {
                 Text("break.press")
@@ -169,8 +168,27 @@ struct BreakView: View {
             .font(.system(size: 11, weight: .semibold, design: .rounded))
             .foregroundStyle(.white.opacity(0.8))
             .padding(.bottom, 28)
+            .breakReveal(delay: 0.7)
         }
         .padding(.horizontal, 48)
+    }
+
+    /// Current time with the localized date beneath it (e.g., "14:32" / "Thursday, Sep 24").
+    private func clockHeader(now: Date) -> some View {
+        let locale = configuration.appLanguage.locale
+        return VStack(spacing: 4) {
+            Text(now, format: .dateTime.hour().minute().locale(locale))
+                .font(.system(size: 44, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+
+            Text(now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(locale))
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+                .tracking(0.5)
+        }
+        .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
+        .accessibilityElement(children: .combine)
     }
 
     private static func formattedRemaining(until endDate: Date, now: Date) -> String {
