@@ -82,13 +82,11 @@ struct SettingsTimePicker: View {
             .frame(width: width, height: 28)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(colorScheme == .dark ? Color.white.opacity(isHovered ? 0.12 : 0.07)
-                                              : Color.black.opacity(isHovered ? 0.09 : 0.05))
+                    .fill(badgeFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(colorScheme == .dark ? Color.white.opacity(isHovered ? 0.22 : 0.12)
-                                                       : Color.black.opacity(isHovered ? 0.20 : 0.10), lineWidth: 1)
+                    .strokeBorder(badgeStroke, lineWidth: 1)
             )
             .contentShape(RoundedRectangle(cornerRadius: 6))
             .onHover { isHovered = $0 }
@@ -97,6 +95,18 @@ struct SettingsTimePicker: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(title))
             .accessibilityValue(Text(formattedTime))
+    }
+
+    private var badgeFill: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(isHovered ? 0.12 : 0.07)
+            : Color.black.opacity(isHovered ? 0.09 : 0.05)
+    }
+
+    private var badgeStroke: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(isHovered ? 0.22 : 0.12)
+            : Color.black.opacity(isHovered ? 0.20 : 0.10)
     }
 
     private var inlineEditor: some View {

@@ -180,7 +180,8 @@ struct StudySessionGroupingTests {
 
         #expect(session.segments.count == 3)
         #expect(session.interruptionCount == 1)
-        #expect(abs(session.focusedDuration - (10 * 60 + 30 + 30.001 + 8 * 60)) < 0.001)
+        let expectedFocusedDuration = TimeInterval(10 * 60 + 30 + 8 * 60) + 30.001
+        #expect(abs(session.focusedDuration - expectedFocusedDuration) < 0.001)
     }
 
     @Test
