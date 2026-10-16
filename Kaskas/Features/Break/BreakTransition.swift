@@ -21,12 +21,16 @@ struct BreakTransitionContainer<Content: View>: View {
     var body: some View {
         let isRevealed = revealState.isRevealed
         ZStack {
-            DesktopBlurView()
-                .opacity(isRevealed ? 1 : 0)
-                .animation(
-                    isRevealed ? .easeOut(duration: 0.5) : .easeIn(duration: BreakTransitionTiming.dismissDuration),
-                    value: isRevealed
-                )
+            // Blur and dim the desktop together so the sharp/blurred overlap stays brief.
+            ZStack {
+                DesktopBlurView()
+                Color.black.opacity(0.3)
+            }
+            .opacity(isRevealed ? 1 : 0)
+            .animation(
+                isRevealed ? .easeOut(duration: 0.3) : .easeIn(duration: BreakTransitionTiming.dismissDuration),
+                value: isRevealed
+            )
 
             content()
                 .opacity(isRevealed ? 1 : 0)
