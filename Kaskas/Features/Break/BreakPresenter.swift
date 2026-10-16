@@ -11,6 +11,7 @@ final class BreakPresenter {
         let onSkip: @MainActor () -> Void
         let onLockScreen: @MainActor () -> Void
         let onOpenSettings: @MainActor () -> Void
+        let revealState = BreakRevealState()
     }
 
     private struct ScreenLayout: Equatable {
@@ -58,6 +59,8 @@ final class BreakPresenter {
             }
         }
 
+        // Replacing a break that is already on screen should not replay the reveal.
+        let isReplacingVisibleBreak = presentation != nil && !panels.isEmpty
         dismissPanels()
         guard !screens.isEmpty else { return }
 
@@ -70,6 +73,9 @@ final class BreakPresenter {
             onLockScreen: onLockScreen,
             onOpenSettings: onOpenSettings
         )
+        if isReplacingVisibleBreak {
+            presentation?.revealState.isRevealed = true
+        }
         screenChangeObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: nil,
@@ -80,9 +86,23 @@ final class BreakPresenter {
             }
         }
         rebuildPanels(on: screens)
+
+        let revealState = presentation?.revealState
+        DispatchQueue.main.async {
+            revealState?.isRevealed = true
+        }
     }
 
     func dismiss() {
+        if let presentation, !panels.isEmpty {
+            let fadingPanels = panels
+            fadingPanels.forEach { $0.ignoresMouseEvents = true }
+            panels.removeAll()
+            presentation.revealState.isRevealed = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + BreakTransitionTiming.dismissDuration) {
+                fadingPanels.forEach { $0.orderOut(nil) }
+            }
+        }
         dismissPanels()
         restorePreviousAppFocus()
     }
@@ -140,22 +160,33 @@ final class BreakPresenter {
             panel.onEscape = presentation.onSkip
             if primaryPanel == nil && screen == primaryScreen {
                 primaryPanel = panel
-                panel.contentViewController = NSHostingController(rootView: BreakView(
-                    endsAt: presentation.endsAt,
-                    configuration: presentation.configuration,
-                    isPreview: presentation.isPreview,
-                    onSnooze: presentation.onSnooze,
-                    onSkip: presentation.onSkip,
-                    onLockScreen: presentation.onLockScreen,
-                    onOpenSettings: presentation.onOpenSettings
-                ).environment(\.locale, presentation.configuration.appLanguage.locale))
+                panel.contentViewController = NSHostingController(rootView: BreakTransitionContainer(
+                    revealState: presentation.revealState
+                ) {
+                    BreakView(
+                        endsAt: presentation.endsAt,
+                        configuration: presentation.configuration,
+                        isPreview: presentation.isPreview,
+                        onSnooze: presentation.onSnooze,
+                        onSkip: presentation.onSkip,
+                        onLockScreen: presentation.onLockScreen,
+                        onOpenSettings: presentation.onOpenSettings
+                    )
+                }.environment(\.locale, presentation.configuration.appLanguage.locale))
             } else {
-                panel.contentViewController = NSHostingController(rootView: BreakBackgroundView(
-                    background: presentation.configuration.breakBackground,
-                    customWallpaperPath: presentation.configuration.customWallpaperPath
-                ).ignoresSafeArea())
+                panel.contentViewController = NSHostingController(rootView: BreakTransitionContainer(
+                    revealState: presentation.revealState
+                ) {
+                    BreakBackgroundView(
+                        background: presentation.configuration.breakBackground,
+                        customWallpaperPath: presentation.configuration.customWallpaperPath
+                    )
+                })
             }
-            panel.backgroundColor = .black
+            // Transparent so the desktop shows through while the blur fades in.
+            panel.isOpaque = false
+            panel.hasShadow = false
+            panel.backgroundColor = .clear
             panel.level = .screenSaver
             panel.collectionBehavior = [.canJoinAllSpaces, .canJoinAllApplications]
             panel.hidesOnDeactivate = false
