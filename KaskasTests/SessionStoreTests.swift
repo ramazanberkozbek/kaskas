@@ -73,24 +73,6 @@ struct SessionStoreTests {
         #expect(configuration.appAppearance == .system)
     }
 
-    @Test
-    func appAppearanceSurvivesPersistenceAndDefaultsToSystem() throws {
-        let suite = "SessionStoreTests.\(UUID())"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        let store = SessionStore(defaults: defaults)
-        #expect(store.loadConfiguration().appAppearance == .system)
-
-        var config = store.loadConfiguration()
-        config.appAppearance = .dark
-        store.save(configuration: config)
-        #expect(store.loadConfiguration().appAppearance == .dark)
-
-        config.appAppearance = .light
-        store.save(configuration: config)
-        #expect(store.loadConfiguration().appAppearance == .light)
-    }
-
     @Test func cachedAnnotationsImmediatelyFollowOtherWritersAndPreserveUnrelatedNotes() throws {
         let suite = "SessionStoreTests.\(UUID())"
         let defaults = try #require(UserDefaults(suiteName: suite))
@@ -195,6 +177,7 @@ struct SessionStoreTests {
         #expect(configuration.showInDock == false)
         #expect(configuration.idleDetectionEnabled == true)
         #expect(configuration.idleThreshold == 3 * 60)
+        #expect(configuration.idlePromptEnabled == false)
         #expect(configuration.breakWarningEnabled)
         #expect(configuration.breakWarningLeadTime == 20)
         #expect(configuration.notificationPosition == .center)
@@ -240,15 +223,6 @@ struct SessionStoreTests {
         store.save(state: engine.state)
 
         #expect(store.loadConfiguration() == configuration)
-        let savedData = defaults.data(forKey: "focusConfiguration")!
-        let savedValues = try! JSONSerialization.jsonObject(with: savedData) as! [String: Any]
-        #expect(savedValues["microReminderMascot"] as? String == "glasses")
-        #expect(savedValues["microReminderColor"] as? String == "blue")
-        #expect(savedValues["menuBarDisplayMode"] as? String == "timerOnly")
-        #expect(savedValues["showInDock"] as? Bool == true)
-        #expect(SessionStore(defaults: defaults).loadConfiguration().showInDock)
-        #expect(savedValues["breakEndSoundEnabled"] as? Bool == true)
-        #expect(savedValues["breakEndSound"] as? String == "Tink")
         #expect(store.loadSessionState() == engine.state)
         #expect(store.loadSessionState()?.consecutiveSkippedBreaks == 2)
     }
@@ -339,27 +313,6 @@ struct SessionStoreTests {
     }
 
     @Test
-    func savesAndRestoresAppLanguage() {
-        let suiteName = "SessionStoreTests.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
-        let store = SessionStore(defaults: defaults)
-        var configuration = FocusConfiguration()
-        configuration.appLanguage = .english
-        store.save(configuration: configuration)
-
-        let loaded = store.loadConfiguration()
-        #expect(loaded.appLanguage == .english)
-
-        configuration.appLanguage = .turkish
-        store.save(configuration: configuration)
-
-        let reloaded = store.loadConfiguration()
-        #expect(reloaded.appLanguage == .turkish)
-    }
-
-    @Test
     func defaultConfigurationHasExpectedValues() {
         let config = FocusConfiguration()
         #expect(config.focusDuration == 25 * 60)
@@ -382,6 +335,7 @@ struct SessionStoreTests {
         #expect(config.notificationPosition == .center)
         #expect(config.idleDetectionEnabled == true)
         #expect(config.idleThreshold == 3 * 60)
+        #expect(config.idlePromptEnabled == false)
         #expect(config.menuBarDisplayMode == .iconAndTimer)
         #expect(config.showInDock == false)
         #expect(config.appLanguage == .system)

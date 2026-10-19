@@ -292,6 +292,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var videoExcludedBundleIDs: [String]
     var idleDetectionEnabled: Bool
     var idleThreshold: TimeInterval
+    var idlePromptEnabled: Bool
     var menuBarDisplayMode: MenuBarDisplayMode
     var showInDock: Bool
     var breakWarningEnabled: Bool
@@ -322,11 +323,11 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         microReminderColor: MicroReminderColor = .white,
         customWallpaperPath: String? = nil,
         pauseDuringMeetings: Bool = true,
-        meetingPauseIndicatorEnabled: Bool = true,
+        meetingPauseIndicatorEnabled: Bool = false,
         pauseWhileTyping: Bool = true,
-        typingPauseIndicatorEnabled: Bool = true,
-        pauseDuringVideo: Bool = false,
-        videoPauseIndicatorEnabled: Bool = true,
+        typingPauseIndicatorEnabled: Bool = false,
+        pauseDuringVideo: Bool = true,
+        videoPauseIndicatorEnabled: Bool = false,
         meetingCameraDetectionEnabled: Bool = false,
         meetingVirtualMicrophonesEnabled: Bool = false,
         meetingExcludedDeviceUIDs: [String] = [],
@@ -334,6 +335,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         videoExcludedBundleIDs: [String] = ["com.spotify.client", "com.apple.Music", "com.apple.FinalCut", "com.blackmagic-design.DaVinciResolve", "com.endel.endel"],
         idleDetectionEnabled: Bool = true,
         idleThreshold: TimeInterval = 3 * 60,
+        idlePromptEnabled: Bool = false,
         menuBarDisplayMode: MenuBarDisplayMode = .iconAndTimer,
         showInDock: Bool = false,
         breakWarningEnabled: Bool = true,
@@ -375,6 +377,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.videoExcludedBundleIDs = videoExcludedBundleIDs
         self.idleDetectionEnabled = idleDetectionEnabled
         self.idleThreshold = max(60, idleThreshold)
+        self.idlePromptEnabled = idlePromptEnabled
         self.menuBarDisplayMode = menuBarDisplayMode
         self.showInDock = showInDock
         self.breakWarningEnabled = breakWarningEnabled
@@ -418,6 +421,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case videoExcludedBundleIDs
         case idleDetectionEnabled
         case idleThreshold
+        case idlePromptEnabled
         case menuBarDisplayMode
         case showInDock
         case breakWarningEnabled
@@ -477,6 +481,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             videoExcludedBundleIDs: value(.videoExcludedBundleIDs, fallback: defaults.videoExcludedBundleIDs),
             idleDetectionEnabled: value(.idleDetectionEnabled, fallback: defaults.idleDetectionEnabled),
             idleThreshold: value(.idleThreshold, fallback: defaults.idleThreshold),
+            idlePromptEnabled: value(.idlePromptEnabled, fallback: defaults.idlePromptEnabled),
             menuBarDisplayMode: value(.menuBarDisplayMode, fallback: defaults.menuBarDisplayMode),
             showInDock: value(.showInDock, fallback: defaults.showInDock),
             breakWarningEnabled: value(.breakWarningEnabled, fallback: defaults.breakWarningEnabled),

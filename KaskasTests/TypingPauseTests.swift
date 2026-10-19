@@ -132,7 +132,7 @@ struct TypingPauseTests {
         #expect(try JSONDecoder().decode(FocusConfiguration.self, from: data) == config)
         let old = try JSONDecoder().decode(FocusConfiguration.self, from: Data("{}".utf8))
         #expect(old.pauseWhileTyping)
-        #expect(old.typingPauseIndicatorEnabled)
+        #expect(!old.typingPauseIndicatorEnabled)
     }
 
     @MainActor @Test func quietIntervalAndInvalidSamples() {

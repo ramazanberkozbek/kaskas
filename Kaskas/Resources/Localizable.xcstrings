@@ -4995,13 +4995,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pause the focus timer when you leave your Mac and offer to log that time as a break upon return."
+            "value" : "Pause the focus timer when you leave your Mac."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klavye veya fare kullanılmadığında çalışma sayacını durdur ve tekrar kullandığınızda bu süreyi mola olarak kaydetmeyi öner."
+            "value" : "Klavye veya fare kullanılmadığında çalışma sayacını duraklat."
           }
         }
       }
@@ -5019,6 +5019,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hareketsizliği algıla"
+          }
+        }
+      }
+    },
+    "settings.idle.prompt.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest logging short breaks"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa molaları kaydetmeyi öner"
+          }
+        }
+      }
+    },
+    "settings.idle.prompt.previewCaption" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prompt to log short inactive periods under 5 minutes as a break upon return"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 dakikadan kısa inaktivitelerden sonra gösterilen mola önerisi"
           }
         }
       }

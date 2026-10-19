@@ -248,8 +248,13 @@ extension SessionEngine {
                     effects.dismiss(.dismissIdleBreakReminder)
                     effects.persist(kind: currentActivityKind(at: returnedAt))
                     effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
-                } else {
+                } else if activeConfiguration.idlePromptEnabled {
                     effects.present(.showIdleBreakPrompt(duration: awayDuration))
+                } else {
+                    resume(at: returnedAt)
+                    effects.dismiss(.dismissIdleBreakReminder)
+                    effects.persist(kind: .studying)
+                    effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
                 }
             }
 
@@ -716,16 +721,6 @@ fileprivate extension SessionEngine {
         guard case .suspended(let suspension) = status,
               case .focus(let remaining, _, _, _) = suspension.frozen else { return 0 }
         return max(0, Self.meetingResumeDelay - remaining)
-    }
-
-    mutating func beginMeetingPause(at now: Date) {
-        guard case .focusing = status else { return }
-        suspend(reason: .meeting, at: now)
-    }
-
-    mutating func endMeetingPause(at now: Date) {
-        guard case .suspended(let suspension) = status, suspension.reason == .meeting else { return }
-        resume(at: now, grace: protectionResumeGrace)
     }
 
     mutating func beginManualPause(at now: Date) {

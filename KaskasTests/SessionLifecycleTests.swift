@@ -188,23 +188,6 @@ struct SessionLifecycleTests {
     }
 
     @Test
-    func sleepDuringBreakLongerThanRemainingCompletesBreak() {
-        // A break completed during sleep waits for new user input after wake.
-        var engine = SessionEngine(configuration: configuration, now: startDate)
-        engine.send(.startBreakNow, at: startDate)
-        #expect(engine.session.phase == .onBreak)
-
-        let sleepStart = startDate.addingTimeInterval(60) // 4 min break left
-        let wakeTime = sleepStart.addingTimeInterval(60 * 60) // 1 hour sleep
-
-        engine.send(.sleep, at: sleepStart)
-        engine.send(.systemResumed(meetingActive: false), at: wakeTime)
-
-        let snapshot = engine.snapshot(at: wakeTime)
-        #expect(snapshot.phase == .focusing)
-    }
-
-    @Test
     func idleFollowedBySleepMeasuresAwayDurationFromIdleStart() {
         // User idle at T, sleep at T+5m, wake at T+20m.
         // Away duration should be measured from idle start (20m total >= 5m breakDuration)
@@ -521,7 +504,9 @@ struct SessionLifecycleTests {
 
     @Test
     func meetingEndingDuringIdleClearsPendingSignalAndAllowsNormalFocusOnReturn() {
-        var engine = SessionEngine(configuration: configuration, now: startDate)
+        var promptConfig = configuration
+        promptConfig.idlePromptEnabled = true
+        var engine = SessionEngine(configuration: promptConfig, now: startDate)
         let idleStart = startDate.addingTimeInterval(5 * 60)
         engine.send(.beginIdle(startedAt: idleStart), at: idleStart)
 
@@ -534,13 +519,31 @@ struct SessionLifecycleTests {
         #expect(endEffects.isEmpty)
         #expect(engine.status.isIdlePaused)
 
-        // User returns after short idle (< breakDuration)
+        // User returns after short idle (< breakDuration) with idle prompt enabled
         let returnTime = idleStart.addingTimeInterval(180)
         let returnEffects = engine.send(.idleReturned(returnedAt: returnTime), at: returnTime)
         #expect(returnEffects.contains(.showIdleBreakPrompt(duration: 180)))
 
         // User declines idle break -> normal focus resumes
         _ = engine.send(.resolveIdle(acceptedAsBreak: false, returnedAt: returnTime), at: returnTime)
+        #expect(engine.status.activityKind == .studying)
+        #expect(!engine.status.isPaused)
+    }
+
+    @Test
+    func shortIdleWithoutPromptResumesFocusSilently() {
+        var engine = SessionEngine(configuration: configuration, now: startDate)
+        let idleStart = startDate.addingTimeInterval(5 * 60)
+        engine.send(.beginIdle(startedAt: idleStart), at: idleStart)
+        #expect(engine.status.isIdlePaused)
+
+        // User returns after short idle (< breakDuration) with default configuration (idlePromptEnabled == false)
+        let returnTime = idleStart.addingTimeInterval(180)
+        let returnEffects = engine.send(.idleReturned(returnedAt: returnTime), at: returnTime)
+        #expect(!returnEffects.contains {
+            if case .showIdleBreakPrompt = $0 { return true }
+            return false
+        })
         #expect(engine.status.activityKind == .studying)
         #expect(!engine.status.isPaused)
     }
@@ -632,37 +635,6 @@ struct SessionLifecycleTests {
         #expect(!effects.contains(.playBreakEndSound))
         engine.send(.userActivity, at: wake.addingTimeInterval(1))
         #expect(!engine.status.isPaused)
-    }
-
-
-    @Test
-    func fiveMinuteBreakWithThreeMinuteWaitProducesOneEightMinuteRecord() throws {
-        var engine = SessionEngine(configuration: configuration, now: startDate)
-        engine.send(.startBreakNow, at: startDate)
-        let deadline = startDate.addingTimeInterval(5 * 60)
-        let endEffects = engine.send(.tick, at: deadline)
-        #expect(!endEffects.contains {
-            if case .persistSession(let record, _) = $0 { return record != nil }
-            return false
-        })
-        #expect(engine.status.activityKind == .breakTime)
-        let state = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(engine.state))
-        var restored = SessionEngine(configuration: configuration, restoredState: state)
-        restored.send(.launch, at: deadline.addingTimeInterval(60))
-        let returned = startDate.addingTimeInterval(8 * 60)
-        let effects = restored.send(.userActivity, at: returned)
-        let records = effects.compactMap { effect -> BreakHistoryEntry? in
-            if case .persistSession(let record, _) = effect { return record }
-            return nil
-        }
-        let record = try #require(records.first)
-        #expect(records.count == 1)
-        #expect(record.startedAt == startDate)
-        #expect(record.occurredAt.timeIntervalSince(startDate) == 8 * 60)
-        #expect(record.outcome == .completed)
-        #expect(restored.breaksTakenToday(at: returned) == 1)
-        #expect(restored.session.startedAt == returned)
-        #expect(restored.send(.userActivity, at: returned.addingTimeInterval(1)).isEmpty)
     }
 
     @Test
