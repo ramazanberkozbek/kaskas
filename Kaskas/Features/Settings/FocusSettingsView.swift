@@ -462,14 +462,13 @@ struct BreakMiniPreviewCard: View {
 
             // Preview content
             VStack(spacing: 0) {
-                // Top Bar: "Live preview", Date, Fullscreen Button
-                ZStack {
-                    Text(Date.now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(configuration.appLanguage.locale))
-                        .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .lineLimit(1)
+                // Top Bar: "Live preview", Clock & Date, Fullscreen Button
+                ZStack(alignment: .top) {
+                    TimelineView(.everyMinute) { context in
+                        miniClockHeader(now: context.date)
+                    }
 
-                    HStack(alignment: .center) {
+                    HStack(alignment: .top) {
                         Text("settings.breakAppearance.livePreview")
                             .font(.system(size: 10, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.92))
@@ -615,6 +614,24 @@ struct BreakMiniPreviewCard: View {
                 .stroke(.white.opacity(0.14), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+    }
+
+    private func miniClockHeader(now: Date) -> some View {
+        let locale = configuration.appLanguage.locale
+        return VStack(spacing: 2) {
+            Text(now, format: .dateTime.hour().minute().locale(locale))
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+
+            Text(now, format: .dateTime.weekday(.wide).day().month(.abbreviated).locale(locale))
+                .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+                .tracking(0.4)
+                .lineLimit(1)
+        }
+        .shadow(color: .black.opacity(0.3), radius: 4, y: 1)
+        .accessibilityElement(children: .combine)
     }
 
     private func miniPill(title: LocalizedStringKey, icon: String) -> some View {
