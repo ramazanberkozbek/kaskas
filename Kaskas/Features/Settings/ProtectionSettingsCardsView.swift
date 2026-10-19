@@ -76,161 +76,27 @@ private struct ProtectionTriggerRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            notificationButton
-            Rectangle()
-                .fill(.primary.opacity(0.10))
-                .frame(width: 1, height: 20)
-                .padding(.horizontal, 2)
+            NotificationIndicatorToggleButton(
+                isOn: $indicatorEnabled,
+                isEnabled: isEnabled,
+                accessibilityLabelKey: "settings.protection.cursorEffect",
+                showsPreview: $showsPreview
+            )
+            .settingsHoverPreview(isPresented: showsPreview, size: CGSize(width: 284, height: 228)) {
+                SettingsPreviewContainer(captionKey: "settings.protection.cursorEffect") {
+                    ProtectionCursorPreview(indicatorEnabled: indicatorEnabled, typingPreview: typingPreview)
+                        .frame(width: 260)
+                }
+            }
+
+            SettingsVerticalDivider()
+
             Toggle(title, isOn: $isEnabled)
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .controlSize(.small)
         }
         .padding(.vertical, 16)
-    }
-
-    private var notificationButton: some View {
-        Button {
-            indicatorEnabled.toggle()
-            showsPreview = indicatorEnabled && isEnabled
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: indicatorEnabled ? "bell.fill" : "bell.slash")
-                    .font(.system(size: 10, weight: .semibold))
-                Text(indicatorEnabled ? "settings.protection.notification.on" : "settings.protection.notification.off")
-                    .font(.system(size: 11, weight: .medium))
-            }
-            .foregroundStyle(indicatorEnabled ? Color.accentColor : .secondary)
-            .frame(minWidth: 48, minHeight: 28)
-            .padding(.horizontal, 7)
-            .background(indicatorEnabled ? Color.accentColor.opacity(0.10) : Color.primary.opacity(0.025),
-                        in: RoundedRectangle(cornerRadius: 7))
-            .overlay {
-                RoundedRectangle(cornerRadius: 7)
-                    .strokeBorder(indicatorEnabled ? Color.accentColor.opacity(0.35) : Color.primary.opacity(0.12), lineWidth: 0.8)
-            }
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.45)
-        .accessibilityLabel("settings.protection.cursorEffect")
-        .accessibilityValue(Text(indicatorEnabled ? "settings.protection.notification.on" : "settings.protection.notification.off"))
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.18)) { showsPreview = hovering && isEnabled }
-        }
-        .onChange(of: isEnabled) { _, enabled in
-            if !enabled { showsPreview = false }
-        }
-        .background(ProtectionHoverPreview(isPresented: showsPreview, indicatorEnabled: indicatorEnabled, typingPreview: typingPreview))
-    }
-}
-
-// A native popover consumes its outside click before the underlying button can
-// act. This nonactivating, mouse-transparent child panel behaves like a tooltip:
-// hovering previews the effect, while the first click still toggles the setting.
-private struct ProtectionHoverPreview: NSViewRepresentable {
-    let isPresented: Bool
-    let indicatorEnabled: Bool
-    var typingPreview = false
-
-    func makeNSView(context: Context) -> ProtectionPreviewAnchor { ProtectionPreviewAnchor() }
-
-    func updateNSView(_ view: ProtectionPreviewAnchor, context: Context) {
-        view.update(isPresented: isPresented, indicatorEnabled: indicatorEnabled, typingPreview: typingPreview)
-    }
-
-    static func dismantleNSView(_ view: ProtectionPreviewAnchor, coordinator: ()) { view.dismiss() }
-}
-
-private final class ProtectionPreviewAnchor: NSView {
-    private var panel: NSPanel?
-    private var presented = false
-    private var indicatorEnabled = false
-    private var typingPreview = false
-
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
-
-    func update(isPresented: Bool, indicatorEnabled: Bool, typingPreview: Bool) {
-        self.typingPreview = typingPreview
-        presented = isPresented
-        self.indicatorEnabled = indicatorEnabled
-        guard isPresented else { dismiss(); return }
-        showIfNeeded()
-    }
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if window == nil { dismiss() } else if presented { showIfNeeded() }
-    }
-
-    override func layout() {
-        super.layout()
-        positionPanel()
-    }
-
-    private func showIfNeeded() {
-        guard let window else { return }
-        if let panel {
-            (panel.contentView as? NSHostingView<ProtectionNotificationPreview>)?.rootView =
-                ProtectionNotificationPreview(indicatorEnabled: indicatorEnabled, typingPreview: typingPreview)
-            positionPanel()
-            return
-        }
-        let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 284, height: 228),
-                            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        panel.contentView = NSHostingView(rootView: ProtectionNotificationPreview(indicatorEnabled: indicatorEnabled, typingPreview: typingPreview))
-        panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = true
-        panel.ignoresMouseEvents = true
-        panel.hidesOnDeactivate = true
-        panel.isReleasedWhenClosed = false
-        self.panel = panel
-        window.addChildWindow(panel, ordered: .above)
-        positionPanel()
-        panel.orderFront(nil)
-    }
-
-    private func positionPanel() {
-        guard let panel, let window, let screen = window.screen else { return }
-        let anchor = window.convertToScreen(convert(bounds, to: nil))
-        let area = screen.visibleFrame
-        let size = panel.frame.size
-        let x = min(max(anchor.maxX - size.width, area.minX), area.maxX - size.width)
-        let above = anchor.maxY + 8
-        let y = above + size.height <= area.maxY ? above : max(area.minY, anchor.minY - size.height - 8)
-        panel.setFrameOrigin(NSPoint(x: x, y: y))
-    }
-
-    func dismiss() {
-        guard let panel else { return }
-        panel.parent?.removeChildWindow(panel)
-        panel.orderOut(nil)
-        self.panel = nil
-    }
-}
-
-private struct ProtectionNotificationPreview: View {
-    let indicatorEnabled: Bool
-    var typingPreview = false
-    @State private var appeared = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ProtectionCursorPreview(indicatorEnabled: indicatorEnabled, typingPreview: typingPreview)
-                .frame(width: 260)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            Text("settings.protection.cursorEffect")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
-        }
-        .padding(12)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-        .opacity(appeared ? 1 : 0)
-        .offset(y: appeared ? 0 : 5)
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.18)) { appeared = true }
-        }
     }
 }
 
