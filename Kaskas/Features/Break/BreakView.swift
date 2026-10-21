@@ -46,7 +46,6 @@ struct BreakView: View {
 
                         Spacer()
 
-                        // Center Hero Content
                         VStack(spacing: 34) {
                             VStack(spacing: 12) {
                                 Text("break.title")
@@ -60,48 +59,29 @@ struct BreakView: View {
                                     .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
                             }
 
+                            let totalSeconds = Self.remainingSeconds(until: endsAt, now: context.date)
                             let formattedRemaining = Self.formattedRemaining(
                                 until: endsAt,
                                 now: context.date
                             )
 
-                            Text(formattedRemaining)
-                                .font(.system(size: 96, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .contentTransition(.numericText(countsDown: true))
-                                .animation(.snappy(duration: 0.45), value: formattedRemaining)
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
-                                .accessibilityLabel("break.remaining.label")
-                                .accessibilityValue(formattedRemaining)
+                            timerDisplay(
+                                totalSeconds: totalSeconds,
+                                formattedRemaining: formattedRemaining,
+                                fontSize: 96,
+                                tamgaHeight: 150,
+                                shadowRadius: 12,
+                                shadowY: 4
+                            )
                         }
                         .multilineTextAlignment(.center)
                         .breakReveal(delay: 0.55)
 
                         Spacer()
 
-                        // Action Buttons at bottom: Snooze, Skip, Lock Screen
-                        HStack(spacing: 16) {
-                            BreakActionButton(
-                                title: "break.snooze",
-                                icon: "clock",
-                                action: onSnooze
-                            )
-
-                            BreakActionButton(
-                                title: "break.skip",
-                                icon: "forward.fill",
-                                action: onSkip
-                            )
-
-                            BreakActionButton(
-                                title: "break.lockScreen",
-                                icon: "lock.fill",
-                                action: onLockScreen
-                            )
-                        }
-                        .padding(.bottom, 64)
-                        .breakReveal(delay: 0.7)
+                        actionButtons(spacing: 16)
+                            .padding(.bottom, 64)
+                            .breakReveal(delay: 0.7)
                     }
                     .padding(.horizontal, Theme.Spacing.extraLarge)
                 }
@@ -134,21 +114,19 @@ struct BreakView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing, spacing: 18) {
+                    let totalSeconds = Self.remainingSeconds(until: endsAt, now: now)
                     let remaining = Self.formattedRemaining(until: endsAt, now: now)
-                    Text(remaining)
-                        .font(.system(size: 88, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .contentTransition(.numericText(countsDown: true))
-                        .animation(.snappy(duration: 0.45), value: remaining)
-                        .foregroundStyle(.white)
-                        .accessibilityLabel("break.remaining.label")
-                        .accessibilityValue(remaining)
 
-                    HStack(spacing: 10) {
-                        BreakActionButton(title: "break.snooze", icon: "clock", action: onSnooze)
-                        BreakActionButton(title: "break.skip", icon: "forward.fill", action: onSkip)
-                        BreakActionButton(title: "break.lockScreen", icon: "lock.fill", action: onLockScreen)
-                    }
+                    timerDisplay(
+                        totalSeconds: totalSeconds,
+                        formattedRemaining: remaining,
+                        fontSize: 88,
+                        tamgaHeight: 125,
+                        shadowRadius: 0,
+                        shadowY: 0
+                    )
+
+                    actionButtons(spacing: 10)
                 }
                 .fixedSize(horizontal: true, vertical: false)
             }
@@ -173,7 +151,50 @@ struct BreakView: View {
         .padding(.horizontal, 48)
     }
 
-    /// Current time with the localized date beneath it (e.g., "14:32" / "Thursday, Sep 24").
+    @ViewBuilder
+    private func timerDisplay(
+        totalSeconds: Int,
+        formattedRemaining: String,
+        fontSize: CGFloat,
+        tamgaHeight: CGFloat,
+        shadowRadius: CGFloat,
+        shadowY: CGFloat
+    ) -> some View {
+        Group {
+            switch configuration.breakTimerStyle {
+            case .standard:
+                Text(formattedRemaining)
+                    .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(countsDown: true))
+                    .animation(.snappy(duration: 0.45), value: formattedRemaining)
+                    .foregroundStyle(.white)
+                    .shadow(color: shadowRadius > 0 ? .black.opacity(0.4) : .clear, radius: shadowRadius, y: shadowY)
+
+            case .tamga:
+                TamgaGlyphView(
+                    value: totalSeconds,
+                    strokeColor: .white,
+                    showSubdivisions: true,
+                    showGuides: true,
+                    glowRadius: 10
+                )
+                .frame(height: tamgaHeight)
+                .animation(.snappy(duration: 0.4), value: totalSeconds)
+            }
+        }
+        .accessibilityLabel("break.remaining.label")
+        .accessibilityValue(formattedRemaining)
+    }
+
+    private func actionButtons(spacing: CGFloat) -> some View {
+        HStack(spacing: spacing) {
+            BreakActionButton(title: "break.snooze", icon: "clock", action: onSnooze)
+            BreakActionButton(title: "break.skip", icon: "forward.fill", action: onSkip)
+            BreakActionButton(title: "break.lockScreen", icon: "lock.fill", action: onLockScreen)
+        }
+    }
+
     private func clockHeader(now: Date) -> some View {
         let locale = configuration.appLanguage.locale
         return VStack(spacing: 4) {
@@ -191,8 +212,12 @@ struct BreakView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private static func remainingSeconds(until endDate: Date, now: Date) -> Int {
+        max(0, Int(endDate.timeIntervalSince(now).rounded(.up)))
+    }
+
     private static func formattedRemaining(until endDate: Date, now: Date) -> String {
-        let totalSeconds = max(0, Int(endDate.timeIntervalSince(now).rounded(.up)))
+        let totalSeconds = remainingSeconds(until: endDate, now: now)
         return String(format: "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
     }
 }
@@ -248,7 +273,6 @@ struct BreakBackgroundView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Base background image or gradient
                 imageLayer
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()

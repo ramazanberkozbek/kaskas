@@ -43,6 +43,18 @@ enum BreakLayout: String, Codable, CaseIterable, Identifiable, Sendable {
     var id: Self { self }
 }
 
+enum BreakTimerStyle: String, Codable, CaseIterable, Identifiable, Sendable {
+    case standard
+    case tamga
+
+    var id: Self { self }
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = Self(rawValue: raw) ?? .standard
+    }
+}
+
 enum BreakSound: String, Codable, CaseIterable, Identifiable, Sendable {
     case glass = "Glass"
     case ping = "Ping"
@@ -272,6 +284,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
     var snoozeDuration: TimeInterval
     var breakBackground: BreakBackground
     var breakLayout: BreakLayout
+    var breakTimerStyle: BreakTimerStyle
     var breakSoundEnabled: Bool
     var breakSound: BreakSound
     var breakEndSoundEnabled: Bool
@@ -315,6 +328,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         snoozeDuration: TimeInterval = 5 * 60,
         breakBackground: BreakBackground = .snowPeaks,
         breakLayout: BreakLayout = .gentleBar,
+        breakTimerStyle: BreakTimerStyle = .standard,
         breakSoundEnabled: Bool = true,
         breakSound: BreakSound = .glass,
         breakEndSoundEnabled: Bool = true,
@@ -357,6 +371,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         self.snoozeDuration = max(1, snoozeDuration)
         self.breakBackground = breakBackground
         self.breakLayout = breakLayout
+        self.breakTimerStyle = breakTimerStyle
         self.breakSoundEnabled = breakSoundEnabled
         self.breakSound = breakSound
         self.breakEndSoundEnabled = breakEndSoundEnabled
@@ -401,6 +416,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         case snoozeDuration
         case breakBackground
         case breakLayout
+        case breakTimerStyle
         case breakSoundEnabled
         case breakSound
         case breakEndSoundEnabled
@@ -461,6 +477,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
             snoozeDuration: value(.snoozeDuration, fallback: defaults.snoozeDuration),
             breakBackground: value(.breakBackground, fallback: defaults.breakBackground),
             breakLayout: value(.breakLayout, fallback: defaults.breakLayout),
+            breakTimerStyle: value(.breakTimerStyle, fallback: defaults.breakTimerStyle),
             breakSoundEnabled: value(.breakSoundEnabled, fallback: defaults.breakSoundEnabled),
             breakSound: value(.breakSound, fallback: defaults.breakSound),
             breakEndSoundEnabled: value(.breakEndSoundEnabled, fallback: defaults.breakEndSoundEnabled),
