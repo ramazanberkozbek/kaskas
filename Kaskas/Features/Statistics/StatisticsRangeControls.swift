@@ -3,14 +3,14 @@ import SwiftUI
 struct StatisticsRangeControls: View {
     @Binding var period: StatisticsPeriod
     @Binding var endDate: Date
-    let now: Date
+    let today: Date
 
     var body: some View {
         HStack(spacing: 10) {
             StatisticsDateNavigator(
                 endDate: $endDate,
                 period: period,
-                now: now
+                today: today
             )
             Spacer(minLength: 8)
             Picker("stats.period", selection: $period) {
@@ -28,13 +28,12 @@ struct StatisticsRangeControls: View {
 private struct StatisticsDateNavigator: View {
     @Binding var endDate: Date
     let period: StatisticsPeriod
-    let now: Date
+    let today: Date
     @Environment(\.locale) private var locale
     @State private var showingCalendar = false
 
     var body: some View {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: now)
         ControlGroup {
             Button {
                 endDate = period.shiftedDate(endDate, by: -1, calendar: calendar)

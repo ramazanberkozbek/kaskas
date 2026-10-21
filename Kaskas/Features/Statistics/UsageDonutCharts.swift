@@ -47,7 +47,7 @@ struct UsageDonutCharts: View {
     }
 }
 
-private struct UsageDonutSlice: Identifiable {
+private struct UsageDonutSlice: Identifiable, Equatable {
     let id: String
     let name: String
     let duration: TimeInterval
@@ -153,12 +153,15 @@ private struct UsageDonutCard: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(StatisticsStyle.panelFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.primary.opacity(0.08)))
-        .onChange(of: slices.map { "\($0.id):\($0.duration)" }) { _, _ in
+        .onChange(of: slices) { oldSlices, newSlices in
             selectedAngle = nil
             hoveredID = nil
-            page = min(page, pageCount - 1)
+            if !oldSlices.elementsEqual(newSlices, by: { $0.id == $1.id }) {
+                page = 0
+            } else {
+                page = min(page, pageCount - 1)
+            }
         }
-        .onChange(of: slices.map(\.id)) { _, _ in page = 0 }
         .onChange(of: page) { _, _ in
             selectedAngle = nil
             hoveredID = nil

@@ -70,6 +70,8 @@ struct ActivityChartSnapshotTests {
         let actual = try await StatisticsRefreshSnapshot.make(intervals: intervals, usage: boundedUsage,
             window: window, categoryEnd: categoryEnd, year: 2026, calendar: calendar, period: .seven,
             excluded: anonymous, exclusions: exclusions)
+        #expect(actual.period == .seven)
+        #expect(actual.endDate == window.end)
         #expect(actual.categories == expected.categories)
         #expect(actual.categories.total == (excludesApp ? 55 : 65) * 60)
         #expect(actual.chart.year.activityByDate == expected.chart.year.activityByDate)

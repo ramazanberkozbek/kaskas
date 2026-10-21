@@ -12,6 +12,8 @@ struct YearActivityHeatmap: View {
     private let cellSpacing: CGFloat = 3
 
     var body: some View {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
         let weeks = data.weeks
         let activityByDate = data.activityByDate
         VStack(alignment: .leading, spacing: 8) {
@@ -35,12 +37,30 @@ struct YearActivityHeatmap: View {
                     weekdayLabels
                     ScrollView(.horizontal, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 6) {
-                            monthLabels(for: weeks)
+                            monthLabels(for: weeks, calendar: calendar)
                             HStack(alignment: .top, spacing: cellSpacing) {
                                 ForEach(weeks.indices, id: \.self) { index in
                                     VStack(spacing: cellSpacing) {
                                         ForEach(weeks[index], id: \.self) { date in
-                                            dayCell(for: date, activityByDate: activityByDate)
+                                            let isInYear = calendar.component(.year, from: date) == selectedYear
+                                            let duration = activityByDate[calendar.startOfDay(for: date)] ?? 0
+                                            HeatmapDayCell(
+                                                date: date,
+                                                isInYear: isInYear,
+                                                isToday: calendar.isDate(date, inSameDayAs: today),
+                                                duration: duration,
+                                                isHovered: hoveredDate == date,
+                                                scheme: scheme,
+                                                cellSize: cellSize,
+                                                onHover: { isHovered in
+                                                    if isHovered {
+                                                        hoveredDate = date
+                                                    } else if hoveredDate == date {
+                                                        hoveredDate = nil
+                                                    }
+                                                }
+                                            )
+                                            .equatable()
                                         }
                                     }
                                 }
@@ -55,7 +75,7 @@ struct YearActivityHeatmap: View {
                     Text("stats.year.less")
                     ForEach(0..<5) { level in
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(color(for: level))
+                            .fill(Self.color(for: level, scheme: scheme))
                             .frame(width: cellSize + 2, height: cellSize + 2)
                     }
                     Text("stats.year.more")
@@ -69,12 +89,12 @@ struct YearActivityHeatmap: View {
         }
     }
 
-    private func monthLabels(for weeks: [[Date]]) -> some View {
+    private func monthLabels(for weeks: [[Date]], calendar: Calendar) -> some View {
         HStack(spacing: cellSpacing) {
             ForEach(weeks.indices, id: \.self) { index in
                 let firstOfMonth = weeks[index].first {
-                    Calendar.current.component(.year, from: $0) == selectedYear &&
-                    Calendar.current.component(.day, from: $0) == 1
+                    calendar.component(.year, from: $0) == selectedYear &&
+                    calendar.component(.day, from: $0) == 1
                 }
                 Color.clear
                     .frame(width: cellSize, height: 12)
@@ -107,44 +127,68 @@ struct YearActivityHeatmap: View {
         }
     }
 
-    private func dayCell(for date: Date, activityByDate: [Date: TimeInterval]) -> some View {
-        let calendar = Calendar.current
-        let isInYear = calendar.component(.year, from: date) == selectedYear
-        let duration = activityByDate[calendar.startOfDay(for: date)] ?? 0
+    static func color(for level: Int, scheme: ColorScheme) -> Color {
+        switch level {
+        case 0: .primary.opacity(scheme == .dark ? 0.06 : 0.07)
+        case 1: StatisticsStyle.studying.opacity(0.24)
+        case 2: StatisticsStyle.studying.opacity(0.45)
+        case 3: StatisticsStyle.studying.opacity(0.72)
+        default: StatisticsStyle.studying
+        }
+    }
+}
+
+private struct HeatmapDayCell: View, Equatable {
+    let date: Date
+    let isInYear: Bool
+    let isToday: Bool
+    let duration: TimeInterval
+    let isHovered: Bool
+    let scheme: ColorScheme
+    let cellSize: CGFloat
+    let onHover: (Bool) -> Void
+    @Environment(\.locale) private var locale
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.date == rhs.date &&
+        lhs.isInYear == rhs.isInYear &&
+        lhs.isToday == rhs.isToday &&
+        lhs.duration == rhs.duration &&
+        lhs.isHovered == rhs.isHovered &&
+        lhs.scheme == rhs.scheme &&
+        lhs.cellSize == rhs.cellSize
+    }
+
+    var body: some View {
         let level = intensity(for: duration)
         let minutes = Int((duration / 60).rounded())
-        let focusText = focusDurationText(for: minutes)
-        return RoundedRectangle(cornerRadius: 2)
-            .fill(isInYear ? color(for: level) : .clear)
+        RoundedRectangle(cornerRadius: 2)
+            .fill(isInYear ? YearActivityHeatmap.color(for: level, scheme: scheme) : .clear)
             .frame(width: cellSize, height: cellSize)
             .contentShape(Rectangle())
             .overlay {
-                if calendar.isDateInToday(date) {
+                if isToday {
                     RoundedRectangle(cornerRadius: 2)
                         .strokeBorder(StatisticsStyle.kaskasPaused, lineWidth: 1)
                 }
-                if isInYear && minutes > 0 && hoveredDate == date {
+                if isInYear && minutes > 0 && isHovered {
                     RoundedRectangle(cornerRadius: 2)
                         .strokeBorder(.primary, lineWidth: 1.5)
                 }
             }
-            .onHover { isHovered in
+            .onHover { hovered in
                 guard isInYear && minutes > 0 else { return }
-                if isHovered {
-                    hoveredDate = date
-                } else if hoveredDate == date {
-                    hoveredDate = nil
-                }
+                onHover(hovered)
             }
             .popover(isPresented: Binding(
-                get: { isInYear && minutes > 0 && hoveredDate == date },
-                set: { if !$0 && hoveredDate == date { hoveredDate = nil } }
+                get: { isInYear && minutes > 0 && isHovered },
+                set: { if !$0 { onHover(false) } }
             ), arrowEdge: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(date.formatted(.dateTime.month(.abbreviated).day().locale(locale)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(focusText)
+                    Text(focusDurationText(for: minutes))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(StatisticsStyle.studying)
                 }
@@ -152,7 +196,7 @@ struct YearActivityHeatmap: View {
                 .environment(\.locale, locale)
             }
             .accessibilityLabel(date.formatted(.dateTime.month(.wide).day().year().locale(locale)))
-            .accessibilityValue(focusText)
+            .accessibilityValue(focusDurationText(for: minutes))
     }
 
     private func focusDurationText(for totalMinutes: Int) -> String {
@@ -174,16 +218,6 @@ struct YearActivityHeatmap: View {
         case ..<5400: 2
         case ..<10800: 3
         default: 4
-        }
-    }
-
-    private func color(for level: Int) -> Color {
-        switch level {
-        case 0: .primary.opacity(scheme == .dark ? 0.06 : 0.07)
-        case 1: StatisticsStyle.studying.opacity(0.24)
-        case 2: StatisticsStyle.studying.opacity(0.45)
-        case 3: StatisticsStyle.studying.opacity(0.72)
-        default: StatisticsStyle.studying
         }
     }
 }
