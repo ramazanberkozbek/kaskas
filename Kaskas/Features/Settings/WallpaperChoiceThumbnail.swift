@@ -21,8 +21,8 @@ struct WallpaperChoiceThumbnail<Content: View>: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .overlay {
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                isSelected ? Color.accentColor : .white.opacity(0.15),
+                            .strokeBorder(
+                                isSelected ? Color.accentColor : Color.white.opacity(0.15),
                                 lineWidth: isSelected ? 2.5 : 1
                             )
                     }
@@ -36,10 +36,12 @@ struct WallpaperChoiceThumbnail<Content: View>: View {
                     }
 
                 Text(title)
-                    .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(isSelected ? .primary : .secondary)
                     .lineLimit(1)
+                    .frame(width: 96)
             }
+            .frame(width: 96)
         }
         .buttonStyle(.plain)
     }
@@ -75,8 +77,8 @@ struct CustomWallpaperChoiceThumbnail: View {
                             .foregroundStyle(isSelected ? Color.accentColor : .white.opacity(0.25))
                     } else {
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                isSelected ? Color.accentColor : .white.opacity(0.15),
+                            .strokeBorder(
+                                isSelected ? Color.accentColor : Color.white.opacity(0.15),
                                 lineWidth: isSelected ? 2.5 : 1
                             )
                     }
@@ -94,10 +96,12 @@ struct CustomWallpaperChoiceThumbnail: View {
                 }
 
                 Text(customPath == nil ? "settings.breakAppearance.upload" : "settings.breakAppearance.custom")
-                    .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(isSelected ? .primary : .secondary)
                     .lineLimit(1)
+                    .frame(width: 96)
             }
+            .frame(width: 96)
         }
         .buttonStyle(.plain)
     }
