@@ -10,19 +10,26 @@ final class DashboardViewState {
     var endDate: Date {
         didSet { if endDate != oldValue { snapshot = nil } }
     }
+    private(set) var today: Date
     private(set) var now: Date
     var snapshot: DashboardRefreshSnapshot?
 
     init(now: Date = Date(), calendar: Calendar = .current) {
         self.now = now
-        endDate = calendar.startOfDay(for: now)
+        let start = calendar.startOfDay(for: now)
+        self.today = start
+        endDate = start
     }
 
     func updateClock(to date: Date, calendar: Calendar = .current) {
-        let previousToday = calendar.startOfDay(for: now)
+        let previousToday = today
         now = date
+        let newToday = calendar.startOfDay(for: date)
+        if newToday != previousToday {
+            today = newToday
+        }
         if endDate == previousToday {
-            endDate = calendar.startOfDay(for: date)
+            endDate = newToday
         }
     }
 }

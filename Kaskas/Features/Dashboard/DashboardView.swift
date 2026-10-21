@@ -7,7 +7,6 @@ struct DashboardView: View {
     @Bindable var state: DashboardViewState
     @State private var selectedSession: DashboardCategorySnapshot.Session?
     @State private var showingCalendar = false
-    @State private var annotationsRevision = 0
     @State private var refreshTask: Task<Void, Never>?
 
     @Environment(\.colorScheme) private var colorScheme
@@ -15,7 +14,6 @@ struct DashboardView: View {
     private let clock = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     private var period: DashboardPeriod { state.period }
     private var endDate: Date { state.endDate }
-    private var now: Date { state.now }
     private var chartSnapshot: DashboardChartSnapshot { state.snapshot?.chart ?? .empty }
     private var window: (start: Date, end: Date) {
         let end = Calendar.current.startOfDay(for: endDate)
@@ -29,10 +27,7 @@ struct DashboardView: View {
     }
     private var sessions: [DashboardCategorySnapshot.Session] { categorySnapshot.sessions }
     private var visibleSessions: [DashboardCategorySnapshot.Session] {
-
-        _ = annotationsRevision
-        _ = controller.annotationsRevision
-        return sessions.filter { item in
+        sessions.filter { item in
             let session = item.value
             let annotation = controller.annotation(for: session)
             let hasAnnotation = !annotation.isEmpty
@@ -103,32 +98,18 @@ struct DashboardView: View {
                     rangeControls
                     if state.snapshot != nil {
                         if period == .today {
-                            DailyStudyChart(data: chartSnapshot.today, now: now)
+                            DashboardDailyTrendSection(
+                                data: chartSnapshot.today,
+                                state: state,
+                                total: days.last?.studying ?? 0,
+                                locale: controller.locale
+                            )
                         } else {
-                            StudyTrendChart(data: chartSnapshot.trend)
-                        }
-                        Divider()
-                        HStack(spacing: 18) {
-                            if period == .today {
-                                legend(
-                                    LocalizedStringKey(chartSnapshot.today.currentLabelKey(at: now)),
-                                    color: StatisticsStyle.studying
-                                )
-                                legend(
-                                    LocalizedStringKey(chartSnapshot.today.previousLabelKey(at: now)),
-                                    color: StatisticsStyle.average
-                                )
-                            } else {
-                                legend("stats.kind.studying", color: StatisticsStyle.studying)
-                                legend("stats.trend.average", color: StatisticsStyle.average)
-                            }
-                            Spacer(minLength: 0)
-                            Text(period == .today ? "dashboard.day.total" : "dashboard.week.total")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(StatisticsDuration.label(period == .today ? (days.last?.studying ?? 0) : weekTotal, locale: controller.locale))
-                                .font(.subheadline.weight(.semibold))
-                                .monospacedDigit()
+                            DashboardWeeklyTrendSection(
+                                data: chartSnapshot.trend,
+                                total: weekTotal,
+                                locale: controller.locale
+                            )
                         }
                     } else {
                         ProgressView()
@@ -201,17 +182,11 @@ struct DashboardView: View {
                 session: item.value,
                 controller: controller,
                 summary: item.summary,
-                onSave: {
-                    annotationsRevision += 1
-                    reload()
-                }
+                onSave: { reload() }
             )
             .environment(\.locale, controller.locale)
         }
-        .onChange(of: controller.annotationsRevision) { _, _ in
-            annotationsRevision = controller.annotationsRevision
-            reload()
-        }
+        .onChange(of: controller.annotationsRevision) { _, _ in reload() }
         .onAppear {
             state.updateClock(to: Date())
             reload()
@@ -220,22 +195,18 @@ struct DashboardView: View {
         .onChange(of: controller.historyRevision) { _, _ in reload() }
         .onChange(of: controller.categoryRegistry.revision) { _, _ in reload() }
         .onChange(of: controller.appUsage.exclusions.revision) { _, _ in reload() }
-        .onChange(of: endDate) { _, newDate in
-            let normalized = Calendar.current.startOfDay(for: newDate)
-            if endDate != normalized {
-                state.endDate = normalized
-            }
-            reload()
-        }
+        .onChange(of: endDate) { _, _ in reload() }
         .onReceive(clock) { date in
             state.updateClock(to: date)
-            reload()
+            if period == .today && isSelectedDayToday {
+                reload()
+            }
         }
     }
 
     private var rangeControls: some View {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: now)
+        let today = state.today
         return HStack(spacing: 10) {
             ControlGroup {
                 Button {
@@ -254,10 +225,18 @@ struct DashboardView: View {
                 }
                 .accessibilityLabel("stats.chooseDate")
                 .popover(isPresented: $showingCalendar) {
-                    DatePicker("stats.chooseDate", selection: $state.endDate, in: ...today, displayedComponents: .date)
-                        .datePickerStyle(.graphical)
-                        .padding()
-                        .environment(\.locale, controller.locale)
+                    DatePicker(
+                        "stats.chooseDate",
+                        selection: Binding(
+                            get: { endDate },
+                            set: { state.endDate = calendar.startOfDay(for: $0) }
+                        ),
+                        in: ...today,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .padding()
+                    .environment(\.locale, controller.locale)
                 }
 
                 Button {
@@ -325,13 +304,6 @@ struct DashboardView: View {
         }
     }
 
-    private func legend(_ title: LocalizedStringKey, color: Color) -> some View {
-        HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 13, height: 5)
-            Text(title).font(.caption).foregroundStyle(.secondary)
-        }
-    }
-
     private func sessionRow(_ item: DashboardCategorySnapshot.Session) -> some View {
         let session = item.value
         let annotation = controller.annotation(for: session)
@@ -386,7 +358,7 @@ struct DashboardView: View {
     private func reload() {
         refreshTask?.cancel()
         let date = endDate
-        let refreshNow = now
+        let refreshNow = state.now
         let calendar = Calendar.current
         let weekStart = window.start
         let selectedDay = calendar.startOfDay(for: date)
@@ -496,5 +468,75 @@ private extension View {
                     .strokeBorder(.primary.opacity(0.08))
                     .allowsHitTesting(false)
             }
+    }
+}
+
+private struct DashboardDailyTrendSection: View {
+    let data: DailyStudyChartData
+    let state: DashboardViewState
+    let total: TimeInterval
+    let locale: Locale
+
+    var body: some View {
+        let now = state.now
+        VStack(spacing: 14) {
+            DailyStudyChart(data: data, now: now)
+            Divider()
+            HStack(spacing: 18) {
+                legend(
+                    LocalizedStringKey(data.currentLabelKey(at: now)),
+                    color: StatisticsStyle.studying
+                )
+                legend(
+                    LocalizedStringKey(data.previousLabelKey(at: now)),
+                    color: StatisticsStyle.average
+                )
+                Spacer(minLength: 0)
+                Text("dashboard.day.total")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(StatisticsDuration.label(total, locale: locale))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+            }
+        }
+    }
+
+    private func legend(_ title: LocalizedStringKey, color: Color) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 13, height: 5)
+            Text(title).font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct DashboardWeeklyTrendSection: View {
+    let data: StudyTrendData
+    let total: TimeInterval
+    let locale: Locale
+
+    var body: some View {
+        VStack(spacing: 14) {
+            StudyTrendChart(data: data)
+            Divider()
+            HStack(spacing: 18) {
+                legend("stats.kind.studying", color: StatisticsStyle.studying)
+                legend("stats.trend.average", color: StatisticsStyle.average)
+                Spacer(minLength: 0)
+                Text("dashboard.week.total")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(StatisticsDuration.label(total, locale: locale))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+            }
+        }
+    }
+
+    private func legend(_ title: LocalizedStringKey, color: Color) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 13, height: 5)
+            Text(title).font(.caption).foregroundStyle(.secondary)
+        }
     }
 }

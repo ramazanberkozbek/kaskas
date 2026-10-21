@@ -9,9 +9,11 @@ struct DashboardViewStateTests {
         let calendar = calendar()
         let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 7, hour: 12)))
         let state = DashboardViewState(now: now, calendar: calendar)
+        #expect(state.today == calendar.startOfDay(for: now))
         state.snapshot = try await snapshot(on: state.endDate, calendar: calendar)
 
         state.updateClock(to: now.addingTimeInterval(60), calendar: calendar)
+        #expect(state.today == calendar.startOfDay(for: now))
         state.period = .week
         let cached = try #require(state.snapshot)
         #expect(cached.chart.days.reduce(0) { $0 + $1.studying } == 7200)
@@ -43,6 +45,7 @@ struct DashboardViewStateTests {
         state.updateClock(to: after, calendar: calendar)
 
         #expect(state.now == after)
+        #expect(state.today == calendar.startOfDay(for: after))
         #expect(state.period == .week)
         #expect(state.endDate == (historical ? selectedDate : calendar.startOfDay(for: after)))
         if historical {
