@@ -5,16 +5,14 @@ import Observation
 @MainActor
 @Observable
 final class DesktopWallpaperPreview {
-    static let shared = DesktopWallpaperPreview()
-    // Generated specifically for Kaskas with the built-in imagegen tool.
-    // No Apple image is bundled.
-    static let protection = DesktopWallpaperPreview(
+    static let shared = DesktopWallpaperPreview(
         wallpaperURL: Bundle.main.url(forResource: "ProtectionBackdrop", withExtension: "png")
     )
+    static let protection = shared
 
     private let wallpaperURL: URL?
 
-    init(wallpaperURL: URL? = URL(fileURLWithPath: "/System/Library/CoreServices/DefaultDesktop.heic")) {
+    init(wallpaperURL: URL? = Bundle.main.url(forResource: "ProtectionBackdrop", withExtension: "png")) {
         self.wallpaperURL = wallpaperURL
     }
 
