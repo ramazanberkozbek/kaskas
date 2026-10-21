@@ -37,7 +37,7 @@ struct SessionStoreTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let configuration = FocusConfiguration(
-            focusDuration: 3600, breakDuration: 600, breakBackground: .aurora,
+            focusDuration: 3600, breakDuration: 600, breakBackground: .cosmic,
             breakLayout: .horizon, breakSound: .ping, breakEndSound: .hero,
             microReminderColor: .rainbow, customWallpaperPath: "/persistent/photo.png",
             pauseDuringMeetings: false, idleDetectionEnabled: false,
@@ -162,7 +162,7 @@ struct SessionStoreTests {
 
         let configuration = SessionStore(defaults: defaults).loadConfiguration()
         #expect(configuration.focusDuration == 3600)
-        #expect(configuration.breakBackground == .aurora)
+        #expect(configuration.breakBackground == .emeraldAurora)
         #expect(configuration.breakLayout == .gentleBar)
         #expect(configuration.breakSoundEnabled == true)
         #expect(configuration.breakSound == .glass)
@@ -319,7 +319,7 @@ struct SessionStoreTests {
         #expect(config.breakDuration == 5 * 60)
         #expect(config.snoozeDuration == 5 * 60)
         #expect(config.longBreakEnabled == false)
-        #expect(config.breakBackground == .snowPeaks)
+        #expect(config.breakBackground == .emeraldAurora)
         #expect(config.breakLayout == .gentleBar)
         #expect(config.breakSoundEnabled == true)
         #expect(config.breakSound == .glass)

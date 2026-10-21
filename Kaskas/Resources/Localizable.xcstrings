@@ -4094,36 +4094,104 @@
         }
       }
     },
-    "settings.breakAppearance.aurora" : {
+    "settings.breakAppearance.goldenShore" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Northern Lights"
+            "value" : "Golden Shore"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kuzey Işıkları"
+            "value" : "Güneşli Sahil"
           }
         }
       }
     },
-    "settings.breakAppearance.calmGradient" : {
+    "settings.breakAppearance.alpineGlow" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Calm Gradient"
+            "value" : "Alpine Glow"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sakin renkler"
+            "value" : "Alp Çayırı"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.solarCorona" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solar Corona"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altın Korona"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.emeraldAurora" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emerald Aurora"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zümrüt Aurora"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.oceanGlow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bioluminescent Ocean"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biyolüminesans Okyanus"
+          }
+        }
+      }
+    },
+    "settings.breakAppearance.darkPrism" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark Prism"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prizmatik Gece"
           }
         }
       }
@@ -4212,19 +4280,19 @@
         }
       }
     },
-    "settings.breakAppearance.desertDunes" : {
+    "settings.breakAppearance.obsidianSilk" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desert Dunes"
+            "value" : "Obsidian Silk"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kum Tepeleri"
+            "value" : "Obsidyen İpek"
           }
         }
       }
@@ -4263,23 +4331,6 @@
         }
       }
     },
-    "settings.breakAppearance.mountainLake" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mountain Lake"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dağ Gölü"
-          }
-        }
-      }
-    },
     "settings.breakAppearance.none" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4293,23 +4344,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sade"
-          }
-        }
-      }
-    },
-    "settings.breakAppearance.ocean" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ocean"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deniz"
           }
         }
       }
@@ -4348,23 +4382,7 @@
         }
       }
     },
-    "settings.breakAppearance.snowPeaks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Snowy Peaks"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Karlı Zirveler"
-          }
-        }
-      }
-    },
+
     "settings.breakAppearance.title" : {
       "extractionState" : "manual",
       "localizations" : {

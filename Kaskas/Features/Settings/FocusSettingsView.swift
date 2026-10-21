@@ -110,9 +110,6 @@ struct FocusSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                ActiveHoursSettingsCard(controller: controller)
-                    .id("activeHours")
-
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading("settings.alerts.preview")
 
@@ -132,56 +129,12 @@ struct FocusSettingsView: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
                                 WallpaperChoiceThumbnail(
-                                    background: .ocean,
-                                    title: "settings.breakAppearance.ocean",
+                                    background: .emeraldAurora,
+                                    title: "settings.breakAppearance.emeraldAurora",
                                     selectedBackground: controller.configuration.breakBackground,
-                                    onSelect: { updateBackground(.ocean) }
+                                    onSelect: { updateBackground(.emeraldAurora) }
                                 ) {
-                                    Image("BreakOcean")
-                                        .resizable()
-                                        .scaledToFill()
-                                }
-
-                                WallpaperChoiceThumbnail(
-                                    background: .mountainLake,
-                                    title: "settings.breakAppearance.mountainLake",
-                                    selectedBackground: controller.configuration.breakBackground,
-                                    onSelect: { updateBackground(.mountainLake) }
-                                ) {
-                                    Image("BreakMountainLake")
-                                        .resizable()
-                                        .scaledToFill()
-                                }
-
-                                WallpaperChoiceThumbnail(
-                                    background: .snowPeaks,
-                                    title: "settings.breakAppearance.snowPeaks",
-                                    selectedBackground: controller.configuration.breakBackground,
-                                    onSelect: { updateBackground(.snowPeaks) }
-                                ) {
-                                    Image("BreakSnowPeaks")
-                                        .resizable()
-                                        .scaledToFill()
-                                }
-
-                                WallpaperChoiceThumbnail(
-                                    background: .aurora,
-                                    title: "settings.breakAppearance.aurora",
-                                    selectedBackground: controller.configuration.breakBackground,
-                                    onSelect: { updateBackground(.aurora) }
-                                ) {
-                                    Image("BreakAurora")
-                                        .resizable()
-                                        .scaledToFill()
-                                }
-
-                                WallpaperChoiceThumbnail(
-                                    background: .desertDunes,
-                                    title: "settings.breakAppearance.desertDunes",
-                                    selectedBackground: controller.configuration.breakBackground,
-                                    onSelect: { updateBackground(.desertDunes) }
-                                ) {
-                                    Image("BreakDesertDunes")
+                                    Image("BreakEmeraldAurora")
                                         .resizable()
                                         .scaledToFill()
                                 }
@@ -193,6 +146,72 @@ struct FocusSettingsView: View {
                                     onSelect: { updateBackground(.cosmic) }
                                 ) {
                                     Image("BreakCosmic")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .goldenShore,
+                                    title: "settings.breakAppearance.goldenShore",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.goldenShore) }
+                                ) {
+                                    Image("BreakGoldenShore")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .alpineGlow,
+                                    title: "settings.breakAppearance.alpineGlow",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.alpineGlow) }
+                                ) {
+                                    Image("BreakAlpineGlow")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .oceanGlow,
+                                    title: "settings.breakAppearance.oceanGlow",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.oceanGlow) }
+                                ) {
+                                    Image("BreakOceanGlow")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .solarCorona,
+                                    title: "settings.breakAppearance.solarCorona",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.solarCorona) }
+                                ) {
+                                    Image("BreakSolarCorona")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .obsidianSilk,
+                                    title: "settings.breakAppearance.obsidianSilk",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.obsidianSilk) }
+                                ) {
+                                    Image("BreakObsidianSilk")
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+
+                                WallpaperChoiceThumbnail(
+                                    background: .darkPrism,
+                                    title: "settings.breakAppearance.darkPrism",
+                                    selectedBackground: controller.configuration.breakBackground,
+                                    onSelect: { updateBackground(.darkPrism) }
+                                ) {
+                                    Image("BreakDarkPrism")
                                         .resizable()
                                         .scaledToFill()
                                 }
@@ -235,6 +254,9 @@ struct FocusSettingsView: View {
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
+
+                ActiveHoursSettingsCard(controller: controller)
+                    .id("activeHours")
             }
             .settingsPageContent()
         }
@@ -574,7 +596,7 @@ struct BreakMiniPreviewCard: View {
 
                     VStack(spacing: 10) {
                         HStack(alignment: .bottom, spacing: 16) {
-                            miniHeader(spacing: 3)
+                            miniHeader(alignment: .leading, spacing: 3)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .multilineTextAlignment(.leading)
 
@@ -592,7 +614,7 @@ struct BreakMiniPreviewCard: View {
                     Spacer(minLength: 10)
 
                     VStack(spacing: 12) {
-                        miniHeader(spacing: 4)
+                        miniHeader(alignment: .center, spacing: 4)
                         miniTimerDisplay(fontSize: 32, tamgaHeight: 84)
                     }
                     .multilineTextAlignment(.center)
@@ -645,16 +667,18 @@ struct BreakMiniPreviewCard: View {
         }
     }
 
-    private func miniHeader(spacing: CGFloat) -> some View {
-        VStack(spacing: spacing) {
+    private func miniHeader(alignment: HorizontalAlignment = .leading, spacing: CGFloat) -> some View {
+        VStack(alignment: alignment, spacing: spacing) {
             Text("break.title")
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
+                .lineLimit(2)
                 .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
 
             Text("break.message")
                 .font(.system(size: 9.5, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85))
+                .lineLimit(2)
                 .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
         }
     }

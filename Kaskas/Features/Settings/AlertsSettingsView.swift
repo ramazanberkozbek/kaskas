@@ -464,7 +464,7 @@ private struct NotificationDesktopPreview: View {
     let leadTime: TimeInterval
     let position: NotificationPosition
     let isEnabled: Bool
-    var breakBackground: BreakBackground = .ocean
+    var breakBackground: BreakBackground = .emeraldAurora
     var customWallpaperPath: String? = nil
 
     @State private var wallpaper = DesktopWallpaperPreview.shared

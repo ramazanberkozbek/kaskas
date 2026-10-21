@@ -3,24 +3,28 @@ import Foundation
 import SwiftUI
 
 enum BreakBackground: String, Codable, CaseIterable, Identifiable, Sendable {
-    case ocean
-    case mountainLake
-    case snowPeaks
-    case aurora
-    case desertDunes
+    case emeraldAurora
     case cosmic
+    case goldenShore
+    case alpineGlow
+    case oceanGlow
+    case solarCorona
+    case obsidianSilk
+    case darkPrism
     case custom
 
     var id: Self { self }
 
     var assetName: String? {
         switch self {
-        case .ocean: "BreakOcean"
-        case .mountainLake: "BreakMountainLake"
-        case .snowPeaks: "BreakSnowPeaks"
-        case .aurora: "BreakAurora"
-        case .desertDunes: "BreakDesertDunes"
+        case .emeraldAurora: "BreakEmeraldAurora"
         case .cosmic: "BreakCosmic"
+        case .goldenShore: "BreakGoldenShore"
+        case .alpineGlow: "BreakAlpineGlow"
+        case .oceanGlow: "BreakOceanGlow"
+        case .solarCorona: "BreakSolarCorona"
+        case .obsidianSilk: "BreakObsidianSilk"
+        case .darkPrism: "BreakDarkPrism"
         case .custom: nil
         }
     }
@@ -28,10 +32,10 @@ enum BreakBackground: String, Codable, CaseIterable, Identifiable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let raw = try container.decode(String.self)
-        if raw == "calmGradient" {
-            self = .ocean
+        if let match = BreakBackground(rawValue: raw) {
+            self = match
         } else {
-            self = BreakBackground(rawValue: raw) ?? .ocean
+            self = .emeraldAurora
         }
     }
 }
@@ -326,7 +330,7 @@ struct FocusConfiguration: Codable, Equatable, Sendable {
         longBreakFrequency: Int = 3,
         longBreakDuration: TimeInterval = 10 * 60,
         snoozeDuration: TimeInterval = 5 * 60,
-        breakBackground: BreakBackground = .snowPeaks,
+        breakBackground: BreakBackground = .emeraldAurora,
         breakLayout: BreakLayout = .gentleBar,
         breakTimerStyle: BreakTimerStyle = .standard,
         breakSoundEnabled: Bool = true,
