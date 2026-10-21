@@ -8,17 +8,31 @@ struct TypingPauseTests {
         SessionEngine(configuration: FocusConfiguration(focusDuration: 100, pauseDuringMeetings: false), now: start)
     }
 
-    @Test func typingOnlyHoldsTheWarningWindowAndKeepsCountingWork() {
+    @Test func typingBeforeWarningQuietlyExtendsSessionWithoutShowingWarning() {
         var engine = engine()
         engine.send(.setTyping(active: true), at: start.addingTimeInterval(50))
         #expect(!engine.status.isPaused)
         let effects = engine.send(.setTyping(active: true), at: start.addingTimeInterval(80))
+        #expect(!engine.status.isPaused)
+        #expect(engine.status.activityKind == .studying)
+        #expect(engine.snapshot(at: start.addingTimeInterval(80)).remaining == 50)
+        #expect(!effects.contains(where: {
+            if case .showBreakWarning = $0 { return true }
+            return false
+        }))
+    }
+
+    @Test func typingAfterWarningIsVisibleHoldsCountdown() {
+        var engine = engine()
+        engine.send(.tick, at: start.addingTimeInterval(80))
+        #expect(engine.hasShownBreakWarning)
+        let effects = engine.send(.setTyping(active: true), at: start.addingTimeInterval(85))
         #expect(engine.status.isTypingPaused)
         #expect(engine.status.activityKind == .studying)
         #expect(engine.nextEventDate == nil)
         #expect(effects.contains(.showBreakWarning(endsAt: start.addingTimeInterval(100))))
         engine.send(.tick, at: start.addingTimeInterval(200))
-        #expect(engine.snapshot(at: start.addingTimeInterval(200)).remaining == 20)
+        #expect(engine.snapshot(at: start.addingTimeInterval(200)).remaining == 15)
         engine.send(.setTyping(active: false), at: start.addingTimeInterval(203))
         #expect(!engine.status.isPaused)
         #expect(engine.snapshot(at: start.addingTimeInterval(203)).remaining == 20)
@@ -51,7 +65,9 @@ struct TypingPauseTests {
 
     @Test func disablingTypingRestartsTheFullCountdownImmediately() {
         var engine = engine()
+        engine.send(.tick, at: start.addingTimeInterval(80))
         engine.send(.setTyping(active: true), at: start.addingTimeInterval(85))
+        #expect(engine.status.isTypingPaused)
         var config = engine.configuration
         config.pauseWhileTyping = false
         let effects = engine.send(.updateConfiguration(config), at: start.addingTimeInterval(100))
@@ -75,6 +91,7 @@ struct TypingPauseTests {
     @Test func explicitActionsStillWorkDuringTyping() {
         for action in [SessionInput.startBreakNow, .skipBreak, .postponeBreak(by: 60), .snooze, .toggleManualPause, .sleep] {
             var engine = engine()
+            engine.send(.tick, at: start.addingTimeInterval(80))
             engine.send(.setTyping(active: true), at: start.addingTimeInterval(85))
             engine.send(action, at: start.addingTimeInterval(100))
             #expect(!engine.status.isTypingPaused)
@@ -103,6 +120,7 @@ struct TypingPauseTests {
         var config = engine.configuration
         config.pauseDuringMeetings = true
         engine.send(.updateConfiguration(config), at: start)
+        engine.send(.tick, at: start.addingTimeInterval(80))
         engine.send(.setTyping(active: true), at: start.addingTimeInterval(85))
         engine.send(.setProtection(meetingActive: true, videoActive: false), at: start.addingTimeInterval(120))
         #expect(engine.status.isMeetingPaused)
@@ -116,6 +134,7 @@ struct TypingPauseTests {
 
     @Test func restoredTypingIsNotStuck() throws {
         var engine = engine()
+        engine.send(.tick, at: start.addingTimeInterval(80))
         engine.send(.setTyping(active: true), at: start.addingTimeInterval(85))
         let state = try JSONDecoder().decode(SessionState.self, from: JSONEncoder().encode(engine.state))
         var restored = SessionEngine(configuration: engine.configuration, restoredState: state,
@@ -159,10 +178,10 @@ struct TypingPauseIntegrationTests {
         controller.start()
         defer { controller.stop() }
         #expect(monitor.callback == nil)
-        monitor.active = true
         controller.advanceSession(by: 85)
-        #expect(controller.sessionSnapshot.status.isTypingPaused)
         #expect(monitor.callback != nil)
+        monitor.callback?(true, Date())
+        #expect(controller.sessionSnapshot.status.isTypingPaused)
         let lateCallback = try #require(monitor.callback)
         config.pauseWhileTyping = false
         controller.updateConfiguration(config)
@@ -172,6 +191,23 @@ struct TypingPauseIntegrationTests {
         #expect(!store.loadConfiguration().pauseWhileTyping)
         lateCallback(true, Date())
         #expect(!controller.sessionSnapshot.status.isPaused)
+    }
+
+    @Test func controllerExtendsFocusWhenTypingBeforeBreakWarning() throws {
+        let suite = "TypingPauseIntegrationTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = SessionStore(defaults: defaults)
+        let config = FocusConfiguration(focusDuration: 100, pauseDuringMeetings: false, idleDetectionEnabled: false)
+        store.save(configuration: config)
+        let monitor = TestTypingMonitor()
+        let controller = SessionController(store: store, typingMonitor: monitor)
+        controller.start()
+        defer { controller.stop() }
+        monitor.active = true
+        controller.advanceSession(by: 80)
+        #expect(!controller.sessionSnapshot.status.isPaused)
+        #expect(abs(controller.sessionSnapshot.remaining - 50) < 0.1)
     }
 
     @Test func controllerRestartsFullCountdownAfterQuietSample() throws {

@@ -64,18 +64,24 @@ extension SessionEngine {
                 && configuration.breakWarningEnabled && !ignoresProtectionForCycle
             if shouldHold, case .focusing(var run) = status,
                run.endsAt.timeIntervalSince(now) <= configuration.breakWarningLeadTime {
-                // A late scheduler wake must not open a break over active typing.
-                run.endsAt = max(run.endsAt, now.addingTimeInterval(1))
-                run.warningShown = true
-                status = .focusing(run)
-                suspend(reason: .typing, at: now)
+                if !run.warningShown {
+                    run.endsAt = max(run.endsAt, now.addingTimeInterval(configuration.breakWarningLeadTime + Self.typingExtensionDuration))
+                    status = .focusing(run)
+                } else {
+                    // A late scheduler wake must not open a break over active typing.
+                    run.endsAt = max(run.endsAt, now.addingTimeInterval(1))
+                    run.warningShown = true
+                    status = .focusing(run)
+                    suspend(reason: .typing, at: now)
+                    effects.present(.showBreakWarning(endsAt: session.endsAt))
+                }
             } else if !shouldHold, status.isTypingPaused {
                 restartWarningAfterTyping(at: now, leadTime: configuration.breakWarningLeadTime)
+                effects.present(.showBreakWarning(endsAt: session.endsAt))
             } else {
                 return []
             }
             effects.dismiss(.dismissMicroReminder)
-            effects.present(.showBreakWarning(endsAt: session.endsAt))
             effects.persist(kind: .studying)
             effects.schedule(nextEventDate: nextEventDate, isPaused: status.isPaused)
 

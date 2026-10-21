@@ -4,6 +4,7 @@ struct SessionEngine: Sendable {
     static let meaningfulBreakDuration: TimeInterval = 60
     static let meetingResumeDelay: TimeInterval = 60
     static let systemResumeGrace: TimeInterval = 60
+    static let typingExtensionDuration: TimeInterval = 30
 
     var configuration: FocusConfiguration
     var activeConfiguration: FocusConfiguration
