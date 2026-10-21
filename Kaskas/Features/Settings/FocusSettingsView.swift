@@ -17,12 +17,11 @@ struct FocusSettingsView: View {
                 VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
                     SettingsPaneHeader(title: "settings.sidebar.focus")
 
-                // 1. Break Schedule
-                VStack(alignment: .leading, spacing: 12) {
-                    sectionHeading(
-                        "settings.schedule.title",
-                        subtitle: "settings.nextCycle.note"
-                    )
+                    VStack(alignment: .leading, spacing: 12) {
+                        sectionHeading(
+                            "settings.schedule.title",
+                            subtitle: "settings.nextCycle.note"
+                        )
 
                     VStack(spacing: 0) {
                         durationRow(
@@ -114,7 +113,6 @@ struct FocusSettingsView: View {
                 ActiveHoursSettingsCard(controller: controller)
                     .id("activeHours")
 
-                // 2. Live Break Preview (Hero Card)
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading("settings.alerts.preview")
 
@@ -124,7 +122,6 @@ struct FocusSettingsView: View {
                     )
                 }
 
-                // 3. Background / Wallpaper Section
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading(
                         "settings.breakAppearance.sectionTitle",
@@ -205,7 +202,7 @@ struct FocusSettingsView: View {
                                     isSelected: controller.configuration.breakBackground == .custom,
                                     onSelect: {
                                         if controller.configuration.customWallpaperPath != nil {
-                                            updateBackground(.custom)
+                                             updateBackground(.custom)
                                         } else {
                                             chooseCustomWallpaper()
                                         }
@@ -219,7 +216,6 @@ struct FocusSettingsView: View {
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                // 4. Break Layout Section
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeading(
                         "settings.breakLayout.title",
@@ -229,6 +225,12 @@ struct FocusSettingsView: View {
                     VStack(spacing: 0) {
                         settingRow("settings.breakLayout.choice") {
                             BreakLayoutSegmentedPicker(selection: breakLayoutBinding)
+                        }
+
+                        rowDivider
+
+                        settingRow("settings.breakTimerStyle.choice") {
+                            BreakTimerStyleSegmentedPicker(selection: binding(for: \.breakTimerStyle))
                         }
                     }
                     .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
@@ -364,7 +366,6 @@ struct FocusSettingsView: View {
 
     // MARK: - Formatters & Bindings
 
-
     private var breakLayoutBinding: Binding<BreakLayout> {
         Binding {
             controller.configuration.breakLayout
@@ -390,59 +391,110 @@ struct FocusSettingsView: View {
     }
 }
 
-// MARK: - Break Layout Segmented Picker
+// MARK: - Reusable Segmented Controls
 
-struct BreakLayoutSegmentedPicker: View {
-    @Binding var selection: BreakLayout
+struct SettingsSegmentContainer<Content: View>: View {
+    let accessibilityLabel: LocalizedStringKey
+    @ViewBuilder let content: () -> Content
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 0) {
-            segment(for: .horizon, title: "settings.breakLayout.horizon", icon: "sun.horizon")
-            segment(for: .gentleBar, title: "settings.breakLayout.gentleBar", icon: "dock.rectangle")
+            content()
         }
-        .frame(width: 216, height: 44)
+        .padding(2.5)
+        .frame(width: 216, height: 30)
         .background {
             RoundedRectangle(cornerRadius: 8)
                 .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06))
-                .frame(height: 30)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08), lineWidth: 0.5)
                 )
         }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(Text("settings.breakLayout.choice"))
+        .accessibilityLabel(Text(accessibilityLabel))
     }
+}
 
-    private func segment(for layout: BreakLayout, title: LocalizedStringKey, icon: String) -> some View {
-        let isSelected = selection == layout
-        return Button {
+struct SettingsSegmentButton<Selection: Equatable, Icon: View>: View {
+    @Binding var selection: Selection
+    let value: Selection
+    let title: LocalizedStringKey
+    @ViewBuilder let icon: (Bool) -> Icon
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let isSelected = selection == value
+        Button {
             withAnimation(.easeInOut(duration: 0.2)) {
-                selection = layout
+                selection = value
             }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 11.5, weight: .medium))
+            HStack(spacing: 5.5) {
+                icon(isSelected)
                 Text(title)
-                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    .font(.system(size: 11.5, weight: isSelected ? .semibold : .regular))
             }
             .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 25)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background {
                 if isSelected {
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: 5.5)
                         .fill(colorScheme == .dark ? Color.white.opacity(0.18) : Color.white)
                         .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.12), radius: 1.5, y: 0.5)
                 }
             }
-            .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+}
+
+// MARK: - Break Layout Segmented Picker
+
+struct BreakLayoutSegmentedPicker: View {
+    @Binding var selection: BreakLayout
+
+    var body: some View {
+        SettingsSegmentContainer(accessibilityLabel: "settings.breakLayout.choice") {
+            SettingsSegmentButton(selection: $selection, value: .horizon, title: "settings.breakLayout.horizon") { _ in
+                Image(systemName: "sun.horizon")
+                    .font(.system(size: 11.5, weight: .medium))
+            }
+            SettingsSegmentButton(selection: $selection, value: .gentleBar, title: "settings.breakLayout.gentleBar") { _ in
+                Image(systemName: "dock.rectangle")
+                    .font(.system(size: 11.5, weight: .medium))
+            }
+        }
+    }
+}
+
+// MARK: - Break Timer Style Segmented Picker
+
+struct BreakTimerStyleSegmentedPicker: View {
+    @Binding var selection: BreakTimerStyle
+
+    var body: some View {
+        SettingsSegmentContainer(accessibilityLabel: "settings.breakTimerStyle.choice") {
+            SettingsSegmentButton(selection: $selection, value: .standard, title: "settings.breakTimerStyle.standard") { _ in
+                Image(systemName: "textformat.123")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            SettingsSegmentButton(selection: $selection, value: .tamga, title: "settings.breakTimerStyle.tamga") { isSelected in
+                TamgaGlyphView(
+                    value: 0xFFFF,
+                    strokeColor: isSelected ? .primary : .secondary,
+                    strokeWidth: 0.75,
+                    showSubdivisions: false,
+                    showGuides: false,
+                    glowRadius: 0
+                )
+                .frame(width: 11, height: 14)
+            }
+        }
     }
 }
 
@@ -452,27 +504,28 @@ struct BreakMiniPreviewCard: View {
     let configuration: FocusConfiguration
     let onFullscreen: () -> Void
 
+    @State private var simulatedSeconds: Int = 20
+    @State private var isCountdownRunning: Bool = false
+    @State private var countdownTask: Task<Void, Never>?
+
     var body: some View {
         ZStack {
-            // Live background render
             BreakBackgroundView(
                 background: configuration.breakBackground,
                 customWallpaperPath: configuration.customWallpaperPath
             )
 
-            // Preview content
             VStack(spacing: 0) {
-                // Top Bar: "Live preview", Clock & Date, Fullscreen Button
                 ZStack(alignment: .top) {
                     TimelineView(.everyMinute) { context in
                         miniClockHeader(now: context.date)
                     }
 
-                    HStack(alignment: .top) {
+                    HStack(alignment: .center, spacing: 6) {
                         Text("settings.breakAppearance.livePreview")
                             .font(.system(size: 10, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.92))
-                            .padding(.horizontal, 9)
+                            .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
                             .overlay {
@@ -482,10 +535,26 @@ struct BreakMiniPreviewCard: View {
 
                         Spacer()
 
+                        Button(action: toggleCountdownSimulation) {
+                            Image(systemName: isCountdownRunning ? "pause.fill" : "play.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 12, height: 12)
+                                .padding(6)
+                                .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .strokeBorder(isCountdownRunning ? Color.white.opacity(0.35) : Color.white.opacity(0.12), lineWidth: 1)
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isCountdownRunning ? Text("settings.breakTimerStyle.pause") : Text("settings.breakTimerStyle.play"))
+
                         Button(action: onFullscreen) {
                             Image(systemName: "arrow.up.left.and.arrow.down.right")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.white)
+                                .frame(width: 12, height: 12)
                                 .padding(6)
                                 .background(Color.black.opacity(0.48), in: RoundedRectangle(cornerRadius: 6))
                                 .overlay {
@@ -494,6 +563,7 @@ struct BreakMiniPreviewCard: View {
                                 }
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("settings.breakAppearance.fullscreenPreview"))
                     }
                 }
                 .padding(.horizontal, SettingsPageLayout.cardInset)
@@ -502,105 +572,37 @@ struct BreakMiniPreviewCard: View {
                 if configuration.breakLayout == .gentleBar {
                     Spacer()
 
-                    // Gentle Bar Layout
                     VStack(spacing: 10) {
                         HStack(alignment: .bottom, spacing: 16) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("break.title")
-                                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
-                                    .lineLimit(2)
-                                    .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
-
-                                Text("break.message")
-                                    .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.85))
-                                    .lineLimit(2)
-                                    .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .multilineTextAlignment(.leading)
+                            miniHeader(spacing: 3)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .multilineTextAlignment(.leading)
 
                             VStack(alignment: .trailing, spacing: 6) {
-                                Text("00:20")
-                                    .font(.system(size: 30, weight: .bold, design: .rounded))
-                                    .monospacedDigit()
-                                    .foregroundStyle(.white)
-                                    .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
-
-                                HStack(spacing: 5) {
-                                    miniPill(title: "break.snooze", icon: "clock")
-                                    miniPill(title: "break.skip", icon: "forward.fill")
-                                    miniPill(title: "break.lockScreen", icon: "lock.fill")
-                                }
+                                miniTimerDisplay(fontSize: 30, tamgaHeight: 68)
+                                miniActionButtons
                             }
                         }
                         .padding(.horizontal, 20)
 
-                        // Press esc to skip
-                        HStack(spacing: 3) {
-                            Text("break.press")
-                            Text("esc")
-                                .font(.system(size: 6.5, weight: .bold, design: .monospaced))
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 1)
-                                .background(.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 3))
-                            Text("break.toSkip")
-                        }
-                        .font(.system(size: 7.5, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.65))
-                        .tracking(1)
+                        escSkipHint
                     }
                     .padding(.bottom, 14)
                 } else {
-                    // Horizon Layout: Title & timer centered, buttons at bottom
                     Spacer(minLength: 10)
 
-                    // Center Hero Content (Title, Message, Timer)
                     VStack(spacing: 12) {
-                        VStack(spacing: 4) {
-                            Text("break.title")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
-
-                            Text("break.message")
-                                .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.85))
-                                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
-                        }
-
-                        Text("00:20")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
+                        miniHeader(spacing: 4)
+                        miniTimerDisplay(fontSize: 32, tamgaHeight: 84)
                     }
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
                     Spacer(minLength: 10)
 
-                    // Bottom Action Buttons & ESC Hint
                     VStack(spacing: 8) {
-                        HStack(spacing: 5) {
-                            miniPill(title: "break.snooze", icon: "clock.arrow.circlepath")
-                            miniPill(title: "break.skip", icon: "forward.end.fill")
-                            miniPill(title: "break.lockScreen", icon: "lock.fill")
-                        }
-
-                        HStack(spacing: 3) {
-                            Text("break.press")
-                            Text("esc")
-                                .font(.system(size: 6.5, weight: .bold, design: .monospaced))
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 1)
-                                .background(.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 3))
-                            Text("break.toSkip")
-                        }
-                        .font(.system(size: 7.5, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.65))
-                        .tracking(1)
+                        miniActionButtons
+                        escSkipHint
                     }
                     .padding(.bottom, 16)
                 }
@@ -614,6 +616,92 @@ struct BreakMiniPreviewCard: View {
                 .stroke(.white.opacity(0.14), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+        .onDisappear {
+            countdownTask?.cancel()
+            countdownTask = nil
+        }
+    }
+
+    private func toggleCountdownSimulation() {
+        if isCountdownRunning {
+            isCountdownRunning = false
+            countdownTask?.cancel()
+            countdownTask = nil
+        } else {
+            if simulatedSeconds <= 0 {
+                simulatedSeconds = 20
+            }
+            isCountdownRunning = true
+            countdownTask = Task { @MainActor in
+                while !Task.isCancelled && simulatedSeconds > 0 {
+                    try? await Task.sleep(for: .seconds(1))
+                    guard !Task.isCancelled else { break }
+                    withAnimation(.snappy(duration: 0.35)) {
+                        simulatedSeconds -= 1
+                    }
+                }
+                isCountdownRunning = false
+            }
+        }
+    }
+
+    private func miniHeader(spacing: CGFloat) -> some View {
+        VStack(spacing: spacing) {
+            Text("break.title")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
+
+            Text("break.message")
+                .font(.system(size: 9.5, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
+        }
+    }
+
+    private var miniActionButtons: some View {
+        HStack(spacing: 5) {
+            miniPill(title: "break.snooze", icon: "clock")
+            miniPill(title: "break.skip", icon: "forward.fill")
+            miniPill(title: "break.lockScreen", icon: "lock.fill")
+        }
+    }
+
+    @ViewBuilder
+    private func miniTimerDisplay(fontSize: CGFloat, tamgaHeight: CGFloat) -> some View {
+        switch configuration.breakTimerStyle {
+        case .standard:
+            Text(String(format: "%02d:%02d", simulatedSeconds / 60, simulatedSeconds % 60))
+                .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
+
+        case .tamga:
+            TamgaGlyphView(
+                value: simulatedSeconds,
+                strokeColor: .white,
+                showSubdivisions: true,
+                showGuides: true,
+                glowRadius: 7
+            )
+            .frame(height: tamgaHeight)
+        }
+    }
+
+    private var escSkipHint: some View {
+        HStack(spacing: 3) {
+            Text("break.press")
+            Text("esc")
+                .font(.system(size: 6.5, weight: .bold, design: .monospaced))
+                .padding(.horizontal, 4)
+                .padding(.vertical, 1)
+                .background(.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 3))
+            Text("break.toSkip")
+        }
+        .font(.system(size: 7.5, weight: .semibold, design: .rounded))
+        .foregroundStyle(.white.opacity(0.65))
+        .tracking(1)
     }
 
     private func miniClockHeader(now: Date) -> some View {
