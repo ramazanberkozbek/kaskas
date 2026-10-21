@@ -1,7 +1,6 @@
 import Charts
 import SwiftUI
 
-/// Four evenly spaced marks, with one duration unit shared by the entire axis.
 nonisolated struct DurationChartScale {
     let upperBound: Double
     let ticks: [Double]
@@ -10,7 +9,8 @@ nonisolated struct DurationChartScale {
 
     init(maximum: Double, minimum: Double, secondsPerUnit: Double) {
         self.secondsPerUnit = secondsPerUnit
-        let requiredStep = max(minimum, maximum.isFinite ? maximum : minimum) * secondsPerUnit / 3
+        let peak = maximum.isFinite ? max(minimum, maximum) : minimum
+        let requiredStep = peak * secondsPerUnit / 3
         let minuteSteps: [Double] = [20, 30, 40, 60]
         let step: Double
         if let minutes = minuteSteps.first(where: { $0 * 60 >= requiredStep }) {
@@ -33,6 +33,8 @@ nonisolated struct DurationChartScale {
         let label = Measurement(value: seconds / (unit == .minutes ? 60 : 3600), unit: unit)
             .formatted(.measurement(width: .abbreviated, usage: .asProvided,
                 numberFormatStyle: .number.precision(.fractionLength(0))).locale(locale))
+        let isTurkish = locale.language.languageCode?.identifier == "tr" || locale.identifier.hasPrefix("tr")
+        guard isTurkish else { return label }
         return label.replacingOccurrences(of: "dk.", with: "dk")
             .replacingOccurrences(of: "sa.", with: "sa")
     }
@@ -42,7 +44,8 @@ enum DurationChartAxis {
     @AxisContentBuilder
     static func marks(scale: DurationChartScale, locale: Locale) -> some AxisContent {
         AxisMarks(position: .trailing, values: scale.ticks) { value in
-            AxisGridLine()
+            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                .foregroundStyle(Color.primary.opacity(0.08))
             AxisValueLabel {
                 if let duration = value.as(Double.self) {
                     Text(scale.label(for: duration, locale: locale))

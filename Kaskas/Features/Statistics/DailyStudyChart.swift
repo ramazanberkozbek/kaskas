@@ -4,23 +4,14 @@ import SwiftUI
 struct DailyStudyChart: View {
     let data: DailyStudyChartData
     let now: Date
-    private var date: Date { data.date }
-
     @State private var hoveredHour: Int?
     @Environment(\.locale) private var locale
-
-    private var currentLabel: LocalizedStringKey {
-        LocalizedStringKey(data.currentLabelKey(at: now))
-    }
-    private var previousLabel: LocalizedStringKey {
-        LocalizedStringKey(data.previousLabelKey(at: now))
-    }
 
     var body: some View {
         let current = data.todayHours
         let previous = data.yesterdayHours
         let visibleHours = data.visibleHours(at: now)
-        let scale = DurationChartScale(maximum: (current + previous).max() ?? 0,
+        let scale = DurationChartScale(maximum: max(current.max() ?? 0, previous.max() ?? 0),
                                        minimum: 1, secondsPerUnit: 3600)
         Chart {
             ForEach(0..<24, id: \.self) { hour in
@@ -30,8 +21,11 @@ struct DailyStudyChart: View {
                         y: .value("Hours", current[hour]),
                         series: .value("Day", "today")
                     )
+                    .interpolationMethod(.monotone)
+                    .lineStyle(StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
                     .foregroundStyle(StatisticsStyle.studying)
-                    if current[hour] > 0 {
+
+                    if visibleHours.count == 1 && current[hour] > 0 {
                         PointMark(
                             x: .value("Hour", data.position(for: hour, at: now)),
                             y: .value("Hours", current[hour])
@@ -44,7 +38,8 @@ struct DailyStudyChart: View {
                     y: .value("Hours", previous[hour]),
                     series: .value("Day", "yesterday")
                 )
-                .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
+                .interpolationMethod(.monotone)
+                .lineStyle(StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round, dash: [5, 5]))
                 .foregroundStyle(StatisticsStyle.average)
             }
         }
@@ -53,8 +48,10 @@ struct DailyStudyChart: View {
         .chartYScale(domain: 0...scale.upperBound)
         .chartXAxis {
             AxisMarks(values: [0.0, 6, 12, 18, 24]) { value in
-                AxisGridLine()
-                AxisTick()
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(Color.primary.opacity(0.08))
+                AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(Color.primary.opacity(0.12))
                 AxisValueLabel {
                     if let hour = value.as(Double.self) {
                         Text(String(format: "%02d:00", Int(hour)))
@@ -91,9 +88,9 @@ struct DailyStudyChart: View {
                                 .font(.subheadline.weight(.semibold))
                             Divider()
                             if visibleHours.contains(hoveredHour) {
-                                ChartTooltipRow(currentLabel, value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
+                                ChartTooltipRow(data.currentLabelKey(at: now), value: StatisticsDuration.label(current[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.studying)
                             }
-                            ChartTooltipRow(previousLabel, value: StatisticsDuration.label(previous[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.average)
+                            ChartTooltipRow(data.previousLabelKey(at: now), value: StatisticsDuration.label(previous[hoveredHour] * 3600, locale: locale), color: StatisticsStyle.average)
                         }
                         .chartTooltip(width: 230)
                         .offset(x: ChartTooltipPosition.originX(for: x, in: plot), y: plot.minY + 8)
@@ -103,6 +100,6 @@ struct DailyStudyChart: View {
             }
         }
         .frame(height: 220)
-        .onChange(of: date) { _, _ in hoveredHour = nil }
+        .onChange(of: data.date) { _, _ in hoveredHour = nil }
     }
 }

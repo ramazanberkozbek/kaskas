@@ -12,11 +12,18 @@ struct StatisticsHourlyChart: View {
     private var hourlyPeriod: HourlyPeriod { period == .seven ? .week : .day }
     private var hourlyValueLabel: String { period.usesHourlyAverage ? "stats.hourly.average" : "stats.kind.studying" }
 
+    private static let weekPalette: [Color] = [
+        StatisticsStyle.computerInactive,
+        StatisticsStyle.studying,
+        StatisticsStyle.breakTime,
+        StatisticsStyle.average,
+        .pink, .mint, .orange
+    ]
+
     var body: some View {
-        let selectedHour = hoveredHour
         let scale = DurationChartScale(maximum: points.map(\.minutes).max() ?? 0,
                                        minimum: 60, secondsPerUnit: 60)
-        return Chart {
+        Chart {
             if hourlyPeriod == .day {
                 ForEach(points) { point in
                     RectangleMark(
@@ -35,8 +42,9 @@ struct StatisticsHourlyChart: View {
                         y: .value("Minutes", point.minutes),
                         series: .value("Day", point.date)
                     )
+                    .interpolationMethod(.monotone)
                     .foregroundStyle(hourlyColor(for: point.date))
-                    .lineStyle(StrokeStyle(lineWidth: 1.7))
+                    .lineStyle(StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round))
                 }
             }
         }
@@ -45,8 +53,10 @@ struct StatisticsHourlyChart: View {
         .chartYScale(domain: 0...scale.upperBound)
         .chartXAxis {
             AxisMarks(values: [0.0, 3, 6, 9, 12, 15, 18, 21]) { value in
-                AxisGridLine()
-                AxisTick()
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(Color.primary.opacity(0.08))
+                AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(Color.primary.opacity(0.12))
                 AxisValueLabel {
                     if let hour = value.as(Double.self) {
                         Text(String(format: "%02d", Int(hour)))
@@ -60,31 +70,30 @@ struct StatisticsHourlyChart: View {
                 ZStack(alignment: .topLeading) {
                     Rectangle().fill(.clear).contentShape(Rectangle())
                         .onContinuousHover { phase in
-                            switch phase {
-                            case .active(let location):
-                                guard let plotFrame = proxy.plotFrame else { hoveredHour = nil; return }
-                                let plot = geometry[plotFrame]
-                                guard plot.contains(location),
-                                      let hour = proxy.value(atX: location.x - plot.minX, as: Double.self) else {
-                                    hoveredHour = nil
-                                    return
-                                }
-                                hoveredHour = min(23, max(0, Int(hour.rounded(.down))))
-                            case .ended:
+                            guard case .active(let location) = phase,
+                                  let plotFrame = proxy.plotFrame else {
                                 hoveredHour = nil
+                                return
                             }
+                            let plot = geometry[plotFrame]
+                            guard plot.contains(location),
+                                  let hour = proxy.value(atX: location.x - plot.minX, as: Double.self) else {
+                                hoveredHour = nil
+                                return
+                            }
+                            hoveredHour = min(23, max(0, Int(hour.rounded(.down))))
                         }
-                    if let selectedHour, let plotFrame = proxy.plotFrame,
-                       let position = proxy.position(forX: Double(selectedHour) + 0.5) {
+                    if let hoveredHour, let plotFrame = proxy.plotFrame,
+                       let position = proxy.position(forX: Double(hoveredHour) + 0.5) {
                         let plot = geometry[plotFrame]
                         let x = plot.minX + position
-                        let activePoints = points.filter { $0.hour == selectedHour && $0.minutes > 0 }
+                        let activePoints = points.filter { $0.hour == hoveredHour && $0.minutes > 0 }
                         let totalMinutes = activePoints.reduce(0.0) { $0 + $1.minutes }
                         ChartHoverGuide(x: x, plot: plot)
                         if hourlyPeriod == .day, let point = activePoints.first,
                            let y = proxy.position(forY: point.minutes),
-                           let left = proxy.position(forX: Double(selectedHour) + 0.14),
-                           let right = proxy.position(forX: Double(selectedHour) + 0.86) {
+                           let left = proxy.position(forX: Double(hoveredHour) + 0.14),
+                           let right = proxy.position(forX: Double(hoveredHour) + 0.86) {
                             RoundedRectangle(cornerRadius: 4)
                                 .strokeBorder(.white.opacity(0.8), lineWidth: 2)
                                 .frame(width: right - left, height: max(1, plot.height - y))
@@ -103,7 +112,7 @@ struct StatisticsHourlyChart: View {
                             }
                         }
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(String(format: "%02d:00–%02d:00", selectedHour, selectedHour + 1))
+                            Text(String(format: "%02d:00–%02d:00", hoveredHour, hoveredHour + 1))
                                 .font(.subheadline.weight(.semibold))
                             if hourlyPeriod == .week {
                                 ChartTooltipRow("stats.total", value: StatisticsDuration.label(totalMinutes * 60, locale: locale), color: StatisticsStyle.computerInactive)
@@ -137,14 +146,7 @@ struct StatisticsHourlyChart: View {
 
     private func hourlyColor(for date: Date) -> Color {
         guard hourlyPeriod == .week else { return StatisticsStyle.computerInactive }
-        let palette: [Color] = [
-            StatisticsStyle.computerInactive,
-            StatisticsStyle.studying,
-            StatisticsStyle.breakTime,
-            StatisticsStyle.average,
-            .pink, .mint, .orange
-        ]
         let index = days.firstIndex { $0.date == date } ?? 0
-        return palette[index % palette.count]
+        return Self.weekPalette[index % Self.weekPalette.count]
     }
 }

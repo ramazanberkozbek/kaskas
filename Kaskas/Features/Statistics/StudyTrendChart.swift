@@ -12,34 +12,41 @@ struct StudyTrendChart: View {
     var body: some View {
         let chartPoints = data.points
         let scale = DurationChartScale(
-            maximum: chartPoints.map { max($0.hours, $0.averageHours) }.max() ?? 0,
+            maximum: chartPoints.reduce(0.0) { max($0, $1.hours, $1.averageHours) },
             minimum: 1, secondsPerUnit: 3600
         )
         let selected = chartPoints.first { $0.date == hoveredDate }
         let dayAxisLabel = localizedString(resolution == .month ? "stats.axis.month" : "stats.axis.day", locale: locale)
         let hoursAxisLabel = localizedString("stats.axis.hours", locale: locale)
-        return Chart {
+        Chart {
             ForEach(chartPoints) { point in
                 LineMark(
                     x: .value(dayAxisLabel, point.date, unit: resolution.component),
                     y: .value(hoursAxisLabel, point.hours),
                     series: .value("Series", "daily")
                 )
+                .interpolationMethod(.monotone)
+                .lineStyle(StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
                 .foregroundStyle(StatisticsStyle.studying)
-                PointMark(
-                    x: .value(dayAxisLabel, point.date, unit: resolution.component),
-                    y: .value(hoursAxisLabel, point.hours)
-                )
-                .foregroundStyle(StatisticsStyle.studying)
+
                 if resolution == .day {
                     LineMark(
                         x: .value(dayAxisLabel, point.date, unit: .day),
                         y: .value(hoursAxisLabel, point.averageHours),
                         series: .value("Series", "average")
                     )
-                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
+                    .interpolationMethod(.monotone)
+                    .lineStyle(StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round, dash: [5, 5]))
                     .foregroundStyle(StatisticsStyle.average)
                 }
+            }
+
+            if chartPoints.count == 1, let singlePoint = chartPoints.first {
+                PointMark(
+                    x: .value(dayAxisLabel, singlePoint.date, unit: resolution.component),
+                    y: .value(hoursAxisLabel, singlePoint.hours)
+                )
+                .foregroundStyle(StatisticsStyle.studying)
             }
         }
         .chartLegend(.hidden)
@@ -48,8 +55,10 @@ struct StudyTrendChart: View {
         .chartYAxis { DurationChartAxis.marks(scale: scale, locale: locale) }
         .chartXAxis {
             AxisMarks(values: .stride(by: resolution.component, count: resolution == .month || chartPoints.count <= 7 ? 1 : 5)) { value in
-                AxisGridLine()
-                AxisTick()
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(Color.primary.opacity(0.08))
+                AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(Color.primary.opacity(0.12))
                 AxisValueLabel {
                     if let date = value.as(Date.self), let first = chartPoints.first?.date,
                        let last = chartPoints.last?.date,
