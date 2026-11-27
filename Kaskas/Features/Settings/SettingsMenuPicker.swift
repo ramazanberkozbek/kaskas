@@ -84,9 +84,6 @@ private struct SettingsNativeMenu<Content: View>: NSViewRepresentable {
         button.usesItemFromMenu = false
         button.isTransparent = true
         context.coordinator.content = menuContent
-        // `NSHostingMenu.rootView`'s setter aborts inside AttributeGraph on
-        // recent macOS ("saw AnyView, expected Optional<AnyView>"), so the
-        // root view is set exactly once and later updates flow through the model.
         button.menu = NSHostingMenu(rootView: SettingsNativeMenuRoot(model: context.coordinator))
         button.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return button
