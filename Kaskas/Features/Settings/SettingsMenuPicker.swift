@@ -73,20 +73,38 @@ private struct SettingsNativeMenu<Content: View>: NSViewRepresentable {
             .environment(\.colorScheme, colorScheme))
     }
 
+    func makeCoordinator() -> SettingsNativeMenuModel {
+        SettingsNativeMenuModel()
+    }
+
     func makeNSView(context: Context) -> NSPopUpButton {
         let button = NSPopUpButton(frame: .zero, pullsDown: true)
         // SwiftUI draws the label; AppKit owns menu sizing, anchoring,
         // keyboard navigation and selection. No selected row covers the label.
         button.usesItemFromMenu = false
         button.isTransparent = true
-        button.menu = NSHostingMenu(rootView: menuContent)
+        context.coordinator.content = menuContent
+        button.menu = NSHostingMenu(rootView: SettingsNativeMenuRoot(model: context.coordinator))
         button.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return button
     }
 
     func updateNSView(_ button: NSPopUpButton, context: Context) {
-        (button.menu as? NSHostingMenu<AnyView>)?.rootView = menuContent
+        context.coordinator.content = menuContent
         button.menu?.minimumWidth = width
         button.isEnabled = isEnabled
+    }
+}
+
+@MainActor @Observable
+private final class SettingsNativeMenuModel {
+    var content = AnyView(EmptyView())
+}
+
+private struct SettingsNativeMenuRoot: View {
+    let model: SettingsNativeMenuModel
+
+    var body: some View {
+        model.content
     }
 }
